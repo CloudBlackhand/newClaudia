@@ -731,17 +731,29 @@ async def get_fatura_status():
 @app.get("/health")
 @app.get("/api/health")
 async def health_check():
-    """Health check otimizado para Render"""
+    """Health check otimizado para Render - ANTI-SLEEP"""
     try:
         import sys
+        from datetime import datetime
+        
         health_info = {
             "status": "healthy",
+            "timestamp": datetime.now().isoformat(),
             "environment": "render" if RENDER_CLOUD else "local",
             "python_version": sys.version.split()[0],
             "port": PORT,
-            "playwright_path": os.getenv('PLAYWRIGHT_BROWSERS_PATH', 'default')
+            "playwright_path": os.getenv('PLAYWRIGHT_BROWSERS_PATH', 'default'),
+            "uptime_monitoring": "active",
+            "anti_sleep": "enabled"
         }
         
+        # Status do WhatsApp
+        global whatsapp_client
+        if whatsapp_client:
+            health_info["whatsapp_status"] = "initialized"
+        else:
+            health_info["whatsapp_status"] = "not_initialized"
+            
         # Verificar memória apenas se psutil estiver disponível
         try:
             import psutil
@@ -757,7 +769,17 @@ async def health_check():
         
     except Exception as e:
         logger.error(f"❌ Health check error: {e}")
-        return {"status": "error", "message": str(e)}
+        return {"status": "error", "message": str(e), "timestamp": datetime.now().isoformat()}
+
+@app.get("/ping")
+async def ping_endpoint():
+    """Endpoint simples para keep-alive - resposta rápida"""
+    from datetime import datetime
+    return {
+        "pong": True,
+        "timestamp": datetime.now().isoformat(),
+        "status": "alive"
+    }
 
 if __name__ == "__main__":
     # Criar diretórios necessários
