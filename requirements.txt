@@ -1,0 +1,47 @@
+# Blacktemplar Bolter - Dependências Mínimas
+# Sistema 100% gratuito para cobrança automatizada
+
+# Framework Web
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+jinja2==3.1.2
+python-multipart==0.0.6
+
+# Processamento de Excel
+pandas==2.1.3
+openpyxl==3.1.2
+
+# Automação Web (WhatsApp + Downloads)
+playwright==1.40.0
+aiohttp==3.9.1
+websockets==12.0
+
+# Processamento de dados
+python-dateutil==2.8.2
+
+# QR Code para WhatsApp
+qrcode[pil]==7.4.2
+
+# Speech Recognition para Anti-Captcha e Download Faturas
+SpeechRecognition==3.10.0
+pydub==0.25.1
+
+# Utilitários
+asyncio-throttle==1.0.2
+python-dotenv==1.0.0
+
+# Sistema de performance e monitoramento (COMENTADO para Render free tier)
+# redis==4.6.0
+# psutil==5.9.6  # Comentado para reduzir uso de memória
+# aioredis==2.0.1
+
+# Segurança (COMENTADO para Render - reduzir build time)
+# cryptography==41.0.7
+# bcrypt==4.1.2
+
+# Sistema Anti-Captcha e Download de Faturas
+requests==2.31.0
+
+# Para desenvolvimento local (opcional)
+# Descomente se precisar rodar localmente
+# uvicorn[standard]==0.24.0 
