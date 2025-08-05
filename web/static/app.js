@@ -71,51 +71,70 @@ class BlacktemplarBot {
                     <div class="card mb-4">
                         <div class="card-header">Status do Sistema</div>
                         <div class="card-body">
-                            <div class="row">
-                                <div class="col-md-3 col-sm-6">
+                            <div class="status-grid">
+                                <div class="status-item">
                                     <div class="status-card" data-status="whatsapp">
-                                        <h5>WhatsApp</h5>
-                                        <div class="status-icon offline">
-                                            <i class="fas fa-mobile-alt"></i>
+                                        <div class="status-header">
+                                            <h5>WhatsApp</h5>
+                                            <div class="status-icon offline">
+                                                <i class="fas fa-mobile-alt"></i>
+                                            </div>
                                         </div>
-                                        <div class="status-text">Desconectado</div>
-                                        <button onclick="connectWhatsApp()" class="btn btn-sm btn-primary">Conectar</button>
+                                        <div class="status-content">
+                                            <div class="status-text">Desconectado</div>
+                                            <button onclick="connectWhatsApp()" class="btn btn-sm btn-primary">Conectar</button>
+                                        </div>
                                     </div>
                                 </div>
-                                <div class="col-md-3 col-sm-6">
+                                
+                                <div class="status-item">
                                     <div class="status-card" data-status="fpd">
-                                        <h5>FPD</h5>
-                                        <div class="status-icon offline">
-                                            <i class="fas fa-file-excel"></i>
+                                        <div class="status-header">
+                                            <h5>FPD</h5>
+                                            <div class="status-icon offline">
+                                                <i class="fas fa-file-excel"></i>
+                                            </div>
                                         </div>
-                                        <div class="status-text">Não carregado</div>
-                                        <div class="upload-area" id="fpdUpload">
-                                            <label for="fpdFile" class="btn btn-sm btn-primary">Carregar FPD</label>
-                                            <input type="file" id="fpdFile" style="display:none">
+                                        <div class="status-content">
+                                            <div class="status-text">Não carregado</div>
+                                            <div class="upload-area" id="fpdUpload">
+                                                <label for="fpdFile" class="btn btn-sm btn-primary">Carregar FPD</label>
+                                                <input type="file" id="fpdFile" style="display:none">
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                                <div class="col-md-3 col-sm-6">
+                                
+                                <div class="status-item">
                                     <div class="status-card" data-status="vendas">
-                                        <h5>VENDAS</h5>
-                                        <div class="status-icon offline">
-                                            <i class="fas fa-chart-line"></i>
+                                        <div class="status-header">
+                                            <h5>VENDAS</h5>
+                                            <div class="status-icon offline">
+                                                <i class="fas fa-chart-line"></i>
+                                            </div>
                                         </div>
-                                        <div class="status-text">Não carregado</div>
-                                        <div class="upload-area" id="vendasUpload">
-                                            <label for="vendasFile" class="btn btn-sm btn-primary">Carregar VENDAS</label>
-                                            <input type="file" id="vendasFile" style="display:none">
+                                        <div class="status-content">
+                                            <div class="status-text">Não carregado</div>
+                                            <div class="upload-area" id="vendasUpload">
+                                                <label for="vendasFile" class="btn btn-sm btn-primary">Carregar VENDAS</label>
+                                                <input type="file" id="vendasFile" style="display:none">
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                                <div class="col-md-3 col-sm-6">
+                                
+                                <div class="status-item">
                                     <div class="status-card" data-status="bot">
-                                        <h5>Bot</h5>
-                                        <div class="status-icon offline">
-                                            <i class="fas fa-robot"></i>
+                                        <div class="status-header">
+                                            <h5>Bot</h5>
+                                            <div class="status-icon offline">
+                                                <i class="fas fa-robot"></i>
+                                            </div>
                                         </div>
-                                        <div class="status-text">Inativo</div>
-                                        <button onclick="toggleBot()" class="btn btn-sm btn-success">Iniciar</button>
+                                        <div class="status-content">
+                                            <div class="status-text">Inativo</div>
+                                            <button onclick="toggleBot()" class="btn btn-sm btn-success">Iniciar</button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
