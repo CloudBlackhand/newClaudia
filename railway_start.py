@@ -58,9 +58,26 @@ def main():
     
     # Iniciar aplicação
     print("🚀 Iniciando Claudia Cobranças...")
-    print("🌐 Acesse: https://seu-app.railway.app")
-    print("🔐 Login: /login")
-    print("📊 Dashboard: /dashboard")
+    
+    # Mostrar URL real do Railway
+    railway_domain = os.getenv('RAILWAY_PUBLIC_DOMAIN')
+    railway_url = os.getenv('RAILWAY_URL')
+    
+    if railway_domain:
+        base_url = f"https://{railway_domain}"
+        print(f"🌐 URL REAL: {base_url}")
+        print(f"🔐 Login: {base_url}/login")
+        print(f"📊 Dashboard: {base_url}/dashboard")
+    elif railway_url:
+        print(f"🌐 URL REAL: {railway_url}")
+        print(f"🔐 Login: {railway_url}/login")
+        print(f"📊 Dashboard: {railway_url}/dashboard")
+    else:
+        print("🌐 Acesse: https://seu-app.railway.app")
+        print("🔐 Login: /login")
+        print("📊 Dashboard: /dashboard")
+        print("💡 Verifique o painel do Railway para a URL real")
+    
     print()
     
     # Comando de inicialização CORRIGIDO
