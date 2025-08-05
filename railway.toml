@@ -10,5 +10,4 @@ restartPolicyMaxRetries = 5
 
 [env]
 PORT = "8080"
-NODE_VERSION = "18"
 RAILWAY_DEPLOY = "True"
