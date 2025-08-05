@@ -527,3 +527,4 @@ class StorageManager:
 
 # 🎯 INSTÂNCIA GLOBAL
 storage_manager = StorageManager()
+ 

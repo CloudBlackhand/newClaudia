@@ -321,10 +321,10 @@ class WhatsAppClient:
         """🤖 SIMULAÇÃO HUMANA ULTRA AVANÇADA"""
         try:
             # 🧹 Limpar campo primeiro
-        await element.click()
-        await self.page.keyboard.press('Control+A')
-        await self.page.keyboard.press('Delete')
-        
+            await element.click()
+            await self.page.keyboard.press('Control+A')
+            await self.page.keyboard.press('Delete')
+            
             # ⏱️ PAUSA PARA "PENSAR"
             await asyncio.sleep(random.uniform(0.5, 2.0))
             
@@ -337,7 +337,7 @@ class WhatsAppClient:
                 
                 # ⌨️ DIGITAR PALAVRA CARACTERE POR CARACTERE
                 for char in word:
-            await element.type(char)
+                    await element.type(char)
                     
                     # ⏱️ VELOCIDADE VARIÁVEL POR CARACTERE
                     char_delay = typing_speed + (hash(char) % 100) / 3000
@@ -776,3 +776,4 @@ class WhatsAppClient:
                 await self.playwright.stop()
             logger.info("🔒 Cliente WhatsApp fechado")
         except Exception as e:
+            logger.error(f"❌ Erro ao fechar cliente: {e}")

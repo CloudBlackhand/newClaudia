@@ -1093,3 +1093,4 @@ async def baixar_fatura_rapido(page: Page, documento: str, protocolo: Optional[s
     """
     downloader = FaturaDownloader(page)
     return await downloader.baixar_fatura(documento, protocolo)
+ 

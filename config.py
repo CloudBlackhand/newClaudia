@@ -95,6 +95,18 @@ class RailwayConfig:
 # Instância global
 railway_config = RailwayConfig()
 
+# Classe Config para compatibilidade
+class Config:
+    """Classe de configuração para compatibilidade"""
+    def __init__(self):
+        self.PORT = railway_config.PORT
+        self.RAILWAY_MODE = railway_config.RAILWAY_DEPLOY
+        self.PLAYWRIGHT_CONFIG = railway_config.PLAYWRIGHT_CONFIG
+        self.DOWNLOADER_CONFIG = railway_config.DOWNLOADER_CONFIG
+        self.WHATSAPP_CONFIG = railway_config.WHATSAPP_CONFIG
+        self.LOG_LEVEL = railway_config.LOG_LEVEL
+        self.ENABLE_DETAILED_LOGS = railway_config.ENABLE_DETAILED_LOGS
+
 # Exportar configurações principais
 PORT = railway_config.PORT
 RAILWAY_MODE = railway_config.RAILWAY_DEPLOY

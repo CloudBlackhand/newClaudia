@@ -727,3 +727,4 @@ def is_blocked(identifier: str) -> bool:
 
 def register_failed_attempt(identifier: str) -> bool:
     return security_manager.register_failed_attempt(identifier)
+ 

@@ -687,3 +687,4 @@ class SystemMonitor:
 
 # Instância global do monitor
 monitor = SystemMonitor()
+ 

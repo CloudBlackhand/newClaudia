@@ -765,3 +765,4 @@ async def initialize_performance_system():
 
 # Pool global de conexões
 connection_pool = AsyncPool(max_connections=ORACLE_PERFORMANCE_CONFIG['max_workers'])
+ 

@@ -301,3 +301,4 @@
 > **O BOT DE COBRANÇA MAIS INTELIGENTE DA DESKTOP!**
 > 
 > Capaz de entender QUALQUER cliente, por mais burro que seja! 🧠⚡
+ 

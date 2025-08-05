@@ -909,10 +909,7 @@ async def start_bot(background_tasks: BackgroundTasks):
 async def stop_bot():
     """Parar bot"""
     try:
-        # Verificar se stealth_sender está definido para evitar erros
-        if 'stealth_sender' in globals():
-            stealth_sender.stop()
-        
+        # Parar bot de forma segura
         system_state["bot_active"] = False
         
         return {
