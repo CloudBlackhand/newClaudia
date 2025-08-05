@@ -201,12 +201,12 @@ async def connect_whatsapp():
         
         if qr_data:
             logger.info("✅ QR Code gerado com sucesso")
-            system_state["whatsapp_connected"] = False
+            # Não alterar o estado aqui, apenas retornar o QR
             return {
                 "success": True,
                 "qr_data": qr_data,
                 "message": "Escaneie o QR Code com WhatsApp",
-                "connected": False
+                "connected": system_state["whatsapp_connected"]
             }
         else:
             logger.warning("⚠️ Não foi possível gerar QR Code")
