@@ -1,5 +1,5 @@
-# REQUIREMENTS OTIMIZADO PARA RAILWAY
-# Apenas dependências essenciais para reduzir custos
+# CLAUDIA COBRANÇAS - REQUIREMENTS OTIMIZADO PARA RAILWAY
+# Sistema oficial de cobrança da Desktop
 
 # Core Web Framework
 fastapi==0.104.1
@@ -11,7 +11,7 @@ jinja2==3.1.2
 playwright==1.40.0
 websockets==12.0
 aiohttp==3.9.1
-qrcode==7.4.2
+qrcode[pil]==7.4.2
 Pillow==10.1.0
 
 # Excel Processing
@@ -19,7 +19,7 @@ pandas==2.1.3
 openpyxl==3.1.2
 
 # Audio Processing (para captcha)
-speechrecognition==3.10.0
+SpeechRecognition==3.10.0
 pydub==0.25.1
 
 # Requests
@@ -28,36 +28,14 @@ requests==2.31.0
 # Logging
 structlog==23.2.0
 
+# Utilitários
+python-dateutil==2.8.2
+asyncio-throttle==1.0.2
+python-dotenv==1.0.0
+
 # DEPENDÊNCIAS COMENTADAS PARA RAILWAY (reduzir RAM/CPU)
 # redis==4.6.0  # Desabilitado - consome muita RAM
 # aioredis==2.0.1  # Desabilitado - problema de compatibilidade  
 # psutil==5.9.6  # Desabilitado - só para monitoramento avançado
 # cryptography==41.0.7  # Desabilitado - railway tem https nativo
-# bcrypt==4.1.2  # Desabilitado - usar hash simples
-
-# Se precisar de dependências adicionais, adicione gradualmente
-# e monitore o impacto nos custos!
-# Se precisar de dependências adicionais, adicione gradualmente
-# e monitore o impacto nos custos!
-# Automação Web (WhatsApp + Downloads)
-playwright==1.40.0
-aiohttp==3.9.1
-websockets==12.0
-
-# Processamento de dados
-python-dateutil==2.8.2
-
-# QR Code para WhatsApp
-qrcode[pil]==7.4.2
-
-# Speech Recognition para Anti-Captcha
-SpeechRecognition==3.10.0
-pydub==0.25.1
-
-# Utilitários
-asyncio-throttle==1.0.2
-python-dotenv==1.0.0
-
-# Para desenvolvimento local (opcional)
-# Descomente se precisar rodar localmente
-# uvicorn[standard]==0.24.0 
+# bcrypt==4.1.2  # Desabilitado - usar hash simples 
