@@ -256,17 +256,23 @@
     position: relative;
     overflow: hidden;
     transition: all 0.3s ease;
-    padding: 10px 20px;
+    padding: 12px 24px;
     border-radius: var(--border-radius-sm);
     font-weight: 600;
     letter-spacing: 0.5px;
     text-transform: uppercase;
-    font-size: 0.9rem;
+    font-size: 0.95rem;
     border: none;
     cursor: pointer;
     background-image: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
     color: white;
     box-shadow: 0 4px 10px rgba(74, 111, 237, 0.3);
+    min-width: 140px;
+    min-height: 44px;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+    z-index: 10;
 }
 
 .status-card button::before {
@@ -1247,12 +1253,19 @@ body {
 }
 
 .server-controls button {
-    padding: 10px 20px;
+    padding: 14px 28px;
     border: none;
-    border-radius: 5px;
+    border-radius: 8px;
     cursor: pointer;
     font-weight: bold;
     transition: all 0.3s ease;
+    min-width: 160px;
+    min-height: 48px;
+    font-size: 1rem;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+    z-index: 10;
 }
 
 .server-controls .btn-start {
@@ -2018,34 +2031,243 @@ body {
     display: block;
 }
 
-/* Responsive improvements */
-@media (max-width: 768px) {
-    .dashboard-container {
-        margin: 10px;
-        padding: 20px;
+/* Responsive improvements - MAJOR UPDATE */
+@media (max-width: 1200px) {
+    .dashboard-grid-4 {
+        grid-template-columns: repeat(2, 1fr);
     }
     
-    .stats-grid {
+    .dashboard-grid-3 {
         grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .dashboard-container {
+        margin: 5px;
+        padding: 15px;
+    }
+    
+    .dashboard-grid {
+        grid-template-columns: 1fr;
         gap: 15px;
     }
     
+    .dashboard-grid-2,
+    .dashboard-grid-3,
+    .dashboard-grid-4 {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+    
+    .status-cards-row {
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    .status-cards-row .status-card {
+        min-width: auto;
+        max-width: none;
+    }
+    
+    .status-card {
+        padding: 15px;
+        margin-bottom: 10px;
+    }
+    
     .status-icon {
-        font-size: 2rem;
+        font-size: 2.5rem;
+        width: 60px;
+        height: 60px;
+    }
+    
+    .status-text {
+        font-size: 0.9rem;
+    }
+    
+    .status-card button {
+        padding: 8px 16px;
+        font-size: 0.85rem;
+        min-height: 36px;
+    }
+    
+    .server-controls {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .server-controls button {
+        width: 100%;
+        padding: 12px;
+        font-size: 1rem;
+        min-height: 44px;
+    }
+    
+    .upload-card {
+        padding: 20px;
+        margin-bottom: 15px;
+    }
+    
+    .upload-area {
+        padding: 30px 20px;
+        min-height: 120px;
+    }
+    
+    .qr-container {
+        padding: 20px;
+        margin: 15px 0;
+    }
+    
+    .qr-code img {
+        max-width: 100%;
+        height: auto;
+    }
+    
+    .nav-tabs {
+        flex-wrap: wrap;
+        gap: 5px;
+    }
+    
+    .nav-tab {
+        flex: 1;
+        min-width: 120px;
+        padding: 10px 8px;
+        font-size: 0.85rem;
+    }
+    
+    .card {
+        margin-bottom: 15px;
+    }
+    
+    .card-body {
+        padding: 15px;
+    }
+    
+    .metrics-grid {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+    
+    .metric-card {
+        padding: 15px;
+    }
+    
+    .conversation-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+    
+    .message {
+        max-width: 95%;
+        padding: 10px;
+    }
+    
+    .log-container {
+        max-height: 300px;
+        font-size: 0.85rem;
+    }
+    
+    .toast {
+        width: 95%;
+        max-width: 400px;
+        font-size: 0.9rem;
     }
 }
 
 @media (max-width: 576px) {
-    .stats-grid {
-        grid-template-columns: 1fr;
-    }
-    
-    .upload-area {
-        padding: 20px;
+    .dashboard-container {
+        margin: 2px;
+        padding: 10px;
     }
     
     .status-card {
-        margin-bottom: 15px;
+        padding: 12px;
+    }
+    
+    .status-icon {
+        font-size: 2rem;
+        width: 50px;
+        height: 50px;
+    }
+    
+    .status-text {
+        font-size: 0.8rem;
+    }
+    
+    .status-card button {
+        padding: 6px 12px;
+        font-size: 0.8rem;
+        min-height: 32px;
+    }
+    
+    .upload-area {
+        padding: 20px 15px;
+        min-height: 100px;
+    }
+    
+    .nav-tab {
+        min-width: 100px;
+        padding: 8px 6px;
+        font-size: 0.8rem;
+    }
+    
+    .card-body {
+        padding: 12px;
+    }
+    
+    .server-controls button {
+        padding: 10px;
+        font-size: 0.9rem;
+        min-height: 40px;
+    }
+    
+    .qr-container {
+        padding: 15px;
+    }
+    
+    .toast {
+        width: 98%;
+        font-size: 0.85rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .status-card {
+        padding: 10px;
+    }
+    
+    .status-icon {
+        font-size: 1.8rem;
+        width: 45px;
+        height: 45px;
+    }
+    
+    .status-text {
+        font-size: 0.75rem;
+    }
+    
+    .status-card button {
+        padding: 5px 10px;
+        font-size: 0.75rem;
+        min-height: 28px;
+    }
+    
+    .nav-tab {
+        min-width: 80px;
+        padding: 6px 4px;
+        font-size: 0.75rem;
+    }
+    
+    .upload-area {
+        padding: 15px 10px;
+        min-height: 80px;
+    }
+    
+    .server-controls button {
+        padding: 8px;
+        font-size: 0.85rem;
+        min-height: 36px;
     }
 }
 
