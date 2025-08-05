@@ -738,7 +738,6 @@ async def connect_whatsapp():
         
         # Verificar se já está conectado
         if system_state["whatsapp_connected"]:
-            logger.info("✅ WhatsApp já está conectado")
             return {
                 "success": True,
                 "message": "WhatsApp já está conectado",
@@ -759,16 +758,15 @@ async def connect_whatsapp():
                 "connected": False
             }
         else:
-            logger.error("❌ Falha ao gerar QR Code")
+            logger.warning("⚠️ Não foi possível gerar QR Code")
             return {
                 "success": False,
-                "message": "Erro ao gerar QR Code - Verifique os logs",
+                "message": "Erro ao gerar QR Code - tente novamente",
                 "connected": False
             }
             
     except Exception as e:
         logger.error(f"❌ Erro ao conectar WhatsApp: {e}")
-        logger.error(f"Tipo de erro: {type(e).__name__}")
         import traceback
         logger.error(f"Traceback: {traceback.format_exc()}")
         return {

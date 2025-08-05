@@ -36,12 +36,18 @@ def main():
         print(f"❌ Dependência faltando: {e}")
         sys.exit(1)
     
-    # Instalar Playwright browsers
-    print("🎭 Instalando Playwright browsers...")
+    # Instalar e testar Playwright browsers
+    print("🎭 Instalando e testando Playwright browsers...")
     try:
         # Tentar executar script de instalação
         subprocess.run(["python", "install_playwright.py"], check=True, capture_output=True)
         print("✅ Playwright instalado via script")
+        
+        # Testar Playwright
+        print("🧪 Testando Playwright...")
+        subprocess.run(["python", "test_playwright.py"], check=True, capture_output=True)
+        print("✅ Playwright testado e funcionando")
+        
     except Exception as e:
         print(f"⚠️ Aviso: Erro ao executar script: {e}")
         print("🔄 Tentando instalação direta...")
