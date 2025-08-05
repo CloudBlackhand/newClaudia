@@ -172,16 +172,39 @@ class WhatsAppClient:
         try:
             logger.info("🔍 Aguardando QR Code aparecer...")
             
-            # Aguardar QR Code aparecer com timeout maior para Railway
-            qr_selector = '[data-testid="qr-code"]'
-            await self.page.wait_for_selector(qr_selector, timeout=90000)  # 90 segundos para Railway
-            logger.info("✅ QR Code encontrado na página")
+            # Múltiplos seletores para QR Code
+            qr_selectors = [
+                '[data-testid="qr-code"]',
+                'canvas[aria-label="Scan me!"]',
+                'canvas[data-ref]',
+                'img[src*="data:image/png"]',
+                'div[data-testid="qr-code"] img',
+                'canvas'
+            ]
+            
+            qr_element = None
+            used_selector = None
+            
+            # Tentar cada seletor
+            for selector in qr_selectors:
+                try:
+                    logger.info(f"🔍 Tentando seletor: {selector}")
+                    await self.page.wait_for_selector(selector, timeout=30000)  # 30s por seletor
+                    qr_element = await self.page.query_selector(selector)
+                    if qr_element:
+                        used_selector = selector
+                        logger.info(f"✅ QR Code encontrado com seletor: {selector}")
+                        break
+                except Exception as e:
+                    logger.info(f"⚠️ Seletor {selector} falhou: {e}")
+                    continue
+            
+            if not qr_element:
+                logger.error("❌ Nenhum QR Code encontrado com nenhum seletor")
+                return None
             
             # Aguardar um pouco para garantir que carregou
-            await asyncio.sleep(2)
-            
-            # Capturar QR Code
-            qr_element = await self.page.query_selector(qr_selector)
+            await asyncio.sleep(3)
             if qr_element:
                 logger.info("📱 Capturando dados do QR Code...")
                 

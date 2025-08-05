@@ -19,8 +19,22 @@ def main():
         subprocess.run(["python", "-m", "playwright", "install", "chromium"], 
                       check=True, capture_output=True)
         print("✅ Playwright instalado")
+        
+        # Instalar dependências do sistema para Railway
+        print("🔧 Instalando dependências do sistema...")
+        subprocess.run(["python", "-m", "playwright", "install-deps"], 
+                      check=True, capture_output=True)
+        print("✅ Dependências do sistema instaladas")
     except Exception as e:
         print(f"⚠️ Aviso: {e}")
+        print("🔄 Tentando instalação alternativa...")
+        try:
+            # Fallback para Railway
+            subprocess.run(["python", "-m", "playwright", "install", "chromium", "--with-deps"], 
+                          check=True, capture_output=True)
+            print("✅ Playwright instalado com dependências")
+        except Exception as e2:
+            print(f"⚠️ Aviso: {e2}")
     
     # Iniciar servidor
     port = os.getenv("PORT", "8000")

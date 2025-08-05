@@ -34,7 +34,7 @@ class RailwayConfig:
         # Playwright config (otimizado)
         self.PLAYWRIGHT_CONFIG = {
             'headless': True,
-            'timeout': 30000 if self.RAILWAY_DEPLOY else 60000,
+            'timeout': 90000 if self.RAILWAY_DEPLOY else 60000,
             'max_retries': 2 if self.RAILWAY_DEPLOY else 3,
             'wait_for_download': 5 if self.RAILWAY_DEPLOY else 10
         }
