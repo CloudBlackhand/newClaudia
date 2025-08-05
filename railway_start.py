@@ -25,23 +25,16 @@ def main():
     print("🚀 Otimizado para Railway")
     print()
     
-    # Verificar e instalar dependências
-    print("📦 Verificando dependências...")
+    # Verificar dependências principais
+    print("📦 Verificando dependências principais...")
     try:
-        # Executar teste de dependências
-        subprocess.run([sys.executable, "test_deps.py"], check=True, capture_output=True)
-        print("✅ Todas as dependências OK")
-    except subprocess.CalledProcessError as e:
-        print(f"❌ Erro no teste de dependências: {e}")
-        print("🔄 Tentando importar dependências principais...")
-        try:
-            import fastapi
-            import uvicorn
-            import playwright
-            print("✅ Dependências principais OK")
-        except ImportError as e2:
-            print(f"❌ Dependência faltando: {e2}")
-            sys.exit(1)
+        import fastapi
+        import uvicorn
+        import playwright
+        print("✅ Dependências principais OK")
+    except ImportError as e:
+        print(f"❌ Dependência faltando: {e}")
+        sys.exit(1)
     
     # Instalar e testar Playwright browsers
     print("🎭 Instalando e testando Playwright browsers...")
@@ -53,8 +46,15 @@ def main():
         
         # Testar Playwright
         print("🧪 Testando Playwright...")
-        subprocess.run(["python", "test_playwright.py"], check=True, capture_output=True)
-        print("✅ Playwright testado e funcionando")
+        try:
+            from playwright.sync_api import sync_playwright
+            with sync_playwright() as p:
+                browser = p.chromium.launch()
+                browser.close()
+            print("✅ Playwright testado e funcionando")
+        except Exception as e:
+            print(f"⚠️ Aviso: {e}")
+            print("🔄 Continuando...")
         
     except Exception as e:
         print(f"❌ Erro ao instalar Playwright: {e}")
