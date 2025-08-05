@@ -1,0 +1,16 @@
+[phases.setup]
+nixPkgs = ["python311", "nodejs", "chromium", "libgcc", "libstdcxx5"]
+
+[phases.install]
+cmds = [
+    "pip install -r requirements.txt",
+    "python -m playwright install chromium --with-deps"
+]
+
+[phases.build]
+cmds = [
+    "python -c 'import fastapi; import uvicorn; print(\"✅ Dependências instaladas\")'"
+]
+
+[start]
+cmd = "python railway_start.py" 

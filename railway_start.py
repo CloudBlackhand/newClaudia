@@ -2,118 +2,171 @@
 # -*- coding: utf-8 -*-
 """
 Railway Start Script - Claudia Cobranças
-Script otimizado para inicialização na Railway
+Script otimizado especificamente para Railway
 """
 
 import os
 import sys
 import subprocess
 import time
+import signal
 import logging
 
 # Configurar logging
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s'
+)
 logger = logging.getLogger(__name__)
 
-def main():
-    """Função principal de inicialização"""
-    print("🚂 Iniciando Claudia Cobranças na Railway...")
-    print("🏢 Sistema oficial de cobrança da Desktop")
-    print("🧠 Inteligência nível ChatGPT")
-    print("🔐 Sistema de login com aprovação manual")
-    print("💾 StorageManager com limite de 50MB")
-    print("🚀 Otimizado para Railway")
-    print()
+def signal_handler(signum, frame):
+    """Handler para sinais de interrupção"""
+    logger.info("🛑 Recebido sinal de interrupção, encerrando...")
+    sys.exit(0)
+
+def check_dependencies():
+    """Verificar dependências críticas"""
+    logger.info("🔍 Verificando dependências...")
     
-    # Verificar dependências principais
-    print("📦 Verificando dependências principais...")
+    # Verificar Python
     try:
         import fastapi
         import uvicorn
-        import playwright
-        print("✅ Dependências principais OK")
+        logger.info("✅ FastAPI e Uvicorn disponíveis")
     except ImportError as e:
-        print(f"❌ Dependência faltando: {e}")
-        sys.exit(1)
+        logger.error(f"❌ Erro: {e}")
+        return False
     
-    # Instalar e testar Playwright browsers
-    print("🎭 Instalando e testando Playwright browsers...")
+    # Verificar Playwright (opcional)
     try:
-        # Instalação direta do Chromium
-        print("📦 Instalando Chromium...")
-        subprocess.run(["python", "-m", "playwright", "install", "chromium"], check=True, capture_output=True)
-        print("✅ Chromium instalado com sucesso")
-        
-        # Testar Playwright
-        print("🧪 Testando Playwright...")
+        import playwright
+        logger.info("✅ Playwright disponível")
+    except ImportError:
+        logger.warning("⚠️ Playwright não disponível (será instalado)")
+    
+    return True
+
+def install_playwright():
+    """Instalar Playwright com retry"""
+    logger.info("📦 Instalando Playwright...")
+    
+    max_retries = 3
+    for attempt in range(max_retries):
         try:
-            from playwright.sync_api import sync_playwright
-            with sync_playwright() as p:
-                browser = p.chromium.launch()
-                browser.close()
-            print("✅ Playwright testado e funcionando")
+            # Instalar Playwright
+            result = subprocess.run(
+                ["python", "-m", "playwright", "install", "chromium"],
+                capture_output=True,
+                text=True,
+                timeout=300
+            )
+            
+            if result.returncode == 0:
+                logger.info("✅ Playwright instalado com sucesso")
+                
+                # Instalar dependências do sistema
+                deps_result = subprocess.run(
+                    ["python", "-m", "playwright", "install-deps"],
+                    capture_output=True,
+                    text=True,
+                    timeout=120
+                )
+                
+                if deps_result.returncode == 0:
+                    logger.info("✅ Dependências do sistema instaladas")
+                    return True
+                else:
+                    logger.warning("⚠️ Falha ao instalar dependências do sistema")
+            else:
+                logger.warning(f"⚠️ Falha na instalação do Playwright: {result.stderr}")
+                
+        except subprocess.TimeoutExpired:
+            logger.warning(f"⏰ Timeout na tentativa {attempt + 1}")
         except Exception as e:
-            print(f"⚠️ Aviso: {e}")
-            print("🔄 Continuando...")
+            logger.warning(f"⚠️ Erro na tentativa {attempt + 1}: {e}")
         
-    except Exception as e:
-        print(f"❌ Erro ao instalar Playwright: {e}")
-        print("⚠️ Tentando método alternativo...")
+        if attempt < max_retries - 1:
+            logger.info("🔄 Tentando novamente...")
+            time.sleep(5)
+    
+    logger.warning("⚠️ Falha na instalação do Playwright - continuando...")
+    return False
+
+def create_directories():
+    """Criar diretórios necessários"""
+    logger.info("📁 Criando diretórios...")
+    
+    directories = [
+        "uploads",
+        "faturas", 
+        "web/static",
+        "logs"
+    ]
+    
+    for directory in directories:
         try:
-            # Método alternativo
-            subprocess.run(["python", "-m", "playwright", "install", "--with-deps"], check=True, capture_output=True)
-            print("✅ Playwright instalado com dependências")
-        except Exception as e2:
-            print(f"❌ Erro definitivo: {e2}")
-            print("⚠️ Continuando sem browsers...")
+            os.makedirs(directory, exist_ok=True)
+            logger.info(f"✅ Diretório {directory} criado/verificado")
+        except Exception as e:
+            logger.error(f"❌ Erro ao criar diretório {directory}: {e}")
+
+def start_server():
+    """Iniciar servidor FastAPI"""
+    port = os.getenv("PORT", "8000")
+    railway_mode = os.getenv("RAILWAY_DEPLOY", "False") == "True"
     
-    # Verificar arquivos essenciais
-    essential_files = [
-        "app.py",
-        "config.py", 
-        "requirements.txt",
-        "Procfile",
-        "railway.toml"
-    ]
+    logger.info(f"🚀 Iniciando servidor na porta {port}")
+    logger.info(f"🔧 Modo Railway: {railway_mode}")
     
-    print("📁 Verificando arquivos essenciais...")
-    for file in essential_files:
-        if os.path.exists(file):
-            print(f"✅ {file}")
-        else:
-            print(f"❌ {file} - FALTANDO!")
-            sys.exit(1)
-    
-    print("✅ Todos os arquivos essenciais encontrados")
-    print()
-    
-    # Iniciar aplicação
-    print("🚀 Iniciando Claudia Cobranças...")
-    print("🌐 Acesse: https://seu-app.railway.app")
-    print("🔐 Login: /login")
-    print("📊 Dashboard: /dashboard")
-    print()
-    
-    # Comando de inicialização CORRIGIDO
-    port = os.getenv("PORT", 8000)
+    # Configuração do servidor
     cmd = [
-        "python", "-m", "uvicorn", 
-        "app:app", 
-        "--host", "0.0.0.0", 
-        "--port", str(port)
+        "python", "-m", "uvicorn",
+        "app:app",
+        "--host", "0.0.0.0",
+        "--port", port,
+        "--timeout-keep-alive", "300",
+        "--log-level", "info"
     ]
     
-    print(f"🎯 Comando: {' '.join(cmd)}")
-    print("🚀 Iniciando servidor...")
-    print()
+    # Configurações específicas para Railway
+    if railway_mode:
+        cmd.extend([
+            "--workers", "1",
+            "--limit-concurrency", "10",
+            "--limit-max-requests", "1000"
+        ])
     
     try:
+        logger.info(f"🎯 Comando: {' '.join(cmd)}")
         subprocess.run(cmd, check=True)
-    except KeyboardInterrupt:
-        print("\n🛑 Parando Claudia Cobranças...")
-    except Exception as e:
-        print(f"❌ Erro ao iniciar: {e}")
+    except subprocess.CalledProcessError as e:
+        logger.error(f"❌ Erro ao iniciar servidor: {e}")
         sys.exit(1)
+    except KeyboardInterrupt:
+        logger.info("🛑 Servidor interrompido pelo usuário")
+        sys.exit(0)
+
+def main():
+    """Função principal"""
+    logger.info("🚀 Iniciando Claudia Cobranças no Railway...")
+    
+    # Configurar handler de sinais
+    signal.signal(signal.SIGINT, signal_handler)
+    signal.signal(signal.SIGTERM, signal_handler)
+    
+    # Verificar dependências
+    if not check_dependencies():
+        logger.error("❌ Dependências críticas não encontradas")
+        sys.exit(1)
+    
+    # Criar diretórios
+    create_directories()
+    
+    # Instalar Playwright (opcional)
+    install_playwright()
+    
+    # Iniciar servidor
+    start_server()
 
 if __name__ == "__main__":
     main()

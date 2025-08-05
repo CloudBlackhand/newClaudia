@@ -154,6 +154,23 @@ async def dashboard(request: Request):
     </html>
         """)
 
+@app.get("/health")
+async def health_check():
+    """Healthcheck simples para Railway"""
+    try:
+        return {
+            "status": "healthy",
+            "timestamp": datetime.now().isoformat(),
+            "version": "2.2"
+        }
+    except Exception as e:
+        logger.error(f"❌ Erro no healthcheck simples: {e}")
+        return {
+            "status": "unhealthy",
+            "error": str(e),
+            "timestamp": datetime.now().isoformat()
+        }
+
 @app.get("/api/status")
 async def get_status():
     """Status do sistema"""
@@ -1073,14 +1090,15 @@ async def auth_middleware(request: Request, call_next):
     # Rotas que não precisam de autenticação
     public_paths = [
         "/",
+        "/health",
+        "/api/status",
         "/api/auth/request",
         "/api/auth/approve",
         "/api/auth/deny", 
         "/api/auth/status",
         "/api/auth/pending",
         "/static",
-        "/favicon.ico",
-        "/health"
+        "/favicon.ico"
     ]
     
     # Verificar se é rota pública
