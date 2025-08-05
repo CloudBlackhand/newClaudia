@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🚀 Claudia Cobranças - Sistema de Cobrança da Desktop</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link rel="icon" type="image/png" href="/static/icon.png">
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Header -->
+        <header class="dashboard-header">
+            <div class="header-content">
+                <div class="logo-section">
+                    <img src="/static/icon.png" alt="Claudia" class="logo">
+                    <h1>Claudia Cobranças</h1>
+                    <p>Sistema oficial de cobrança da Desktop - Dashboard</p>
+                </div>
+                <div class="status-indicators">
+                    <div class="status-item" id="connectionStatus">
+                        <span class="status-dot offline"></span>
+                        <span class="status-text">Desconectado</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="dashboard-main">
+            <div class="status-grid">
+                <!-- WhatsApp Card -->
+                <div class="status-card" id="whatsappCard">
+                    <div class="card-header">
+                        <i class="icon">📱</i>
+                        <h3>WhatsApp</h3>
+                    </div>
+                    <div class="card-content">
+                        <div class="status-item">
+                            <span class="label">Status:</span>
+                            <span class="value" id="whatsappStatus">Desconectado</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="label">QR Code:</span>
+                            <span class="value" id="qrCodeStatus">Não disponível</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="label">Mensagens:</span>
+                            <span class="value" id="whatsappMessages">0</span>
+                        </div>
+                        <div class="card-actions">
+                            <button class="btn btn-primary" onclick="connectWhatsApp()" id="connectBtn">
+                                Conectar WhatsApp
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bot Card -->
+                <div class="status-card" id="botCard">
+                    <div class="card-header">
+                        <i class="icon">🤖</i>
+                        <h3>Bot</h3>
+                    </div>
+                    <div class="card-content">
+                        <div class="status-item">
+                            <span class="label">Status:</span>
+                            <span class="value" id="botStatus">Inativo</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="label">Ativo desde:</span>
+                            <span class="value" id="botActiveSince">-</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="label">Respostas:</span>
+                            <span class="value" id="botResponses">0</span>
+                        </div>
+                        <div class="card-actions">
+                            <button class="btn btn-success" onclick="toggleBot()" id="botBtn">
+                                Iniciar Bot
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Faturas Card -->
+                <div class="status-card" id="faturasCard">
+                    <div class="card-header">
+                        <i class="icon">📄</i>
+                        <h3>Faturas</h3>
+                    </div>
+                    <div class="card-content">
+                        <div class="status-item">
+                            <span class="label">Downloads:</span>
+                            <span class="value" id="faturasDownloads">0</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="label">Sucessos:</span>
+                            <span class="value" id="faturasSuccess">0</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="label">Erros:</span>
+                            <span class="value" id="faturasErrors">0</span>
+                        </div>
+                        <div class="card-actions">
+                            <button class="btn btn-info" onclick="downloadFatura()">
+                                Download Fatura
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sistema Card -->
+                <div class="status-card" id="sistemaCard">
+                    <div class="card-header">
+                        <i class="icon">💾</i>
+                        <h3>Sistema</h3>
+                    </div>
+                    <div class="card-content">
+                        <div class="status-item">
+                            <span class="label">Armazenamento:</span>
+                            <span class="value" id="storageUsage">0.00MB / undefinedMB</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="label">Arquivos:</span>
+                            <span class="value" id="fileCount">0</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="label">Limpeza:</span>
+                            <span class="value" id="cleanupStatus">Automático</span>
+                        </div>
+                        <div class="card-actions">
+                            <button class="btn btn-warning" onclick="forceCleanup()">
+                                Limpeza Manual
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- QR Code Modal -->
+            <div id="qrModal" class="modal" style="display: none;">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3>📱 Conectar WhatsApp</h3>
+                        <span class="close" onclick="closeQRModal()">&times;</span>
+                    </div>
+                    <div class="modal-body">
+                        <div id="qrCodeContainer">
+                            <p>Gerando QR Code...</p>
+                        </div>
+                        <div class="qr-instructions">
+                            <p>1. Abra o WhatsApp no seu celular</p>
+                            <p>2. Vá em Configurações > WhatsApp Web</p>
+                            <p>3. Escaneie o QR Code acima</p>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-primary" onclick="refreshQRCode()">
+                            Atualizar QR Code
+                        </button>
+                        <button class="btn btn-secondary" onclick="closeQRModal()">
+                            Fechar
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Progress Modal -->
+            <div id="progressModal" class="modal" style="display: none;">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3>⏳ Processando...</h3>
+                    </div>
+                    <div class="modal-body">
+                        <div class="progress-container">
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="progressFill"></div>
+                            </div>
+                            <p id="progressText">Iniciando...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="/static/app.js"></script>
+    <script>
+        // Inicializar aplicação
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 Claudia Cobranças iniciando...');
+            
+            // Inicializar BlacktemplarBot
+            if (typeof BlacktemplarBot !== 'undefined') {
+                window.bot = new BlacktemplarBot();
+            } else {
+                console.error('❌ BlacktemplarBot não encontrado!');
+            }
+        });
+
+        // Funções globais para compatibilidade
+        function connectWhatsApp() {
+            if (window.bot) {
+                window.bot.connectWhatsApp();
+            } else {
+                console.error('Bot não inicializado');
+            }
+        }
+
+        function toggleBot() {
+            if (window.bot) {
+                window.bot.toggleBot();
+            } else {
+                console.error('Bot não inicializado');
+            }
+        }
+
+        function downloadFatura() {
+            // Implementar download de fatura
+            console.log('Download de fatura solicitado');
+        }
+
+        function forceCleanup() {
+            // Implementar limpeza manual
+            console.log('Limpeza manual solicitada');
+        }
+
+        function closeQRModal() {
+            document.getElementById('qrModal').style.display = 'none';
+        }
+
+        function refreshQRCode() {
+            if (window.bot) {
+                window.bot.refreshQRCode();
+            }
+        }
+    </script>
+</body>
+</html> 
