@@ -1,15 +1,14 @@
 [phases.setup]
-nixPkgs = ["python311", "nodejs", "chromium", "libgcc"]
+nixPkgs = ["python311", "nodejs"]
 
 [phases.install]
 cmds = [
-    "pip install -r requirements.txt",
-    "python -m playwright install chromium --with-deps"
+    "pip install -r requirements.txt"
 ]
 
 [phases.build]
 cmds = [
-    "python -c 'import fastapi; import uvicorn; print(\"✅ Dependências instaladas\")'"
+    "python -m playwright install chromium"
 ]
 
 [start]
