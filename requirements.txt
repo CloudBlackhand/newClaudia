@@ -21,7 +21,7 @@ openpyxl==3.1.2
 
 # Audio Processing (para captcha)
 SpeechRecognition==3.10.0
-pydub==0.25.1
+# pydub==0.25.1  # Removido - requer ffmpeg que causa problemas no Railway
 
 # Requests
 requests==2.31.0
