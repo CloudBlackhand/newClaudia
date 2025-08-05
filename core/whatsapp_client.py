@@ -137,11 +137,15 @@ class WhatsAppClient:
                     
                     return qr_code
                 else:
-                    raise Exception("Não foi possível obter QR Code")
+                    logger.error("❌ Não foi possível obter QR Code")
+                    return None
                     
         except Exception as e:
             logger.error(f"❌ Erro ao inicializar WhatsApp: {e}")
-            raise
+            logger.error(f"Tipo de erro: {type(e).__name__}")
+            import traceback
+            logger.error(f"Traceback: {traceback.format_exc()}")
+            return None
     
     async def _check_if_logged_in(self) -> bool:
         """Verificar se já está logado"""

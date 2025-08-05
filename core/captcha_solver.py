@@ -18,6 +18,8 @@ from playwright.async_api import async_playwright, Browser, Page
 # Importar SpeechRecognition
 try:
     import speech_recognition as sr
+    from pydub import AudioSegment
+    from pydub.utils import which
     SPEECH_AVAILABLE = True
 except ImportError as e:
     logging.warning(f"⚠️ SpeechRecognition não disponível: {e}")
@@ -172,31 +174,20 @@ class CaptchaSolver:
     async def _process_audio(self, audio_file: str) -> Optional[str]:
         """Processar áudio com SpeechRecognition"""
         try:
-            # Verificar se o arquivo é compatível diretamente
-            if audio_file.endswith('.wav'):
-                # Arquivo já está no formato correto
-                with sr.AudioFile(audio_file) as source:
-                    audio_data = self.recognizer.record(source)
-                    text = self.recognizer.recognize_google(audio_data, language='pt-BR')
-                    
-                    logger.info(f"🎵 Áudio reconhecido: '{text}'")
-                    return text
-            else:
-                # Para outros formatos, tentar reconhecer diretamente
-                logger.warning("⚠️ Formato de áudio não suportado sem conversão")
-                logger.info("🔄 Tentando reconhecimento direto...")
+            # Converter para formato compatível se necessário
+            audio = AudioSegment.from_mp3(audio_file)
+            
+            # Salvar como WAV (formato preferido pelo SpeechRecognition)
+            wav_file = audio_file.replace('.mp3', '.wav')
+            audio.export(wav_file, format="wav")
+            
+            # Reconhecer fala
+            with sr.AudioFile(wav_file) as source:
+                audio_data = self.recognizer.record(source)
+                text = self.recognizer.recognize_google(audio_data, language='pt-BR')
                 
-                # Tentar reconhecer o arquivo como está
-                try:
-                    with sr.AudioFile(audio_file) as source:
-                        audio_data = self.recognizer.record(source)
-                        text = self.recognizer.recognize_google(audio_data, language='pt-BR')
-                        
-                        logger.info(f"🎵 Áudio reconhecido: '{text}'")
-                        return text
-                except Exception as e:
-                    logger.error(f"❌ Erro no reconhecimento direto: {e}")
-                    return None
+                logger.info(f"🎵 Áudio reconhecido: '{text}'")
+                return text
             
         except Exception as e:
             logger.error(f"❌ Erro ao processar áudio: {e}")
@@ -205,6 +196,8 @@ class CaptchaSolver:
             # Limpar arquivos temporários
             try:
                 os.unlink(audio_file)
+                if os.path.exists(wav_file):
+                    os.unlink(wav_file)
             except:
                 pass
     
