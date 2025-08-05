@@ -72,7 +72,7 @@ class BlacktemplarBot {
                         <div class="card-header">Status do Sistema</div>
                         <div class="card-body">
                             <div class="row">
-                                <div class="col-md-4">
+                                <div class="col-md-3 col-sm-6">
                                     <div class="status-card" data-status="whatsapp">
                                         <h5>WhatsApp</h5>
                                         <div class="status-icon offline">
@@ -82,7 +82,7 @@ class BlacktemplarBot {
                                         <button onclick="connectWhatsApp()" class="btn btn-sm btn-primary">Conectar</button>
                                     </div>
                                 </div>
-                                <div class="col-md-4">
+                                <div class="col-md-3 col-sm-6">
                                     <div class="status-card" data-status="fpd">
                                         <h5>FPD</h5>
                                         <div class="status-icon offline">
@@ -95,7 +95,20 @@ class BlacktemplarBot {
                                         </div>
                                     </div>
                                 </div>
-                                <div class="col-md-4">
+                                <div class="col-md-3 col-sm-6">
+                                    <div class="status-card" data-status="vendas">
+                                        <h5>VENDAS</h5>
+                                        <div class="status-icon offline">
+                                            <i class="fas fa-chart-line"></i>
+                                        </div>
+                                        <div class="status-text">Não carregado</div>
+                                        <div class="upload-area" id="vendasUpload">
+                                            <label for="vendasFile" class="btn btn-sm btn-primary">Carregar VENDAS</label>
+                                            <input type="file" id="vendasFile" style="display:none">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 col-sm-6">
                                     <div class="status-card" data-status="bot">
                                         <h5>Bot</h5>
                                         <div class="status-icon offline">
