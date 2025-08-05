@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Blacktemplar Bolter - SuperBot de Cobrança
+CLAUDIA COBRANÇAS - Sistema de Cobrança da Desktop
 Aplicação principal FastAPI com interface web
 """
 
@@ -52,13 +52,13 @@ from core.conversation import SuperConversationEngine
 from core.fatura_downloader import FaturaDownloader
 from core.captcha_solver import CaptchaSolver, get_captcha_solver_info
 from core.storage_manager import storage_manager
-from config import Config
+from config import Config, CLAUDIA_CONFIG
 
 # Inicializar FastAPI
 app = FastAPI(
-    title="Blacktemplar Bolter",
-    description="SuperBot de Cobrança 100% Gratuito",
-    version="1.0.0"
+    title="Claudia Cobranças",
+    description="Sistema oficial de cobrança da Desktop",
+    version="2.2"
 )
 
 # Configurar arquivos estáticos com cabeçalhos anti-cache
@@ -109,27 +109,588 @@ async def dashboard(request: Request):
     import time
     # Adicionar timestamp para evitar cache do navegador
     timestamp = int(time.time())
-    html_content = f"""
-    <!DOCTYPE html>
-    <html lang="pt-br">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Blacktemplar Bolter - SuperBot de Cobrança</title>
-        <link rel="icon" href="/static/icon.png" type="image/png">
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
-        <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-        <meta http-equiv="Pragma" content="no-cache" />
-        <meta http-equiv="Expires" content="0" />
-        <link rel="stylesheet" href="/static/style.css?v={timestamp}">
-    </head>
-    <body>
-        <div id="loading">Carregando interface...</div>
-        <script src="/static/app.js?v={timestamp}"></script>
-    </body>
-    </html>
-    """
-    return HTMLResponse(content=html_content)
+    return HTMLResponse(content=f"""
+        <!DOCTYPE html>
+        <html lang="pt-BR">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Claudia Cobranças - Sistema de Cobrança da Desktop</title>
+            <style>
+                * {{
+                    margin: 0;
+                    padding: 0;
+                    box-sizing: border-box;
+                }}
+                
+                body {{
+                    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    min-height: 100vh;
+                    color: #333;
+                }}
+                
+                .header {{
+                    background: rgba(255, 255, 255, 0.95);
+                    backdrop-filter: blur(10px);
+                    padding: 20px;
+                    box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+                    position: sticky;
+                    top: 0;
+                    z-index: 100;
+                }}
+                
+                .header h1 {{
+                    color: #333;
+                    font-size: 2rem;
+                    font-weight: 300;
+                    text-align: center;
+                }}
+                
+                .header p {{
+                    text-align: center;
+                    color: #666;
+                    margin-top: 5px;
+                }}
+                
+                .container {{
+                    max-width: 1200px;
+                    margin: 0 auto;
+                    padding: 20px;
+                }}
+                
+                .status-grid {{
+                    display: grid;
+                    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+                    gap: 20px;
+                    margin-bottom: 30px;
+                }}
+                
+                .status-card {{
+                    background: white;
+                    border-radius: 15px;
+                    padding: 25px;
+                    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+                    transition: transform 0.3s ease;
+                }}
+                
+                .status-card:hover {{
+                    transform: translateY(-5px);
+                }}
+                
+                .status-card h3 {{
+                    color: #333;
+                    margin-bottom: 15px;
+                    font-size: 1.3rem;
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                }}
+                
+                .status-item {{
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    padding: 10px 0;
+                    border-bottom: 1px solid #f0f0f0;
+                }}
+                
+                .status-item:last-child {{
+                    border-bottom: none;
+                }}
+                
+                .status-label {{
+                    font-weight: 600;
+                    color: #555;
+                }}
+                
+                .status-value {{
+                    font-weight: 500;
+                    color: #333;
+                }}
+                
+                .status-value.connected {{
+                    color: #28a745;
+                }}
+                
+                .status-value.disconnected {{
+                    color: #dc3545;
+                }}
+                
+                .status-value.loading {{
+                    color: #ffc107;
+                }}
+                
+                .action-buttons {{
+                    display: grid;
+                    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                    gap: 15px;
+                    margin-top: 30px;
+                }}
+                
+                .btn {{
+                    padding: 15px 25px;
+                    border: none;
+                    border-radius: 10px;
+                    font-size: 1rem;
+                    font-weight: 600;
+                    cursor: pointer;
+                    transition: all 0.3s ease;
+                    text-decoration: none;
+                    display: inline-block;
+                    text-align: center;
+                }}
+                
+                .btn-primary {{
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    color: white;
+                }}
+                
+                .btn-primary:hover {{
+                    transform: translateY(-2px);
+                    box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+                }}
+                
+                .btn-success {{
+                    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+                    color: white;
+                }}
+                
+                .btn-success:hover {{
+                    transform: translateY(-2px);
+                    box-shadow: 0 10px 25px rgba(40, 167, 69, 0.3);
+                }}
+                
+                .btn-danger {{
+                    background: linear-gradient(135deg, #dc3545 0%, #e83e8c 100%);
+                    color: white;
+                }}
+                
+                .btn-danger:hover {{
+                    transform: translateY(-2px);
+                    box-shadow: 0 10px 25px rgba(220, 53, 69, 0.3);
+                }}
+                
+                .btn-warning {{
+                    background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%);
+                    color: white;
+                }}
+                
+                .btn-warning:hover {{
+                    transform: translateY(-2px);
+                    box-shadow: 0 10px 25px rgba(255, 193, 7, 0.3);
+                }}
+                
+                .btn:disabled {{
+                    opacity: 0.6;
+                    cursor: not-allowed;
+                    transform: none !important;
+                }}
+                
+                .logs-section {{
+                    background: white;
+                    border-radius: 15px;
+                    padding: 25px;
+                    margin-top: 30px;
+                    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+                }}
+                
+                .logs-section h3 {{
+                    color: #333;
+                    margin-bottom: 20px;
+                    font-size: 1.3rem;
+                }}
+                
+                .log-entry {{
+                    background: #f8f9fa;
+                    border-radius: 8px;
+                    padding: 15px;
+                    margin-bottom: 10px;
+                    border-left: 4px solid #667eea;
+                }}
+                
+                .log-entry.error {{
+                    border-left-color: #dc3545;
+                    background: #fff5f5;
+                }}
+                
+                .log-entry.warning {{
+                    border-left-color: #ffc107;
+                    background: #fffbf0;
+                }}
+                
+                .log-entry.success {{
+                    border-left-color: #28a745;
+                    background: #f0fff4;
+                }}
+                
+                .log-time {{
+                    font-size: 0.8rem;
+                    color: #666;
+                    margin-bottom: 5px;
+                }}
+                
+                .log-message {{
+                    color: #333;
+                    font-weight: 500;
+                }}
+                
+                @media (max-width: 768px) {{
+                    .container {{
+                        padding: 10px;
+                    }}
+                    
+                    .status-grid {{
+                        grid-template-columns: 1fr;
+                    }}
+                    
+                    .action-buttons {{
+                        grid-template-columns: 1fr;
+                    }}
+                    
+                    .header h1 {{
+                        font-size: 1.5rem;
+                    }}
+                }}
+            </style>
+        </head>
+        <body>
+            <div class="header">
+                <h1>🚀 Claudia Cobranças</h1>
+                <p>Sistema oficial de cobrança da Desktop - Dashboard</p>
+            </div>
+            
+            <div class="container">
+                <div class="status-grid">
+                    <div class="status-card">
+                        <h3>📱 WhatsApp</h3>
+                        <div class="status-item">
+                            <span class="status-label">Status:</span>
+                            <span class="status-value" id="whatsappStatus">Carregando...</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">QR Code:</span>
+                            <span class="status-value" id="qrStatus">-</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">Mensagens:</span>
+                            <span class="status-value" id="messageCount">0</span>
+                        </div>
+                    </div>
+                    
+                    <div class="status-card">
+                        <h3>🤖 Bot</h3>
+                        <div class="status-item">
+                            <span class="status-label">Status:</span>
+                            <span class="status-value" id="botStatus">Inativo</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">Ativo desde:</span>
+                            <span class="status-value" id="botActiveTime">-</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">Respostas:</span>
+                            <span class="status-value" id="responseCount">0</span>
+                        </div>
+                    </div>
+                    
+                    <div class="status-card">
+                        <h3>📄 Faturas</h3>
+                        <div class="status-item">
+                            <span class="status-label">Downloads:</span>
+                            <span class="status-value" id="downloadCount">0</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">Sucessos:</span>
+                            <span class="status-value" id="successCount">0</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">Erros:</span>
+                            <span class="status-value" id="errorCount">0</span>
+                        </div>
+                    </div>
+                    
+                    <div class="status-card">
+                        <h3>💾 Sistema</h3>
+                        <div class="status-item">
+                            <span class="status-label">Armazenamento:</span>
+                            <span class="status-value" id="storageUsage">-</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">Arquivos:</span>
+                            <span class="status-value" id="fileCount">-</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">Limpeza:</span>
+                            <span class="status-value" id="cleanupStatus">-</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="action-buttons">
+                    <button class="btn btn-primary" onclick="connectWhatsApp()">📱 Conectar WhatsApp</button>
+                    <button class="btn btn-success" onclick="startBot()">🤖 Iniciar Bot</button>
+                    <button class="btn btn-danger" onclick="stopBot()">🛑 Parar Bot</button>
+                    <button class="btn btn-warning" onclick="downloadFatura()">📄 Baixar Fatura</button>
+                    <button class="btn btn-primary" onclick="uploadFPD()">📊 Upload FPD</button>
+                    <button class="btn btn-primary" onclick="uploadVendas()">📈 Upload Vendas</button>
+                    <button class="btn btn-warning" onclick="cleanupStorage()">🧹 Limpar Armazenamento</button>
+                    <button class="btn btn-danger" onclick="logout()">🚪 Logout</button>
+                </div>
+                
+                <div class="logs-section">
+                    <h3>📋 Logs do Sistema</h3>
+                    <div id="logsContainer">
+                        <div class="log-entry">
+                            <div class="log-time">Sistema iniciado</div>
+                            <div class="log-message">Claudia Cobranças carregada com sucesso</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <script>
+                // Sistema de atualização em tempo real
+                let updateInterval;
+                
+                function updateStatus() {{
+                    fetch('/api/status')
+                        .then(response => response.json())
+                        .then(data => {{
+                            document.getElementById('whatsappStatus').textContent = data.whatsapp_connected ? 'Conectado' : 'Desconectado';
+                            document.getElementById('whatsappStatus').className = 'status-value ' + (data.whatsapp_connected ? 'connected' : 'disconnected');
+                            
+                            document.getElementById('qrStatus').textContent = data.qr_code ? 'Disponível' : 'Não disponível';
+                            
+                            document.getElementById('botStatus').textContent = data.bot_active ? 'Ativo' : 'Inativo';
+                            document.getElementById('botStatus').className = 'status-value ' + (data.bot_active ? 'connected' : 'disconnected');
+                            
+                            document.getElementById('messageCount').textContent = data.stats.messages_sent || 0;
+                            document.getElementById('responseCount').textContent = data.stats.responses_sent || 0;
+                            document.getElementById('downloadCount').textContent = data.stats.downloads_attempted || 0;
+                            document.getElementById('successCount').textContent = data.stats.downloads_successful || 0;
+                            document.getElementById('errorCount').textContent = data.stats.downloads_failed || 0;
+                        }})
+                        .catch(error => {{
+                            console.error('Erro ao atualizar status:', error);
+                        }});
+                }}
+                
+                function updateStorage() {{
+                    fetch('/api/storage/stats')
+                        .then(response => response.json())
+                        .then(data => {{
+                            if (data.success) {{
+                                const stats = data.stats;
+                                document.getElementById('storageUsage').textContent = `${{stats.total_size_mb.toFixed(2)}}MB / ${{stats.max_total_storage_mb}}MB`;
+                                document.getElementById('fileCount').textContent = stats.total_files;
+                                document.getElementById('cleanupStatus').textContent = 'Automático';
+                            }}
+                        }})
+                        .catch(error => {{
+                            console.error('Erro ao atualizar storage:', error);
+                        }});
+                }}
+                
+                function connectWhatsApp() {{
+                    fetch('/api/whatsapp/connect', {{ method: 'POST' }})
+                        .then(response => response.json())
+                        .then(data => {{
+                            if (data.success) {{
+                                addLog('WhatsApp conectado com sucesso', 'success');
+                            }} else {{
+                                addLog('Erro ao conectar WhatsApp: ' + data.error, 'error');
+                            }}
+                        }})
+                        .catch(error => {{
+                            addLog('Erro de conexão: ' + error, 'error');
+                        }});
+                }}
+                
+                function startBot() {{
+                    fetch('/api/bot/start', {{ method: 'POST' }})
+                        .then(response => response.json())
+                        .then(data => {{
+                            if (data.success) {{
+                                addLog('Bot iniciado com sucesso', 'success');
+                            }} else {{
+                                addLog('Erro ao iniciar bot: ' + data.error, 'error');
+                            }}
+                        }})
+                        .catch(error => {{
+                            addLog('Erro de conexão: ' + error, 'error');
+                        }});
+                }}
+                
+                function stopBot() {{
+                    fetch('/api/bot/stop', {{ method: 'POST' }})
+                        .then(response => response.json())
+                        .then(data => {{
+                            if (data.success) {{
+                                addLog('Bot parado com sucesso', 'success');
+                            }} else {{
+                                addLog('Erro ao parar bot: ' + data.error, 'error');
+                            }}
+                        }})
+                        .catch(error => {{
+                            addLog('Erro de conexão: ' + error, 'error');
+                        }});
+                }}
+                
+                function downloadFatura() {{
+                    const documento = prompt('Digite o documento para baixar a fatura:');
+                    if (documento) {{
+                        fetch('/api/fatura/download', {{
+                            method: 'POST',
+                            headers: {{ 'Content-Type': 'application/json' }},
+                            body: JSON.stringify({{ documento: documento }})
+                        }})
+                        .then(response => response.json())
+                        .then(data => {{
+                            if (data.success) {{
+                                addLog(`Fatura baixada: ${{data.file_path}}`, 'success');
+                            }} else {{
+                                addLog('Erro ao baixar fatura: ' + data.error, 'error');
+                            }}
+                        }})
+                        .catch(error => {{
+                            addLog('Erro de conexão: ' + error, 'error');
+                        }});
+                    }}
+                }}
+                
+                function uploadFPD() {{
+                    const input = document.createElement('input');
+                    input.type = 'file';
+                    input.accept = '.xlsx,.xls';
+                    input.onchange = function(e) {{
+                        const file = e.target.files[0];
+                        if (file) {{
+                            const formData = new FormData();
+                            formData.append('file', file);
+                            
+                            fetch('/api/upload/fpd', {{
+                                method: 'POST',
+                                body: formData
+                            }})
+                            .then(response => response.json())
+                            .then(data => {{
+                                if (data.success) {{
+                                    addLog('FPD carregado com sucesso', 'success');
+                                }} else {{
+                                    addLog('Erro ao carregar FPD: ' + data.error, 'error');
+                                }}
+                            }})
+                            .catch(error => {{
+                                addLog('Erro de conexão: ' + error, 'error');
+                            }});
+                        }}
+                    }};
+                    input.click();
+                }}
+                
+                function uploadVendas() {{
+                    const input = document.createElement('input');
+                    input.type = 'file';
+                    input.accept = '.xlsx,.xls';
+                    input.onchange = function(e) {{
+                        const file = e.target.files[0];
+                        if (file) {{
+                            const formData = new FormData();
+                            formData.append('file', file);
+                            
+                            fetch('/api/upload/vendas', {{
+                                method: 'POST',
+                                body: formData
+                            }})
+                            .then(response => response.json())
+                            .then(data => {{
+                                if (data.success) {{
+                                    addLog('Vendas carregadas com sucesso', 'success');
+                                }} else {{
+                                    addLog('Erro ao carregar vendas: ' + data.error, 'error');
+                                }}
+                            }})
+                            .catch(error => {{
+                                addLog('Erro de conexão: ' + error, 'error');
+                            }});
+                        }}
+                    }};
+                    input.click();
+                }}
+                
+                function cleanupStorage() {{
+                    fetch('/api/storage/cleanup', {{ method: 'POST' }})
+                        .then(response => response.json())
+                        .then(data => {{
+                            if (data.success) {{
+                                addLog('Limpeza de armazenamento executada', 'success');
+                                updateStorage();
+                            }} else {{
+                                addLog('Erro na limpeza: ' + data.error, 'error');
+                            }}
+                        }})
+                        .catch(error => {{
+                            addLog('Erro de conexão: ' + error, 'error');
+                        }});
+                }}
+                
+                function logout() {{
+                    fetch('/api/auth/logout', {{
+                        method: 'DELETE',
+                        headers: {{ 'Content-Type': 'application/json' }},
+                        body: JSON.stringify({{ token: localStorage.getItem('claudia_session') }})
+                    }})
+                    .then(() => {{
+                        localStorage.removeItem('claudia_session');
+                        window.location.href = '/login';
+                    }})
+                    .catch(error => {{
+                        addLog('Erro no logout: ' + error, 'error');
+                    }});
+                }}
+                
+                function addLog(message, type = 'info') {{
+                    const logsContainer = document.getElementById('logsContainer');
+                    const logEntry = document.createElement('div');
+                    logEntry.className = `log-entry ${{type}}`;
+                    
+                    const time = new Date().toLocaleTimeString();
+                    logEntry.innerHTML = `
+                        <div class="log-time">${{time}}</div>
+                        <div class="log-message">${{message}}</div>
+                    `;
+                    
+                    logsContainer.insertBefore(logEntry, logsContainer.firstChild);
+                    
+                    // Manter apenas os últimos 50 logs
+                    while (logsContainer.children.length > 50) {{
+                        logsContainer.removeChild(logsContainer.lastChild);
+                    }}
+                }}
+                
+                // Inicializar
+                document.addEventListener('DOMContentLoaded', function() {{
+                    updateStatus();
+                    updateStorage();
+                    
+                    // Atualizar a cada 5 segundos
+                    updateInterval = setInterval(() => {{
+                        updateStatus();
+                        updateStorage();
+                    }}, 5000);
+                }});
+                
+                // Limpar intervalo ao sair
+                window.addEventListener('beforeunload', function() {{
+                    if (updateInterval) {{
+                        clearInterval(updateInterval);
+                    }}
+                }});
+            </script>
+        </body>
+        </html>
+        """)
 
 @app.get("/api/status")
 async def get_status():

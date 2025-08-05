@@ -1,11 +1,22 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
+CLAUDIA COBRANÇAS - Sistema de Cobrança da Desktop
 Configurações Específicas para Railway
 Otimizado para custos baixos e performance adequada
 """
 
 import os
+
+# Configurações da Claudia Cobranças
+CLAUDIA_CONFIG = {
+    'name': 'Claudia Cobranças',
+    'company': 'Desktop',
+    'version': '2.2',
+    'description': 'Sistema oficial de cobrança da Desktop',
+    'website': 'https://sac.desktop.com.br/Cliente_Documento.jsp',
+    'support_email': 'cobranca@desktop.com.br'
+}
 
 class RailwayConfig:
     """Configurações otimizadas para Railway"""

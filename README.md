@@ -1,10 +1,13 @@
-# 🚀 BLACKTEMPLAR BOLTER - BOT DE COBRANÇA NÍVEL CHATGPT
+# 🚀 CLAUDIA COBRANÇAS - BOT DE COBRANÇA DA DESKTOP
 
 ## 🧠 SISTEMA DE CONVERSAÇÃO ULTRA MEGA AVANÇADO - GIGANTEMENTE FODA
 
 ### 📊 **2.301 LINHAS DE CÓDIGO ULTRA INTELIGENTE**
 ### 🎯 **40+ MÉTODOS ULTRA AVANÇADOS**  
 ### 🔥 **INTELIGÊNCIA NÍVEL CHATGPT+**
+
+### 🏢 **SOBRE A CLAUDIA:**
+**Claudia Cobranças** é o sistema oficial de cobrança da **Desktop**, especializado em atender clientes com máxima eficiência e inteligência artificial avançada.
 
 ### ✨ **CAPACIDADES INSANAS:**
 
@@ -72,14 +75,14 @@
 
 ## 📋 FUNCIONALIDADES COMPLETAS
 
-### 🤖 **BOT DE COBRANÇA**
+### 🤖 **BOT DE COBRANÇA DA DESKTOP**
 - Entende QUALQUER cliente (mesmo os mais burros)
 - Respostas personalizadas por contexto
 - Detecção emocional avançada
 - Sistema de conversação contextual
 
-### 📄 **DOWNLOAD DE FATURAS**
-- Integração com SAC Desktop
+### 📄 **DOWNLOAD DE FATURAS DESKTOP**
+- Integração com SAC Desktop (sac.desktop.com.br)
 - Anti-captcha funcional
 - Download automático
 - Sistema Playwright
@@ -106,7 +109,7 @@
 └── core/
     ├── conversation.py       # 🧠 ENGINE ULTRA INTELIGENTE
     ├── whatsapp_client.py   # Cliente WhatsApp
-    ├── fatura_downloader.py  # Download faturas
+    ├── fatura_downloader.py  # Download faturas Desktop
     ├── captcha_solver.py     # Anti-captcha
     └── ...
 ```
@@ -123,7 +126,7 @@
 
 ## 🎯 **RESULTADO FINAL**
 
-### ✅ **BOT PERFEITO PARA CLIENTES BURROS**
+### ✅ **CLAUDIA COBRANÇAS - BOT PERFEITO PARA CLIENTES BURROS**
 - Entende QUALQUER texto mal escrito
 - Corrige português automaticamente  
 - Detecta intenções mesmo com erros graves
@@ -142,8 +145,8 @@
 
 ---
 
-> 🚀 **SISTEMA FINALIZADO!** 
+> 🚀 **CLAUDIA COBRANÇAS - SISTEMA FINALIZADO!** 
 > 
-> **O BOT DE COBRANÇA MAIS INTELIGENTE DO MUNDO!**
+> **O BOT DE COBRANÇA MAIS INTELIGENTE DA DESKTOP!**
 > 
 > Capaz de entender QUALQUER cliente, por mais burro que seja! 🧠⚡

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🔐 Login - Blacktemplar Bolter</title>
+    <title>🔐 Login - Claudia Cobranças</title>
     <style>
         * {
             margin: 0;
@@ -221,7 +221,7 @@
 <body>
     <div class="login-container">
         <div class="login-header">
-            <h1>🔐 Blacktemplar Bolter</h1>
+            <h1>🔐 Claudia Cobranças</h1>
             <p>Sistema de Login com Aprovação Manual</p>
         </div>
 
@@ -273,7 +273,7 @@
         </div>
 
         <div class="footer">
-            ⚡ Sistema Anti-Força Bruta | 100% Seguro | Aprovação Manual
+            ⚡ Sistema Anti-Força Bruta | 100% Seguro | Aprovação Manual | Claudia Cobranças - Desktop
         </div>
     </div>
 
@@ -293,7 +293,7 @@
         });
 
         async function checkExistingSession() {
-            const token = localStorage.getItem('blacktemplar_session');
+            const token = localStorage.getItem('claudia_session');
             if (token) {
                 try {
                     const response = await fetch('/api/auth/validate', {
@@ -317,7 +317,7 @@
                 }
                 
                 // Token inválido, remover
-                localStorage.removeItem('blacktemplar_session');
+                localStorage.removeItem('claudia_session');
             }
         }
 
@@ -439,7 +439,7 @@
                     loadAuthStatus();
                     
                     // Verificar se há uma sessão ativa (usuário foi aprovado)
-                    const token = localStorage.getItem('blacktemplar_session');
+                    const token = localStorage.getItem('claudia_session');
                     if (token) {
                         const response = await fetch('/api/auth/validate', {
                             method: 'POST',

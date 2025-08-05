@@ -1,58 +1,61 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Módulos Core do Blacktemplar Bolter
-Sistema independente com funcionalidades essenciais para produção
+Módulos Core do Claudia Cobranças
+Sistema oficial de cobrança da Desktop
 """
 
-# Importações principais
-from .whatsapp_client import WhatsAppClient
+# Importar módulos principais
 from .excel_processor import ExcelProcessor
+from .whatsapp_client import WhatsAppClient
 from .conversation import SuperConversationEngine
-from .stealth_sender import StealthSender
-
-# Novos módulos independentes - FUNCIONALIDADES REAIS
-from .captcha_solver import CaptchaSolver, solve_recaptcha, get_captcha_solver_info
-from .fatura_downloader import FaturaDownloader, baixar_fatura_rapido
+from .fatura_downloader import FaturaDownloader
+from .captcha_solver import CaptchaSolver, get_captcha_solver_info
+from .logger import logger, ClaudiaLogger
 from .storage_manager import StorageManager, storage_manager
 
-# Sistema de logging essencial
-from .logger import logger, BlacktemplarLogger
-
+# Lista de módulos disponíveis
 __all__ = [
-    # Core original
-    'WhatsAppClient',
-    'ExcelProcessor', 
-    'SuperConversationEngine',
-    'StealthSender',
+    # Processadores
+    'ExcelProcessor',
     
-    # Novos módulos independentes - FUNCIONAIS
-    'CaptchaSolver',
+    # Clientes
+    'WhatsAppClient',
+    
+    # Engines
+    'SuperConversationEngine',
+    
+    # Downloaders
     'FaturaDownloader',
-    'StorageManager',
-    'storage_manager',
-    'solve_recaptcha',
-    'baixar_fatura_rapido',
+    
+    # Solvers
+    'CaptchaSolver',
     'get_captcha_solver_info',
     
-    # Sistema essencial
+    # Logging
     'logger',
-    'BlacktemplarLogger'
+    'ClaudiaLogger',
+    
+    # Storage
+    'StorageManager',
+    'storage_manager'
 ]
 
 # Informações do módulo
-__version__ = "2.2.0"
-__description__ = "Blacktemplar Bolter - SuperBot de Cobrança 100% Funcional"
+__version__ = "2.2"
+__author__ = "Desktop"
+__description__ = "Claudia Cobranças - Sistema oficial de cobrança da Desktop"
+
+# Lista de funcionalidades
 __features__ = [
-    "WhatsApp Web Integration",
-    "Excel Processing",
-    "Intelligent Conversation Engine", 
-    "Stealth Sending",
-    "Anti-Captcha System (REAL)",
-    "Automatic Invoice Download (REAL)",
+    "Sistema de Cobrança Inteligente",
+    "Download Automático de Faturas",
+    "Anti-Captcha Avançado",
+    "Conversação Nível ChatGPT",
+    "Sistema de Login Seguro",
     "Smart Storage Management",
     "Railway Optimized",
-    "100% Free"
+    "100% Funcional"
 ]
 
 # Status das funcionalidades
@@ -60,3 +63,9 @@ CAPTCHA_SOLVER_AVAILABLE = True
 FATURA_DOWNLOADER_AVAILABLE = True
 STORAGE_MANAGER_AVAILABLE = True
 PRODUCTION_READY = True
+
+# Log de inicialização
+logger.info("🚀 Claudia Cobranças - Módulos Core carregados com sucesso!")
+logger.info(f"📦 Versão: {__version__}")
+logger.info(f"🏢 Empresa: {__author__}")
+logger.info(f"✨ Funcionalidades: {len(__features__)} disponíveis")
