@@ -63,14 +63,13 @@ def main():
     print("📊 Dashboard: /dashboard")
     print()
     
-    # Comando de inicialização
+    # Comando de inicialização CORRIGIDO
     port = os.getenv("PORT", 8000)
     cmd = [
         "python", "-m", "uvicorn", 
         "app:app", 
         "--host", "0.0.0.0", 
-        "--port", str(port),
-        "--reload", "False"
+        "--port", str(port)
     ]
     
     print(f"🎯 Comando: {' '.join(cmd)}")
