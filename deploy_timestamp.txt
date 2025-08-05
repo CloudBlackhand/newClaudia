@@ -1,0 +1,13 @@
+# Deploy Timestamp - Claudia Cobranças
+# Último deploy: $(date)
+# Força redeploy para aplicar todas as correções
+
+Deploy realizado em: $(date)
+Versão: 2.2
+Status: Redeploy forçado
+
+Correções aplicadas:
+- Playwright installation fix
+- WhatsApp undefined error resolved
+- JavaScript error handling improved
+- Better logging and error messages 
