@@ -114,10 +114,13 @@ class WhatsAppClient:
             # Carregar sessão se existir
             await self._load_session()
             
-            # Acessar WhatsApp Web
-            await self.page.goto('https://web.whatsapp.com')
+            # Acessar WhatsApp Web com timeout maior
+            logger.info("🌐 Acessando WhatsApp Web...")
+            await self.page.goto('https://web.whatsapp.com', timeout=60000)
+            logger.info("✅ WhatsApp Web carregado")
             
             # Aguardar carregar
+            logger.info("⏳ Aguardando carregamento...")
             await asyncio.sleep(5)
             
             # Verificar se já está logado

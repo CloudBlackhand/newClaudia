@@ -105,32 +105,296 @@ system_state = {
 
 @app.get("/", response_class=HTMLResponse)
 async def dashboard(request: Request):
-    """Dashboard principal - serve o arquivo HTML separado"""
-    try:
-        with open("web/dashboard.html", "r", encoding="utf-8") as f:
-            content = f.read()
-        return HTMLResponse(content=content)
-    except FileNotFoundError:
-        # Fallback para HTML inline se o arquivo não existir
-        return HTMLResponse(content="""
-        <!DOCTYPE html>
+    """Dashboard principal - serve apenas um HTML básico que carrega o JS"""
+    import time
+    # Adicionar timestamp para evitar cache do navegador
+    timestamp = int(time.time())
+    return HTMLResponse(content=f"""
+    <!DOCTYPE html>
         <html lang="pt-BR">
-        <head>
-            <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
             <title>Claudia Cobranças - Sistema de Cobrança da Desktop</title>
-            <link rel="stylesheet" href="/static/style.css">
-        </head>
-        <body>
-            <div style="text-align: center; padding: 50px; color: white;">
+            <style>
+                * {{
+                    margin: 0;
+                    padding: 0;
+                    box-sizing: border-box;
+                }}
+                
+                body {{
+                    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    min-height: 100vh;
+                    color: #333;
+                }}
+                
+                .header {{
+                    background: rgba(255, 255, 255, 0.95);
+                    backdrop-filter: blur(10px);
+                    padding: 20px;
+                    box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+                    position: sticky;
+                    top: 0;
+                    z-index: 100;
+                }}
+                
+                .header h1 {{
+                    color: #333;
+                    font-size: 2rem;
+                    font-weight: 300;
+                    text-align: center;
+                }}
+                
+                .header p {{
+                    text-align: center;
+                    color: #666;
+                    margin-top: 5px;
+                }}
+                
+                .container {{
+                    max-width: 1200px;
+                    margin: 0 auto;
+                    padding: 20px;
+                }}
+                
+                .status-grid {{
+                    display: grid;
+                    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+                    gap: 20px;
+                    margin-bottom: 30px;
+                }}
+                
+                .status-card {{
+                    background: white;
+                    border-radius: 15px;
+                    padding: 25px;
+                    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+                    transition: transform 0.3s ease;
+                }}
+                
+                .status-card:hover {{
+                    transform: translateY(-5px);
+                }}
+                
+                .status-card h3 {{
+                    color: #333;
+                    margin-bottom: 15px;
+                    font-size: 1.3rem;
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                }}
+                
+                .status-item {{
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    padding: 10px 0;
+                    border-bottom: 1px solid #f0f0f0;
+                }}
+                
+                .status-item:last-child {{
+                    border-bottom: none;
+                }}
+                
+                .status-label {{
+                    font-weight: 600;
+                    color: #555;
+                }}
+                
+                .status-value {{
+                    font-weight: 500;
+                    color: #333;
+                }}
+                
+                .status-value.connected {{
+                    color: #28a745;
+                }}
+                
+                .status-value.disconnected {{
+                    color: #dc3545;
+                }}
+                
+                .status-value.loading {{
+                    color: #ffc107;
+                }}
+                
+                .action-buttons {{
+                    display: grid;
+                    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                    gap: 15px;
+                    margin-top: 30px;
+                }}
+                
+                .btn {{
+                    padding: 15px 25px;
+                    border: none;
+                    border-radius: 10px;
+                    font-size: 1rem;
+                    font-weight: 600;
+                    cursor: pointer;
+                    transition: all 0.3s ease;
+                    text-decoration: none;
+                    display: inline-block;
+                    text-align: center;
+                }}
+                
+                .btn-primary {{
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    color: white;
+                }}
+                
+                .btn-primary:hover {{
+                    transform: translateY(-2px);
+                    box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+                }}
+                
+                .btn-success {{
+                    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+                    color: white;
+                }}
+                
+                .btn-success:hover {{
+                    transform: translateY(-2px);
+                    box-shadow: 0 10px 25px rgba(40, 167, 69, 0.3);
+                }}
+                
+                .btn-danger {{
+                    background: linear-gradient(135deg, #dc3545 0%, #e83e8c 100%);
+                    color: white;
+                }}
+                
+                .btn-danger:hover {{
+                    transform: translateY(-2px);
+                    box-shadow: 0 10px 25px rgba(220, 53, 69, 0.3);
+                }}
+                
+                .btn-warning {{
+                    background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%);
+                    color: white;
+                }}
+                
+                .btn-warning:hover {{
+                    transform: translateY(-2px);
+                    box-shadow: 0 10px 25px rgba(255, 193, 7, 0.3);
+                }}
+                
+                .btn:disabled {{
+                    opacity: 0.6;
+                    cursor: not-allowed;
+                    transform: none !important;
+                }}
+                
+                .logs-section {{
+                    background: white;
+                    border-radius: 15px;
+                    padding: 25px;
+                    margin-top: 30px;
+                    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+                }}
+                
+                .logs-section h3 {{
+                    color: #333;
+                    margin-bottom: 20px;
+                    font-size: 1.3rem;
+                }}
+                
+                .log-entry {{
+                    background: #f8f9fa;
+                    border-radius: 8px;
+                    padding: 15px;
+                    margin-bottom: 10px;
+                    border-left: 4px solid #667eea;
+                }}
+                
+                .log-entry.error {{
+                    border-left-color: #dc3545;
+                    background: #fff5f5;
+                }}
+                
+                .log-entry.warning {{
+                    border-left-color: #ffc107;
+                    background: #fffbf0;
+                }}
+                
+                .log-entry.success {{
+                    border-left-color: #28a745;
+                    background: #f0fff4;
+                }}
+                
+                .log-time {{
+                    font-size: 0.8rem;
+                    color: #666;
+                    margin-bottom: 5px;
+                }}
+                
+                .log-message {{
+                    color: #333;
+                    font-weight: 500;
+                }}
+                
+                @media (max-width: 768px) {{
+                    .container {{
+                        padding: 10px;
+                    }}
+                    
+                    .status-grid {{
+                        grid-template-columns: 1fr;
+                    }}
+                    
+                    .action-buttons {{
+                        grid-template-columns: 1fr;
+                    }}
+                    
+                    .header h1 {{
+                        font-size: 1.5rem;
+                    }}
+                }}
+            </style>
+    </head>
+    <body>
+            <div class="header">
                 <h1>🚀 Claudia Cobranças</h1>
-                <p>Sistema oficial de cobrança da Desktop</p>
-                <p>Carregando dashboard...</p>
+                <p>Sistema oficial de cobrança da Desktop - Dashboard</p>
             </div>
-            <script src="/static/app.js"></script>
-        </body>
-        </html>
-        """)
+            
+            <div class="container">
+                <div class="status-grid">
+                    <div class="status-card">
+                        <h3>📱 WhatsApp</h3>
+                        <div class="status-item">
+                            <span class="status-label">Status:</span>
+                            <span class="status-value" id="whatsappStatus">Carregando...</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">QR Code:</span>
+                            <span class="status-value" id="qrStatus">-</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">Mensagens:</span>
+                            <span class="status-value" id="messageCount">0</span>
+                        </div>
+                    </div>
+                    
+                    <div class="status-card">
+                        <h3>🤖 Bot</h3>
+                        <div class="status-item">
+                            <span class="status-label">Status:</span>
+                            <span class="status-value" id="botStatus">Inativo</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">Ativo desde:</span>
+                            <span class="status-value" id="botActiveTime">-</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">Respostas:</span>
+                            <span class="status-value" id="responseCount">0</span>
+                        </div>
+                    </div>
+                    
+                    <div class="status-card">
                         <h3>📄 Faturas</h3>
                         <div class="status-item">
                             <span class="status-label">Downloads:</span>

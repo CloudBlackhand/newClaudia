@@ -601,14 +601,11 @@ class BlacktemplarBot {
                 this.showQRCode(result.qr_data);
                 this.showNotification('QR Code gerado! Escaneie com seu WhatsApp.', 'info');
             } else {
-                const errorMsg = result.message || 'Erro desconhecido';
-                this.showNotification(`Erro ao conectar WhatsApp: ${errorMsg}`, 'error');
-                console.error('WhatsApp connection error:', result);
+                this.showNotification(`Erro: ${result.message}`, 'error');
             }
             
         } catch (error) {
-            console.error('WhatsApp connection error:', error);
-            this.showNotification(`Erro de conexão: ${error.message || 'Erro desconhecido'}`, 'error');
+            this.showNotification(`Erro de conexão: ${error.message}`, 'error');
         } finally {
             this.hideProgress();
         }

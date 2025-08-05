@@ -184,7 +184,7 @@ class CaptchaSolver:
             else:
                 # Para outros formatos, tentar reconhecer diretamente
                 logger.warning("⚠️ Formato de áudio não suportado sem pydub")
-                return None
+            return None
             
         except Exception as e:
             logger.error(f"❌ Erro ao processar áudio: {e}")
