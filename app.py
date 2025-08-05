@@ -110,11 +110,11 @@ async def dashboard(request: Request):
     # Adicionar timestamp para evitar cache do navegador
     timestamp = int(time.time())
     return HTMLResponse(content=f"""
-        <!DOCTYPE html>
+    <!DOCTYPE html>
         <html lang="pt-BR">
-        <head>
-            <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
             <title>Claudia Cobranças - Sistema de Cobrança da Desktop</title>
             <style>
                 * {{
@@ -353,8 +353,8 @@ async def dashboard(request: Request):
                     }}
                 }}
             </style>
-        </head>
-        <body>
+    </head>
+    <body>
             <div class="header">
                 <h1>🚀 Claudia Cobranças</h1>
                 <p>Sistema oficial de cobrança da Desktop - Dashboard</p>
@@ -688,8 +688,8 @@ async def dashboard(request: Request):
                     }}
                 }});
             </script>
-        </body>
-        </html>
+    </body>
+    </html>
         """)
 
 @app.get("/api/status")
@@ -955,27 +955,41 @@ async def whatsapp_webhook(request: Request):
         return {"success": False}
 
 async def run_cobranca_bot():
-    """Executar bot de cobrança em background"""
+    """🚀 EXECUTAR BOT ULTRA-ROBUSTO - Resolve todos os problemas críticos"""
     try:
-        logger.info("🤖 Iniciando bot de cobrança...")
+        logger.info("🤖 INICIANDO ULTRA STEALTH BOT...")
         
         # Obter dados para cobrança
         cobranca_data = excel_processor.get_cobranca_data()
         
-        # Definir stealth_sender como global
-        global stealth_sender
-        from core.stealth_sender import StealthSender
-        stealth_sender = StealthSender()
+        # 🛑 VERIFICAÇÃO CRÍTICA - Lista vazia
+        if not cobranca_data:
+            logger.warning("⚠️ NENHUM DADO PARA COBRANÇA - PARANDO")
+            system_state["bot_active"] = False
+            return
         
-        # Executar envios stealth
-        await stealth_sender.execute_mass_sending(
+        logger.info(f"📊 Dados carregados: {len(cobranca_data)} registros")
+        
+        # 🚀 USAR ULTRA STEALTH SENDER
+        from core.ultra_stealth_sender import UltraStealthSender
+        ultra_sender = UltraStealthSender()
+        
+        # 🔄 EXECUTAR ENVIOS ULTRA STEALTH
+        result = await ultra_sender.execute_mass_sending(
             data=cobranca_data,
             whatsapp_client=whatsapp_client,
             stats_callback=update_stats
         )
         
+        # 📊 LOGS FINAIS
+        logger.info(f"✅ ULTRA STEALTH concluído: {result}")
+        
+        # 🛑 PARAR BOT QUANDO ACABAR
+        system_state["bot_active"] = False
+        logger.info("🛑 Bot parado automaticamente após conclusão")
+        
     except Exception as e:
-        logger.error(f"❌ Erro no bot de cobrança: {e}")
+        logger.error(f"❌ Erro no ULTRA STEALTH BOT: {e}")
         system_state["bot_active"] = False
 
 def update_stats(stats):

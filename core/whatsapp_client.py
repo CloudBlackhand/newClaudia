@@ -17,6 +17,7 @@ import websockets
 from playwright.async_api import async_playwright, Browser, Page
 import qrcode
 from io import BytesIO
+import random
 
 logger = logging.getLogger(__name__)
 
@@ -30,6 +31,8 @@ class WhatsAppClient:
         self.session_data = None
         self.qr_code_data = None
         self.message_queue = []
+        self.last_message_time = 0
+        self.message_count = 0
         
     async def initialize(self) -> Optional[str]:
         """Inicializar WhatsApp Web e gerar QR Code"""
@@ -315,22 +318,185 @@ class WhatsAppClient:
             logger.error(f"❌ Erro ao enviar anexo: {e}")
     
     async def _type_human_like(self, element, text: str):
-        """Simular digitação humana"""
-        # Limpar campo primeiro
-        await element.click()
-        await self.page.keyboard.press('Control+A')
-        await self.page.keyboard.press('Delete')
-        
-        # Digitar com variação de velocidade
-        for char in text:
-            await element.type(char)
-            # Variação aleatória na velocidade
-            delay = 0.05 + (hash(char) % 100) / 2000  # 0.05-0.10s por caractere
-            await asyncio.sleep(delay)
+        """🤖 SIMULAÇÃO HUMANA ULTRA AVANÇADA"""
+        try:
+            # 🧹 Limpar campo primeiro
+            await element.click()
+            await self.page.keyboard.press('Control+A')
+            await self.page.keyboard.press('Delete')
             
-            # Pausas ocasionais (simular pensamento)
-            if char in '.!?' and len(text) > 20:
-                await asyncio.sleep(0.5)
+            # ⏱️ PAUSA PARA "PENSAR"
+            await asyncio.sleep(random.uniform(0.5, 2.0))
+            
+            # ⌨️ DIGITAÇÃO HUMANA ULTRA REALISTA
+            words = text.split()
+            
+            for i, word in enumerate(words):
+                # 🎲 VELOCIDADE VARIÁVEL POR PALAVRA
+                typing_speed = random.uniform(0.05, 0.15)
+                
+                # ⌨️ DIGITAR PALAVRA CARACTERE POR CARACTERE
+                for char in word:
+                    await element.type(char)
+                    
+                    # ⏱️ VELOCIDADE VARIÁVEL POR CARACTERE
+                    char_delay = typing_speed + (hash(char) % 100) / 3000
+                    await asyncio.sleep(char_delay)
+                    
+                    # 🎲 CHANCE DE "ERRAR" E CORRIGIR
+                    if random.random() < 0.01:  # 1% chance
+                        await self._simulate_typo_correction(element)
+                
+                # ⏱️ PAUSA ENTRE PALAVRAS
+                if i < len(words) - 1:
+                    word_pause = random.uniform(0.1, 0.3)
+                    await asyncio.sleep(word_pause)
+                
+                # 🧠 PAUSA PARA "PENSAR" EM PONTUAÇÃO
+                if any(punct in word for punct in '.!?'):
+                    thinking_pause = random.uniform(0.5, 1.5)
+                    await asyncio.sleep(thinking_pause)
+            
+            # ⏱️ PAUSA FINAL ANTES DE ENVIAR
+            await asyncio.sleep(random.uniform(1.0, 3.0))
+            
+        except Exception as e:
+            logger.error(f"❌ Erro na simulação humana: {e}")
+            # Fallback para digitação simples
+            await element.fill(text)
+    
+    async def _simulate_typo_correction(self, element):
+        """⌨️ SIMULAR CORREÇÃO DE ERRO DE DIGITAÇÃO"""
+        try:
+            # 🎲 SIMULAR ERRO
+            await element.type('x')
+            await asyncio.sleep(random.uniform(0.2, 0.5))
+            
+            # ⌨️ APAGAR ERRO
+            await self.page.keyboard.press('Backspace')
+            await asyncio.sleep(random.uniform(0.1, 0.3))
+            
+            logger.debug("⌨️ Erro de digitação simulado e corrigido")
+            
+        except Exception as e:
+            logger.debug(f"Erro na simulação de erro: {e}")
+    
+    async def _simulate_human_behavior(self):
+        """🤖 SIMULAÇÃO DE COMPORTAMENTO HUMANO AVANÇADO"""
+        try:
+            # 🎲 AÇÕES ALEATÓRIAS
+            actions = [
+                lambda: asyncio.sleep(random.uniform(0.5, 2.0)),
+                lambda: self.page.mouse.move(random.randint(100, 800), random.randint(100, 600)),
+                lambda: asyncio.sleep(random.uniform(1.0, 3.0)),
+                lambda: logger.debug("🤖 Ação humana simulada: verificando mensagem"),
+            ]
+            
+            # 🎲 EXECUTAR AÇÃO ALEATÓRIA
+            if random.random() < 0.3:  # 30% chance
+                action = random.choice(actions)
+                await action()
+                
+        except Exception as e:
+            logger.debug(f"Erro na simulação de comportamento: {e}")
+    
+    async def _ultra_stealth_send(self, phone: str, message: str, attachment: Optional[str] = None) -> bool:
+        """🚀 ENVIO ULTRA STEALTH - Máxima proteção"""
+        try:
+            if not self.is_connected:
+                logger.error("❌ WhatsApp não conectado")
+                return False
+            
+            logger.info(f"📤 ULTRA STEALTH: Enviando mensagem para {phone}")
+            
+            # 🛡️ VERIFICAÇÃO DE SEGURANÇA
+            current_time = time.time()
+            if current_time - self.last_message_time < 10:  # Mínimo 10s entre mensagens
+                wait_time = 10 - (current_time - self.last_message_time)
+                logger.info(f"⏱️ Aguardando {wait_time:.1f}s por segurança...")
+                await asyncio.sleep(wait_time)
+            
+            # 📱 FORMATAR NÚMERO
+            formatted_phone = self._format_phone(phone)
+            
+            # 🔗 ABRIR CONVERSA
+            chat_url = f"https://web.whatsapp.com/send?phone={formatted_phone}"
+            await self.page.goto(chat_url)
+            
+            # ⏱️ AGUARDAR CONVERSA CARREGAR
+            await asyncio.sleep(random.uniform(2, 4))
+            
+            # ✅ VERIFICAR SE CONVERSA ABRIU
+            try:
+                await self.page.wait_for_selector('[data-testid="conversation-panel-body"]', timeout=15000)
+            except:
+                logger.error(f"❌ Não foi possível abrir conversa com {phone}")
+                return False
+            
+            # 📎 ENVIAR ANEXO SE FORNECIDO
+            if attachment and os.path.exists(attachment):
+                await self._send_attachment_stealth(attachment)
+                await asyncio.sleep(random.uniform(1.5, 3.0))
+            
+            # ⌨️ LOCALIZAR CAMPO DE MENSAGEM
+            message_input = await self.page.wait_for_selector('[data-testid="message-composer-input"]')
+            
+            # 🤖 SIMULAÇÃO HUMANA ULTRA AVANÇADA
+            await self._simulate_human_behavior()
+            
+            # ⌨️ SIMULAR DIGITAÇÃO HUMANA
+            await self._type_human_like(message_input, message)
+            
+            # ⏱️ PAUSA ANTES DE ENVIAR
+            await asyncio.sleep(random.uniform(1.5, 3.0))
+            
+            # 📤 ENVIAR MENSAGEM
+            await self.page.keyboard.press('Enter')
+            
+            # ⏱️ AGUARDAR CONFIRMAÇÃO
+            await asyncio.sleep(random.uniform(2, 4))
+            
+            # 📊 ATUALIZAR CONTADORES
+            self.last_message_time = time.time()
+            self.message_count += 1
+            
+            logger.info(f"✅ ULTRA STEALTH: Mensagem enviada para {phone}")
+            return True
+            
+        except Exception as e:
+            logger.error(f"❌ Erro no envio ULTRA STEALTH para {phone}: {e}")
+            return False
+    
+    async def _send_attachment_stealth(self, file_path: str):
+        """📎 ENVIAR ANEXO COM STEALTH"""
+        try:
+            # 🎲 PAUSA ALEATÓRIA
+            await asyncio.sleep(random.uniform(0.5, 1.5))
+            
+            # 📎 CLICAR NO BOTÃO DE ANEXO
+            attach_button = await self.page.wait_for_selector('[data-testid="clip"]')
+            await attach_button.click()
+            
+            await asyncio.sleep(random.uniform(0.8, 1.5))
+            
+            # 📄 CLICAR EM DOCUMENTO
+            doc_button = await self.page.wait_for_selector('[data-testid="attach-document"]')
+            await doc_button.click()
+            
+            # 📤 UPLOAD DO ARQUIVO
+            file_input = await self.page.wait_for_selector('input[type="file"]')
+            await file_input.set_input_files(file_path)
+            
+            await asyncio.sleep(random.uniform(1.5, 3.0))
+            
+            # 📤 ENVIAR ANEXO
+            send_button = await self.page.wait_for_selector('[data-testid="send-button"]')
+            await send_button.click()
+            
+            logger.info(f"✅ Anexo ULTRA STEALTH enviado: {os.path.basename(file_path)}")
+            
+        except Exception as e:
+            logger.error(f"❌ Erro ao enviar anexo ULTRA STEALTH: {e}")
     
     async def get_qr_code(self) -> Optional[str]:
         """Obter QR Code atual"""
