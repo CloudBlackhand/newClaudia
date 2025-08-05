@@ -112,11 +112,11 @@ async def dashboard(request: Request):
     timestamp = int(time.time())
     return HTMLResponse(content=f"""
     <!DOCTYPE html>
-    <html lang="pt-BR">
+        <html lang="pt-BR">
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Claudia Cobranças - Sistema de Cobrança da Desktop</title>
+            <title>Claudia Cobranças - Sistema de Cobrança da Desktop</title>
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
         <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
         <link href="/static/style.css?v={timestamp}" rel="stylesheet">
@@ -125,23 +125,23 @@ async def dashboard(request: Request):
         <div id="loading" class="loading-overlay">
             <div class="spinner-border text-primary" role="status">
                 <span class="visually-hidden">Carregando...</span>
-            </div>
-        </div>
-        
+                        </div>
+                    </div>
+                    
         <script src="/static/app.js?v={timestamp}"></script>
-        <script>
+            <script>
             // Inicializar o sistema quando a página carregar
-            document.addEventListener('DOMContentLoaded', function() {{
+                document.addEventListener('DOMContentLoaded', function() {{
                 // Remover loading
                 document.getElementById('loading').style.display = 'none';
                 
                 // Inicializar Blacktemplar Bot
                 window.blacktemplarBot = new BlacktemplarBot();
-            }});
-        </script>
+                }});
+            </script>
     </body>
     </html>
-    """)
+        """)
 
 @app.get("/api/status")
 async def get_status():
