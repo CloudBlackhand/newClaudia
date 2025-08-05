@@ -15,6 +15,7 @@ from playwright.async_api import Page, Browser
 import tempfile
 from .captcha_solver import CaptchaSolver
 from .logger import logger, performance_metric, security_event
+from .storage_manager import storage_manager
 
 class FaturaDownloader:
     """Sistema de download automático de faturas do SAC Desktop"""
@@ -377,15 +378,30 @@ class FaturaDownloader:
                 else:
                     filename = f"fatura_{documento}_{int(time.time())}.pdf"
                 
-                # Salvar arquivo
-                file_path = os.path.join(self.faturas_dir, filename)
-                await download.save_as(file_path)
+                # 💾 Salvar arquivo usando StorageManager
+                temp_path = os.path.join(tempfile.gettempdir(), filename)
+                await download.save_as(temp_path)
                 
-                # Verificar se arquivo foi salvo
-                if os.path.exists(file_path) and os.path.getsize(file_path) > 0:
-                    logger.info(f"✅ Fatura baixada: {filename}")
-                    security_event("fatura_downloaded", "low", documento=documento, arquivo=filename)
-                    return file_path
+                # Verificar se arquivo foi baixado
+                if os.path.exists(temp_path) and os.path.getsize(temp_path) > 0:
+                    # Ler arquivo e usar StorageManager
+                    with open(temp_path, 'rb') as f:
+                        file_data = f.read()
+                    
+                    # Salvar usando StorageManager (com auto-limpeza)
+                    save_result = await storage_manager.save_invoice(documento, filename, file_data)
+                    
+                    # Remover arquivo temporário
+                    os.unlink(temp_path)
+                    
+                    if save_result['success']:
+                        logger.info(f"✅ Fatura salva via StorageManager: {filename} ({save_result['file_size_mb']:.2f}MB)")
+                        logger.info(f"📊 Armazenamento total: {save_result['total_storage_mb']:.2f}MB")
+                        security_event("fatura_downloaded", "low", documento=documento, arquivo=filename)
+                        return save_result['file_path']
+                    else:
+                        logger.error(f"❌ Erro ao salvar via StorageManager: {save_result.get('error')}")
+                        return None
                 else:
                     logger.error("❌ Arquivo baixado está vazio ou não existe")
                     return None

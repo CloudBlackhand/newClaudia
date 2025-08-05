@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔐 Login - Blacktemplar Bolter</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #333;
+        }
+
+        .login-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+            width: 100%;
+            max-width: 420px;
+            margin: 20px;
+        }
+
+        .login-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .login-header h1 {
+            font-size: 2rem;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+
+        .login-header p {
+            opacity: 0.9;
+            font-size: 0.9rem;
+        }
+
+        .login-form {
+            padding: 40px 30px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+            font-size: 0.9rem;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: #f8f9fa;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+            font-family: inherit;
+        }
+
+        .login-button {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+
+        .login-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+
+        .login-button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .message {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            font-weight: 500;
+        }
+
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .message.info {
+            background: #cce7ff;
+            color: #004085;
+            border: 1px solid #b3d9ff;
+        }
+
+        .status-container {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border: 1px solid #e9ecef;
+        }
+
+        .status-container h3 {
+            color: #495057;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+        }
+
+        .status-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+
+        .status-label {
+            color: #6c757d;
+        }
+
+        .status-value {
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .loader {
+            display: none;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .button-content {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 20px;
+            font-size: 0.8rem;
+            color: #6c757d;
+            border-top: 1px solid #e9ecef;
+            background: #f8f9fa;
+        }
+
+        @media (max-width: 480px) {
+            .login-container {
+                margin: 10px;
+            }
+            
+            .login-form {
+                padding: 30px 20px;
+            }
+            
+            .login-header {
+                padding: 25px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-header">
+            <h1>🔐 Blacktemplar Bolter</h1>
+            <p>Sistema de Login com Aprovação Manual</p>
+        </div>
+
+        <div class="login-form">
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="email">📧 Email / Usuário:</label>
+                    <input type="email" id="email" name="email" required 
+                           placeholder="seu.email@empresa.com">
+                </div>
+
+                <div class="form-group">
+                    <label for="password">🔑 Senha:</label>
+                    <input type="password" id="password" name="password" required 
+                           placeholder="Digite sua senha">
+                </div>
+
+                <div class="form-group">
+                    <label for="reason">📝 Motivo do Acesso:</label>
+                    <textarea id="reason" name="reason" required 
+                              placeholder="Ex: Verificar faturas do cliente XYZ, gerar relatório mensal, etc."></textarea>
+                </div>
+
+                <button type="submit" class="login-button" id="submitBtn">
+                    <div class="button-content">
+                        <div class="loader" id="loader"></div>
+                        <span id="buttonText">🚀 Solicitar Acesso</span>
+                    </div>
+                </button>
+            </form>
+
+            <div id="message" class="message" style="display: none;"></div>
+
+            <div class="status-container">
+                <h3>📊 Status do Sistema</h3>
+                <div class="status-item">
+                    <span class="status-label">Solicitações Pendentes:</span>
+                    <span class="status-value" id="pendingCount">-</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">Sessões Ativas:</span>
+                    <span class="status-value" id="activeSessions">-</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">Timeout da Sessão:</span>
+                    <span class="status-value" id="sessionTimeout">-</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            ⚡ Sistema Anti-Força Bruta | 100% Seguro | Aprovação Manual
+        </div>
+    </div>
+
+    <script>
+        // 🔐 Sistema de Login com Aprovação Manual - JavaScript Puro
+        
+        const loginForm = document.getElementById('loginForm');
+        const submitBtn = document.getElementById('submitBtn');
+        const loader = document.getElementById('loader');
+        const buttonText = document.getElementById('buttonText');
+        const messageDiv = document.getElementById('message');
+
+        // Verificar status ao carregar a página
+        document.addEventListener('DOMContentLoaded', function() {
+            loadAuthStatus();
+            checkExistingSession();
+        });
+
+        async function checkExistingSession() {
+            const token = localStorage.getItem('blacktemplar_session');
+            if (token) {
+                try {
+                    const response = await fetch('/api/auth/validate', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ token })
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (data.valid) {
+                            // Usuário já está logado, redirecionar
+                            window.location.href = '/dashboard';
+                            return;
+                        }
+                    }
+                } catch (error) {
+                    console.log('Erro verificando sessão:', error);
+                }
+                
+                // Token inválido, remover
+                localStorage.removeItem('blacktemplar_session');
+            }
+        }
+
+        async function loadAuthStatus() {
+            try {
+                const response = await fetch('/api/auth/status');
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    document.getElementById('pendingCount').textContent = data.pending_requests;
+                    document.getElementById('activeSessions').textContent = data.active_sessions;
+                    document.getElementById('sessionTimeout').textContent = `${Math.floor(data.settings.session_timeout / 60)} min`;
+                }
+            } catch (error) {
+                console.error('Erro carregando status:', error);
+            }
+        }
+
+        function showMessage(text, type = 'info') {
+            messageDiv.textContent = text;
+            messageDiv.className = `message ${type}`;
+            messageDiv.style.display = 'block';
+            
+            // Auto-hide após 10 segundos
+            setTimeout(() => {
+                messageDiv.style.display = 'none';
+            }, 10000);
+        }
+
+        function setLoading(loading) {
+            if (loading) {
+                loader.style.display = 'block';
+                buttonText.textContent = 'Enviando solicitação...';
+                submitBtn.disabled = true;
+            } else {
+                loader.style.display = 'none';
+                buttonText.textContent = '🚀 Solicitar Acesso';
+                submitBtn.disabled = false;
+            }
+        }
+
+        loginForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(loginForm);
+            const loginData = {
+                email: formData.get('email'),
+                password: formData.get('password'),
+                reason: formData.get('reason')
+            };
+
+            // Validação básica
+            if (!loginData.email || !loginData.password || !loginData.reason) {
+                showMessage('❌ Todos os campos são obrigatórios!', 'error');
+                return;
+            }
+
+            if (loginData.reason.length < 10) {
+                showMessage('❌ Motivo deve ter pelo menos 10 caracteres!', 'error');
+                return;
+            }
+
+            setLoading(true);
+
+            try {
+                const response = await fetch('/api/auth/request', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(loginData)
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showMessage(
+                        `✅ Solicitação enviada com sucesso! ` +
+                        `ID: ${data.request_id.substring(0, 8)}... ` +
+                        `Aguarde a aprovação do administrador no terminal.`,
+                        'success'
+                    );
+                    
+                    // Limpar formulário
+                    loginForm.reset();
+                    
+                    // Recarregar status
+                    loadAuthStatus();
+                    
+                    // Começar a verificar aprovação
+                    startPendingCheck(data.request_id);
+                    
+                } else {
+                    showMessage(`❌ Erro: ${data.detail || 'Erro desconhecido'}`, 'error');
+                }
+
+            } catch (error) {
+                console.error('Erro na solicitação:', error);
+                showMessage('❌ Erro de conexão. Tente novamente.', 'error');
+            } finally {
+                setLoading(false);
+            }
+        });
+
+        let pendingCheckInterval;
+
+        function startPendingCheck(requestId) {
+            // Limpar qualquer verificação anterior
+            if (pendingCheckInterval) {
+                clearInterval(pendingCheckInterval);
+            }
+
+            showMessage('🔄 Verificando aprovação a cada 5 segundos...', 'info');
+
+            pendingCheckInterval = setInterval(async () => {
+                try {
+                    // Tentar buscar token de sessão através de cookies ou outros métodos
+                    // Por enquanto, vamos apenas atualizar o status
+                    loadAuthStatus();
+                    
+                    // Verificar se há uma sessão ativa (usuário foi aprovado)
+                    const token = localStorage.getItem('blacktemplar_session');
+                    if (token) {
+                        const response = await fetch('/api/auth/validate', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({ token })
+                        });
+
+                        if (response.ok) {
+                            const data = await response.json();
+                            if (data.valid) {
+                                clearInterval(pendingCheckInterval);
+                                showMessage('✅ Login aprovado! Redirecionando...', 'success');
+                                setTimeout(() => {
+                                    window.location.href = '/dashboard';
+                                }, 2000);
+                                return;
+                            }
+                        }
+                    }
+
+                } catch (error) {
+                    console.log('Erro verificando aprovação:', error);
+                }
+            }, 5000);
+
+            // Parar verificação após 10 minutos
+            setTimeout(() => {
+                if (pendingCheckInterval) {
+                    clearInterval(pendingCheckInterval);
+                    showMessage('⏰ Tempo limite para aprovação. Tente novamente se necessário.', 'info');
+                }
+            }, 600000); // 10 minutos
+        }
+
+        // Auto-refresh do status a cada 30 segundos
+        setInterval(loadAuthStatus, 30000);
+    </script>
+</body>
+</html>

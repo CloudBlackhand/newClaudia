@@ -15,21 +15,35 @@ from fastapi.responses import HTMLResponse, JSONResponse, FileResponse
 from fastapi.requests import Request
 from typing import List, Optional
 import logging
+import uuid
+import json
+import time
+from datetime import datetime, timedelta
+from pydantic import BaseModel
 
-# Configurações específicas para Render Cloud
-RENDER_CLOUD = os.getenv('RENDER_CLOUD', 'false').lower() == 'true'
-PORT = int(os.getenv('PORT', 8000))
-HOST = os.getenv('HOST', '127.0.0.1' if not RENDER_CLOUD else '0.0.0.0')
-
-# Configurar logging otimizado para ambiente
-if RENDER_CLOUD:
-    logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-    # Configurações específicas para Render
-    os.environ['PLAYWRIGHT_BROWSERS_PATH'] = os.getenv('PLAYWRIGHT_BROWSERS_PATH', '/opt/render/.cache/ms-playwright')
-else:
-    logging.basicConfig(level=logging.INFO)
-
+# Configurar logging
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+# 🔐 MODELOS PARA SISTEMA DE AUTENTICAÇÃO
+class LoginRequest(BaseModel):
+    email: str
+    password: str
+    reason: str
+    ip: Optional[str] = None
+    user_agent: Optional[str] = None
+
+class SessionValidation(BaseModel):
+    token: str
+
+# 🗃️ ARMAZENAMENTO DE AUTENTICAÇÃO (em memória para simplicidade)
+pending_auth_requests = {}  # {request_id: {email, timestamp, ip, reason, etc}}
+active_sessions = {}       # {token: {email, timestamp, request_id}}
+auth_settings = {
+    "session_timeout": 3600,  # 1 hora
+    "request_timeout": 300,   # 5 minutos
+    "max_pending": 10
+}
 
 # Importar módulos core
 from core.excel_processor import ExcelProcessor
@@ -37,6 +51,7 @@ from core.whatsapp_client import WhatsAppClient
 from core.conversation import SuperConversationEngine
 from core.fatura_downloader import FaturaDownloader
 from core.captcha_solver import CaptchaSolver, get_captcha_solver_info
+from core.storage_manager import storage_manager
 from config import Config
 
 # Inicializar FastAPI
@@ -127,6 +142,32 @@ async def get_status():
         "bot_active": system_state["bot_active"],
         "stats": system_state["stats"]
     }
+
+@app.get("/api/storage/stats")
+async def get_storage_stats():
+    """📊 Estatísticas do gerenciamento de armazenamento"""
+    try:
+        stats = await storage_manager.get_storage_stats()
+        return {
+            "success": True,
+            "stats": stats
+        }
+    except Exception as e:
+        logger.error(f"❌ Erro ao obter estatísticas de armazenamento: {e}")
+        return {"success": False, "error": str(e)}
+
+@app.post("/api/storage/cleanup")
+async def force_storage_cleanup():
+    """🧹 Forçar limpeza de armazenamento"""
+    try:
+        cleanup_result = await storage_manager.cleanup_expired_files()
+        return {
+            "success": True,
+            "cleanup_result": cleanup_result
+        }
+    except Exception as e:
+        logger.error(f"❌ Erro na limpeza forçada: {e}")
+        return {"success": False, "error": str(e)}
 
 @app.post("/api/whatsapp/connect")
 async def connect_whatsapp():
@@ -728,85 +769,322 @@ async def get_fatura_status():
         logger.error(f"❌ Erro ao obter status: {e}")
         return {"success": False, "error": str(e)}
 
-@app.get("/health")
-@app.get("/api/health")
-async def health_check():
-    """Health check otimizado para Render - ANTI-SLEEP"""
-    try:
-        import sys
-        from datetime import datetime
-        
-        health_info = {
-            "status": "healthy",
-            "timestamp": datetime.now().isoformat(),
-            "environment": "render" if RENDER_CLOUD else "local",
-            "python_version": sys.version.split()[0],
-            "port": PORT,
-            "playwright_path": os.getenv('PLAYWRIGHT_BROWSERS_PATH', 'default'),
-            "uptime_monitoring": "active",
-            "anti_sleep": "enabled"
-        }
-        
-        # Status do WhatsApp
-        global whatsapp_client
-        if whatsapp_client:
-            health_info["whatsapp_status"] = "initialized"
-        else:
-            health_info["whatsapp_status"] = "not_initialized"
-            
-        # Verificar memória apenas se psutil estiver disponível
-        try:
-            import psutil
-            memory = psutil.virtual_memory()
-            health_info["memory"] = {
-                "usage_percent": f"{memory.percent}%",
-                "available_mb": f"{memory.available / 1024 / 1024:.1f}MB"
-            }
-        except ImportError:
-            health_info["memory"] = "monitoring_disabled"
-            
-        return health_info
-        
-    except Exception as e:
-        logger.error(f"❌ Health check error: {e}")
-        return {"status": "error", "message": str(e), "timestamp": datetime.now().isoformat()}
+# ================================
+# 🔐 SISTEMA DE AUTENTICAÇÃO COM APROVAÇÃO MANUAL
+# ================================
 
-@app.get("/ping")
-async def ping_endpoint():
-    """Endpoint simples para keep-alive - resposta rápida"""
-    from datetime import datetime
+def cleanup_expired_requests():
+    """Limpar solicitações expiradas"""
+    current_time = time.time()
+    expired_keys = []
+    
+    for request_id, request_data in pending_auth_requests.items():
+        if current_time - request_data["timestamp"] > auth_settings["request_timeout"]:
+            expired_keys.append(request_id)
+    
+    for key in expired_keys:
+        del pending_auth_requests[key]
+        logger.info(f"🧹 Solicitação expirada removida: {key}")
+
+def cleanup_expired_sessions():
+    """Limpar sessões expiradas"""
+    current_time = time.time()
+    expired_keys = []
+    
+    for token, session_data in active_sessions.items():
+        if current_time - session_data["timestamp"] > auth_settings["session_timeout"]:
+            expired_keys.append(token)
+    
+    for key in expired_keys:
+        del active_sessions[key]
+        logger.info(f"🧹 Sessão expirada removida: {key[:8]}...")
+
+@app.get("/api/auth/status")
+async def auth_status():
+    """Status do sistema de autenticação"""
+    cleanup_expired_requests()
+    cleanup_expired_sessions()
+    
     return {
-        "pong": True,
-        "timestamp": datetime.now().isoformat(),
-        "status": "alive"
+        "success": True,
+        "pending_requests": len(pending_auth_requests),
+        "active_sessions": len(active_sessions),
+        "settings": auth_settings
     }
+
+@app.post("/api/auth/request")
+async def auth_request(request: Request, login_data: LoginRequest):
+    """Solicitar aprovação de login"""
+    cleanup_expired_requests()
+    
+    # Verificar limite de solicitações pendentes
+    if len(pending_auth_requests) >= auth_settings["max_pending"]:
+        raise HTTPException(status_code=429, detail="Muitas solicitações pendentes")
+    
+    # Gerar ID único para a solicitação
+    request_id = str(uuid.uuid4())
+    
+    # Obter IP e User-Agent automaticamente
+    client_ip = request.client.host if request.client else login_data.ip
+    user_agent = request.headers.get("user-agent", login_data.user_agent or "Unknown")
+    
+    # Armazenar solicitação
+    request_data = {
+        "email": login_data.email,
+        "password": login_data.password,  # Em produção, nunca armazenar senhas!
+        "reason": login_data.reason,
+        "ip": client_ip,
+        "user_agent": user_agent,
+        "timestamp": time.time(),
+        "datetime": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    }
+    
+    pending_auth_requests[request_id] = request_data
+    
+    # 🖥️ EXIBIR NO TERMINAL RAILWAY
+    print("\n" + "=" * 80)
+    print("🔐 NOVA TENTATIVA DE LOGIN - AGUARDANDO APROVAÇÃO")
+    print("=" * 80)
+    print(f"📅 Data/Hora: {request_data['datetime']}")
+    print(f"🆔 Request ID: {request_id}")
+    print(f"👤 Email/Usuário: {login_data.email}")
+    print(f"📝 Motivo: {login_data.reason}")
+    print(f"🌐 IP: {client_ip}")
+    print(f"💻 User Agent: {user_agent[:100]}...")
+    print("-" * 80)
+    print("Para APROVAR este login, acesse:")
+    print(f"https://sua-app.railway.app/api/auth/approve/{request_id}")
+    print()
+    print("Para NEGAR este login, acesse:")
+    print(f"https://sua-app.railway.app/api/auth/deny/{request_id}")
+    print("=" * 80)
+    print()
+    
+    # Log estruturado
+    logger.info(f"🔐 Nova solicitação de login: {login_data.email} | ID: {request_id}")
+    
+    return {
+        "success": True,
+        "request_id": request_id,
+        "message": "Solicitação enviada. Aguarde aprovação do administrador.",
+        "status": "pending"
+    }
+
+@app.post("/api/auth/approve/{request_id}")
+async def auth_approve(request_id: str):
+    """Aprovar solicitação de login"""
+    cleanup_expired_requests()
+    
+    if request_id not in pending_auth_requests:
+        raise HTTPException(status_code=404, detail="Solicitação não encontrada ou expirada")
+    
+    # Obter dados da solicitação
+    request_data = pending_auth_requests[request_id]
+    
+    # Gerar token de sessão
+    session_token = str(uuid.uuid4())
+    
+    # Criar sessão ativa
+    active_sessions[session_token] = {
+        "email": request_data["email"],
+        "request_id": request_id,
+        "timestamp": time.time(),
+        "ip": request_data["ip"],
+        "approved_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    }
+    
+    # Remover da lista de pendentes
+    del pending_auth_requests[request_id]
+    
+    # 🖥️ FEEDBACK NO TERMINAL
+    print(f"\n✅ LOGIN APROVADO! ID: {request_id}")
+    print(f"👤 Usuário: {request_data['email']}")
+    print(f"🎫 Token: {session_token[:16]}...")
+    print(f"⏰ Válido até: {(datetime.now() + timedelta(seconds=auth_settings['session_timeout'])).strftime('%H:%M:%S')}")
+    print()
+    
+    logger.info(f"✅ Login aprovado: {request_data['email']} | Token: {session_token[:8]}...")
+    
+    return {
+        "success": True,
+        "message": "Login aprovado com sucesso",
+        "session_token": session_token,
+        "expires_in": auth_settings["session_timeout"]
+    }
+
+@app.post("/api/auth/deny/{request_id}")
+async def auth_deny(request_id: str):
+    """Negar solicitação de login"""
+    cleanup_expired_requests()
+    
+    if request_id not in pending_auth_requests:
+        raise HTTPException(status_code=404, detail="Solicitação não encontrada ou expirada")
+    
+    # Obter dados da solicitação
+    request_data = pending_auth_requests[request_id]
+    
+    # Remover da lista de pendentes
+    del pending_auth_requests[request_id]
+    
+    # 🖥️ FEEDBACK NO TERMINAL
+    print(f"\n❌ LOGIN NEGADO! ID: {request_id}")
+    print(f"👤 Usuário: {request_data['email']}")
+    print(f"🌐 IP: {request_data['ip']}")
+    print()
+    
+    logger.warning(f"❌ Login negado: {request_data['email']} | ID: {request_id}")
+    
+    return {
+        "success": True,
+        "message": "Login negado",
+        "status": "denied"
+    }
+
+@app.post("/api/auth/validate")
+async def auth_validate(session_data: SessionValidation):
+    """Validar token de sessão"""
+    cleanup_expired_sessions()
+    
+    if session_data.token not in active_sessions:
+        return {"valid": False, "message": "Token inválido ou expirado"}
+    
+    session_info = active_sessions[session_data.token]
+    
+    # Atualizar timestamp da sessão (renovar)
+    session_info["timestamp"] = time.time()
+    
+    return {
+        "valid": True,
+        "email": session_info["email"],
+        "expires_in": auth_settings["session_timeout"]
+    }
+
+@app.delete("/api/auth/logout")
+async def auth_logout(session_data: SessionValidation):
+    """Fazer logout (invalidar sessão)"""
+    if session_data.token in active_sessions:
+        session_info = active_sessions[session_data.token]
+        del active_sessions[session_data.token]
+        
+        logger.info(f"🚪 Logout: {session_info['email']} | Token: {session_data.token[:8]}...")
+        
+        return {"success": True, "message": "Logout realizado com sucesso"}
+    
+    return {"success": False, "message": "Sessão não encontrada"}
+
+@app.get("/api/auth/pending")
+async def auth_pending():
+    """Listar solicitações pendentes (para admin)"""
+    cleanup_expired_requests()
+    
+    pending_list = []
+    for request_id, data in pending_auth_requests.items():
+        pending_list.append({
+            "request_id": request_id,
+            "email": data["email"],
+            "reason": data["reason"],
+            "ip": data["ip"],
+            "datetime": data["datetime"],
+            "user_agent": data["user_agent"][:100] + "..." if len(data["user_agent"]) > 100 else data["user_agent"]
+        })
+    
+    return {
+        "success": True,
+        "pending_requests": pending_list,
+        "count": len(pending_list)
+    }
+
+# ================================
+# 🔒 MIDDLEWARE DE AUTENTICAÇÃO
+# ================================
+
+@app.middleware("http")
+async def auth_middleware(request: Request, call_next):
+    """Middleware para verificar autenticação em rotas protegidas"""
+    
+    # Rotas que não precisam de autenticação
+    public_paths = [
+        "/",
+        "/api/auth/request",
+        "/api/auth/approve",
+        "/api/auth/deny", 
+        "/api/auth/status",
+        "/api/auth/pending",
+        "/static",
+        "/favicon.ico",
+        "/health"
+    ]
+    
+    # Verificar se é rota pública
+    path = str(request.url.path)
+    
+    for public_path in public_paths:
+        if path.startswith(public_path):
+            return await call_next(request)
+    
+    # Para rotas protegidas, verificar autenticação
+    auth_header = request.headers.get("Authorization")
+    
+    if not auth_header or not auth_header.startswith("Bearer "):
+        # Retornar página de login ao invés de erro JSON
+        if path.startswith("/dashboard") or path.startswith("/admin"):
+            with open("web/login.html", "r", encoding="utf-8") as f:
+                content = f.read()
+            return HTMLResponse(content=content)
+        
+        return JSONResponse(
+            status_code=401,
+            content={"error": "Token de autenticação necessário"}
+        )
+    
+    token = auth_header.split(" ")[1]
+    
+    # Verificar se token é válido
+    cleanup_expired_sessions()
+    
+    if token not in active_sessions:
+        if path.startswith("/dashboard") or path.startswith("/admin"):
+            with open("web/login.html", "r", encoding="utf-8") as f:
+                content = f.read()
+            return HTMLResponse(content=content)
+        
+        return JSONResponse(
+            status_code=401,
+            content={"error": "Token inválido ou expirado"}
+        )
+    
+    # Renovar sessão
+    active_sessions[token]["timestamp"] = time.time()
+    
+    # Adicionar informações do usuário ao request
+    request.state.user = active_sessions[token]
+    
+    return await call_next(request)
 
 if __name__ == "__main__":
     # Criar diretórios necessários
     os.makedirs("uploads", exist_ok=True)
     os.makedirs("faturas", exist_ok=True)
     os.makedirs("web/static", exist_ok=True)
-    os.makedirs("sessions", exist_ok=True)
-    os.makedirs("logs", exist_ok=True)
     
-    if RENDER_CLOUD:
-        logger.info(f"🚀 Iniciando Blacktemplar Bolter no Render Cloud - Porta {PORT}")
-        logger.info(f"💾 Playwright path: {os.getenv('PLAYWRIGHT_BROWSERS_PATH', 'padrão')}")
-        
-        # Configurações otimizadas para Render free tier
-        uvicorn.run(
-            app,
-            host=HOST,
-            port=PORT,
-            log_level="info",
-            access_log=False,  # Reduzir logs para economizar recursos
-            workers=1          # Apenas 1 worker no free tier
-        )
-    else:
-        logger.info("🏠 Iniciando Blacktemplar Bolter localmente")
-        uvicorn.run(
-            "app:app",
-            host=HOST,
-            port=PORT,
-            reload=True
-        ) 
+    # 🧹 Inicializar limpeza automática de armazenamento
+    async def startup_storage_cleanup():
+        """Inicializar sistema de limpeza automática"""
+        logger.info("🗂️ Iniciando sistema de gerenciamento de armazenamento...")
+        await storage_manager.cleanup_expired_files()  # Limpeza inicial
+        # Agendar limpeza periódica em background
+        asyncio.create_task(storage_manager.schedule_periodic_cleanup())
+        logger.info("✅ Sistema de armazenamento inicializado!")
+    
+    # Adicionar evento de startup
+    @app.on_event("startup")
+    async def startup_event():
+        await startup_storage_cleanup()
+    
+    # Iniciar servidor
+    uvicorn.run(
+        "app:app",
+        host="0.0.0.0",
+        port=int(os.getenv("PORT", 8000)),
+        reload=False
+    ) 

@@ -14,6 +14,7 @@ from .stealth_sender import StealthSender
 # Novos módulos independentes - FUNCIONALIDADES REAIS
 from .captcha_solver import CaptchaSolver, solve_recaptcha, get_captcha_solver_info
 from .fatura_downloader import FaturaDownloader, baixar_fatura_rapido
+from .storage_manager import StorageManager, storage_manager
 
 # Sistema de logging essencial
 from .logger import logger, BlacktemplarLogger
@@ -28,6 +29,8 @@ __all__ = [
     # Novos módulos independentes - FUNCIONAIS
     'CaptchaSolver',
     'FaturaDownloader',
+    'StorageManager',
+    'storage_manager',
     'solve_recaptcha',
     'baixar_fatura_rapido',
     'get_captcha_solver_info',
@@ -47,11 +50,13 @@ __features__ = [
     "Stealth Sending",
     "Anti-Captcha System (REAL)",
     "Automatic Invoice Download (REAL)",
-    "Oracle Cloud Ready",
+    "Smart Storage Management",
+    "Railway Optimized",
     "100% Free"
 ]
 
 # Status das funcionalidades
 CAPTCHA_SOLVER_AVAILABLE = True
 FATURA_DOWNLOADER_AVAILABLE = True
+STORAGE_MANAGER_AVAILABLE = True
 PRODUCTION_READY = True
