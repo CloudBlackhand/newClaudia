@@ -39,22 +39,52 @@ class WhatsAppClient:
         try:
             logger.info("🚀 Inicializando WhatsApp Web...")
             
-            # Inicializar Playwright
-            self.playwright = await async_playwright().start()
+            # Verificar se Playwright está disponível
+            try:
+                self.playwright = await async_playwright().start()
+                logger.info("✅ Playwright inicializado")
+            except Exception as e:
+                logger.error(f"❌ Erro ao inicializar Playwright: {e}")
+                return None
             
             # Configurar navegador stealth
-            self.browser = await self.playwright.chromium.launch(
-                headless=True,  # Headless para testes - QR via base64
-                args=[
-                    '--disable-blink-features=AutomationControlled',
-                    '--disable-dev-shm-usage',
-                    '--no-sandbox',
-                    '--disable-setuid-sandbox',
-                    '--disable-web-security',
-                    '--disable-features=VizDisplayCompositor',
-                    '--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-                ]
-            )
+            try:
+                self.browser = await self.playwright.chromium.launch(
+                    headless=True,  # Headless para testes - QR via base64
+                    args=[
+                        '--disable-blink-features=AutomationControlled',
+                        '--disable-dev-shm-usage',
+                        '--no-sandbox',
+                        '--disable-setuid-sandbox',
+                        '--disable-web-security',
+                        '--disable-features=VizDisplayCompositor',
+                        '--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+                    ]
+                )
+                logger.info("✅ Navegador Chromium inicializado")
+            except Exception as e:
+                logger.error(f"❌ Erro ao inicializar navegador: {e}")
+                logger.info("🔄 Tentando instalar browsers...")
+                try:
+                    import subprocess
+                    subprocess.run(["playwright", "install", "chromium"], check=True, capture_output=True)
+                    logger.info("✅ Browsers instalados, tentando novamente...")
+                    self.browser = await self.playwright.chromium.launch(
+                        headless=True,
+                        args=[
+                            '--disable-blink-features=AutomationControlled',
+                            '--disable-dev-shm-usage',
+                            '--no-sandbox',
+                            '--disable-setuid-sandbox',
+                            '--disable-web-security',
+                            '--disable-features=VizDisplayCompositor',
+                            '--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+                        ]
+                    )
+                    logger.info("✅ Navegador inicializado após instalação")
+                except Exception as e2:
+                    logger.error(f"❌ Erro definitivo ao inicializar navegador: {e2}")
+                    return None
             
             # Configurar contexto stealth
             context = await self.browser.new_context(
@@ -133,9 +163,12 @@ class WhatsAppClient:
     async def _wait_for_qr_code(self) -> Optional[str]:
         """Aguardar e capturar QR Code"""
         try:
+            logger.info("🔍 Aguardando QR Code aparecer...")
+            
             # Aguardar QR Code aparecer
             qr_selector = '[data-testid="qr-code"]'
             await self.page.wait_for_selector(qr_selector, timeout=30000)
+            logger.info("✅ QR Code encontrado na página")
             
             # Aguardar um pouco para garantir que carregou
             await asyncio.sleep(2)
@@ -143,27 +176,46 @@ class WhatsAppClient:
             # Capturar QR Code
             qr_element = await self.page.query_selector(qr_selector)
             if qr_element:
+                logger.info("📱 Capturando dados do QR Code...")
+                
                 # Obter atributo data-ref do QR
                 qr_data = await qr_element.get_attribute('data-ref')
                 
                 if qr_data:
+                    logger.info("🎯 Gerando QR Code como imagem...")
                     # Gerar QR Code como base64
                     qr_img = qrcode.make(qr_data)
                     buffer = BytesIO()
                     qr_img.save(buffer, format='PNG')
                     qr_base64 = base64.b64encode(buffer.getvalue()).decode()
                     
+                    logger.info("✅ QR Code gerado com sucesso")
                     return f"data:image/png;base64,{qr_base64}"
                 else:
+                    logger.info("📸 Usando screenshot como fallback...")
                     # Fallback: screenshot do QR
                     qr_screenshot = await qr_element.screenshot()
                     qr_base64 = base64.b64encode(qr_screenshot).decode()
+                    logger.info("✅ QR Code capturado via screenshot")
                     return f"data:image/png;base64,{qr_base64}"
-            
-            return None
+            else:
+                logger.warning("⚠️ Elemento QR Code não encontrado")
+                return None
             
         except Exception as e:
             logger.error(f"❌ Erro ao capturar QR Code: {e}")
+            logger.info("🔄 Tentando método alternativo...")
+            try:
+                # Método alternativo: procurar por qualquer QR code
+                qr_elements = await self.page.query_selector_all('img[src*="data:image/png"]')
+                if qr_elements:
+                    logger.info("🎯 QR Code encontrado via método alternativo")
+                    qr_screenshot = await qr_elements[0].screenshot()
+                    qr_base64 = base64.b64encode(qr_screenshot).decode()
+                    return f"data:image/png;base64,{qr_base64}"
+            except Exception as e2:
+                logger.error(f"❌ Erro no método alternativo: {e2}")
+            
             return None
     
     async def _monitor_login(self):

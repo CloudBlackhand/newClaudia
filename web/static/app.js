@@ -26,335 +26,149 @@ class BlacktemplarBot {
         console.log('🤖 Blacktemplar Bolter iniciado com funcionalidades avançadas!');
     }
     
-    // Criar interface dinamicamente - UI Moderna
+    // Criar interface dinamicamente - Nova função
     createInterface() {
         const appContainer = document.createElement('div');
         appContainer.id = 'app';
-        appContainer.className = 'container-fluid modern-ui';
+        appContainer.className = 'container-fluid';
         
-        // Cabeçalho moderno
+        // Cabeçalho
         const header = document.createElement('header');
-        header.className = 'admin-header';
+        header.className = 'p-3 mb-4 bg-dark text-white';
         header.innerHTML = `
-            <div class="container-fluid">
-                <div class="d-flex align-items-center justify-content-between">
-                    <div class="d-flex align-items-center">
-                        <div class="logo-container">
-                            <img src="/static/icon.png" alt="Claudia" class="logo-image pulse-anim">
-                        </div>
-                        <div class="title-container">
-                            <h1 class="m-0">🚀 Claudia Cobranças</h1>
-                            <p class="m-0">Sistema oficial de cobrança da Desktop - Dashboard</p>
-                        </div>
-                        <div class="version-badge">v2.2</div>
-                    </div>
-                    <div class="status-container">
-                        <div class="status-indicator status-offline" id="connectionIndicator"></div>
-                        <span class="server-status">Sistema</span>
-                    </div>
+            <div class="container">
+                <div class="d-flex align-items-center">
+                    <img src="/static/icon.png" alt="Logo" height="40" class="mr-3">
+                    <h1 class="m-0">Blacktemplar Bolter</h1>
+                    <small class="ml-2">v2.2 - 100% Gratuito</small>
+                    <div class="ml-auto" id="connectionIndicator" title="Status da conexão" class="status-offline"></div>
                 </div>
             </div>
         `;
         
-        // Navegação moderna
+        // Navegação
         const nav = document.createElement('nav');
-        nav.className = 'modern-tabs';
+        nav.className = 'nav-tabs';
         nav.innerHTML = `
-            <button class="nav-tab active" data-tab="dashboard">
-                <span class="tab-icon dashboard-icon">📊</span>
-                Dashboard
-            </button>
-            <button class="nav-tab" data-tab="whatsapp">
-                <span class="tab-icon">📱</span>
-                WhatsApp
-            </button>
-            <button class="nav-tab" data-tab="faturas">
-                <span class="tab-icon">📄</span>
-                Faturas
-            </button>
-            <button class="nav-tab" data-tab="logs">
-                <span class="tab-icon logs-icon">📝</span>
-                Logs
-            </button>
-            <button class="nav-tab" data-tab="metricas">
-                <span class="tab-icon metrics-icon">📈</span>
-                Métricas
-            </button>
-            <button class="nav-tab" data-tab="configuracoes">
-                <span class="tab-icon settings-icon">⚙️</span>
-                Configurações
-            </button>
+            <button class="nav-tab active" data-tab="dashboard">📊 Dashboard</button>
+            <button class="nav-tab" data-tab="logs">📝 Logs</button>
+            <button class="nav-tab" data-tab="metricas">📈 Métricas</button>
+            <button class="nav-tab" data-tab="mensagens">💬 Mensagens</button>
+            <button class="nav-tab" data-tab="configuracoes">⚙️ Configurações</button>
         `;
         
         // Conteúdo principal
         const main = document.createElement('main');
-        main.className = 'admin-main';
+        main.className = 'container mt-4';
         
-        // Dashboard tab - UI Moderna
+        // Dashboard tab
         const dashboard = document.createElement('div');
         dashboard.id = 'dashboard';
         dashboard.className = 'tab-content active';
         dashboard.innerHTML = `
-            <div class="dashboard-container">
-                <!-- Cards de Status Principais -->
-                <div class="dashboard-grid-4">
-                    <div class="status-card" data-status="whatsapp">
-                        <div class="status-icon offline">
-                            <i class="fas fa-mobile-alt"></i>
-                        </div>
-                        <div class="status-text">
-                            <h5>WhatsApp</h5>
-                            <p class="status-value">Desconectado</p>
-                            <p class="status-detail">QR Code: Não disponível</p>
-                            <p class="status-detail">Mensagens: 0</p>
-                        </div>
-                        <div class="status-actions">
-                            <button onclick="connectWhatsApp()" class="btn-custom btn-success">
-                                <i class="fas fa-plug"></i> Conectar
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <div class="status-card" data-status="bot">
-                        <div class="status-icon offline">
-                            <i class="fas fa-robot"></i>
-                        </div>
-                        <div class="status-text">
-                            <h5>Bot</h5>
-                            <p class="status-value">Inativo</p>
-                            <p class="status-detail">Ativo desde: -</p>
-                            <p class="status-detail">Respostas: 0</p>
-                        </div>
-                        <div class="status-actions">
-                            <button onclick="toggleBot()" class="btn-custom btn-success">
-                                <i class="fas fa-play"></i> Ativar
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <div class="status-card" data-status="faturas">
-                        <div class="status-icon offline">
-                            <i class="fas fa-file-invoice"></i>
-                        </div>
-                        <div class="status-text">
-                            <h5>Faturas</h5>
-                            <p class="status-value">Downloads: 0</p>
-                            <p class="status-detail">Sucessos: 0</p>
-                            <p class="status-detail">Erros: 0</p>
-                        </div>
-                        <div class="status-actions">
-                            <button onclick="downloadFaturas()" class="btn-custom btn-primary">
-                                <i class="fas fa-download"></i> Baixar
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <div class="status-card" data-status="sistema">
-                        <div class="status-icon online">
-                            <i class="fas fa-server"></i>
-                        </div>
-                        <div class="status-text">
-                            <h5>Sistema</h5>
-                            <p class="status-value">Online</p>
-                            <p class="status-detail">Armazenamento: 0.00MB</p>
-                            <p class="status-detail">Arquivos: 0</p>
-                        </div>
-                        <div class="status-actions">
-                            <button onclick="cleanupSystem()" class="btn-custom btn-warning">
-                                <i class="fas fa-broom"></i> Limpar
-                            </button>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Área de Upload -->
-                <div class="dashboard-grid-2">
-                    <div class="upload-card">
-                        <div class="upload-content">
-                            <div class="upload-icon">
-                                <i class="fas fa-file-excel"></i>
-                            </div>
-                            <h4>Upload de FPD</h4>
-                            <p>Arraste e solte seu arquivo FPD aqui ou clique para selecionar</p>
-                            <div class="upload-actions">
-                                <div class="upload-area" id="fpdUpload">
-                                    <input type="file" id="fpdFile" accept=".xlsx,.xls" style="display:none">
-                                    <label for="fpdFile" class="btn-custom">
-                                        <i class="fas fa-upload"></i> Selecionar Arquivo
-                                    </label>
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="card mb-4">
+                        <div class="card-header">Status do Sistema</div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="status-card" data-status="whatsapp">
+                                        <h5>WhatsApp</h5>
+                                        <div class="status-icon offline">
+                                            <i class="fas fa-mobile-alt"></i>
+                                        </div>
+                                        <div class="status-text">Desconectado</div>
+                                        <button onclick="connectWhatsApp()" class="btn btn-sm btn-primary">Conectar</button>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="status-card" data-status="fpd">
+                                        <h5>FPD</h5>
+                                        <div class="status-icon offline">
+                                            <i class="fas fa-file-excel"></i>
+                                        </div>
+                                        <div class="status-text">Não carregado</div>
+                                        <div class="upload-area" id="fpdUpload">
+                                            <label for="fpdFile" class="btn btn-sm btn-primary">Carregar FPD</label>
+                                            <input type="file" id="fpdFile" style="display:none">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="status-card" data-status="bot">
+                                        <h5>Bot</h5>
+                                        <div class="status-icon offline">
+                                            <i class="fas fa-robot"></i>
+                                        </div>
+                                        <div class="status-text">Inativo</div>
+                                        <button onclick="toggleBot()" class="btn btn-sm btn-success">Iniciar</button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                     
-                    <div class="upload-card">
-                        <div class="upload-content">
-                            <div class="upload-icon">
-                                <i class="fas fa-qrcode"></i>
+                    <div class="card mb-4">
+                        <div class="card-header">Controle do Servidor</div>
+                        <div class="card-body">
+                            <div class="server-controls">
+                                <button id="startServerBtn" onclick="startServer()" class="btn-start">▶️ Iniciar Servidor</button>
+                                <button id="stopServerBtn" onclick="stopServer()" class="btn-stop" disabled>⏹️ Parar Servidor</button>
+                                <button id="restartServerBtn" onclick="restartServer()" class="btn-restart">🔄 Reiniciar Servidor</button>
                             </div>
-                            <h4>QR Code WhatsApp</h4>
-                            <p>Escaneie o QR Code para conectar o WhatsApp</p>
-                            <div class="upload-actions">
-                                <div class="qr-container" id="qrContainer">
-                                    <div id="noQrMessage">QR Code não disponível</div>
-                                </div>
-                                <button onclick="refreshQRCode()" class="btn-custom">
-                                    <i class="fas fa-sync"></i> Atualizar QR
-                                </button>
-                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card mb-4">
+                        <div class="card-header">Log de Atividades</div>
+                        <div class="card-body p-0">
+                            <div id="logContainer" class="log-container p-2" style="height:200px; overflow-y:auto;"></div>
                         </div>
                     </div>
                 </div>
                 
-                <!-- Controles do Servidor -->
-                <div class="server-controls">
-                    <button onclick="startServer()" class="btn-custom btn-success">
-                        <i class="fas fa-play"></i> Iniciar Servidor
-                    </button>
-                    <button onclick="stopServer()" class="btn-custom btn-danger">
-                        <i class="fas fa-stop"></i> Parar Servidor
-                    </button>
-                    <button onclick="restartServer()" class="btn-custom btn-warning">
-                        <i class="fas fa-redo"></i> Reiniciar
-                    </button>
-                </div>
-                
-                <!-- Logs em Tempo Real -->
-                <div class="card">
-                    <div class="card-header bg-gradient-dark">
-                        <h5><i class="fas fa-terminal"></i> Logs em Tempo Real</h5>
+                <div class="col-md-4">
+                    <div class="card mb-4">
+                        <div class="card-header">QR Code WhatsApp</div>
+                        <div class="card-body text-center">
+                            <div id="qrContainer" class="qr-container" style="display:none">
+                                <div id="qrCode" class="qr-code"></div>
+                                <p class="mt-2">Escaneie com WhatsApp</p>
+                                <button onclick="refreshQRCode()" class="btn btn-sm btn-outline-primary mt-2">Atualizar QR Code</button>
+                            </div>
+                            <div id="noQrMessage">
+                                <p>Clique em "Conectar" para gerar QR Code</p>
+                            </div>
+                        </div>
                     </div>
-                    <div class="card-body">
-                        <div class="log-container" id="logContainer">
-                            <div class="log-entry log-info">
-                                <span class="log-time">12:00:00</span>
-                                <span class="log-level">INFO</span>
-                                <span class="log-message">Sistema iniciado com sucesso</span>
+                    
+                    <div class="card mb-4">
+                        <div class="card-header">Estatísticas</div>
+                        <div class="card-body">
+                            <div class="stat-item">
+                                <span class="stat-label">Mensagens enviadas:</span>
+                                <span id="stat-messages_sent" class="stat-value">0</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Faturas enviadas:</span>
+                                <span id="stat-faturas_sent" class="stat-value">0</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Conversas ativas:</span>
+                                <span id="stat-conversations" class="stat-value">0</span>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-        `;
-        
-        // WhatsApp tab
-        const whatsapp = document.createElement('div');
-        whatsapp.id = 'whatsapp';
-        whatsapp.className = 'tab-content';
-        whatsapp.innerHTML = `
-            <div class="dashboard-container">
-                <div class="dashboard-grid-2">
-                    <div class="status-card" data-status="whatsapp">
-                        <div class="status-icon offline">
-                            <i class="fas fa-mobile-alt"></i>
-                        </div>
-                        <div class="status-text">
-                            <h5>Status WhatsApp</h5>
-                            <p class="status-value">Desconectado</p>
-                            <p class="status-detail">Última conexão: Nunca</p>
-                            <p class="status-detail">Mensagens: 0</p>
-                        </div>
-                        <div class="status-actions">
-                            <button onclick="connectWhatsApp()" class="btn-custom btn-success">
-                                <i class="fas fa-plug"></i> Conectar
-                            </button>
-                            <button onclick="disconnectWhatsApp()" class="btn-custom btn-danger">
-                                <i class="fas fa-times"></i> Desconectar
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <div class="upload-card">
-                        <div class="upload-content">
-                            <div class="upload-icon">
-                                <i class="fas fa-qrcode"></i>
-                            </div>
-                            <h4>QR Code WhatsApp</h4>
-                            <p>Escaneie o QR Code para conectar o WhatsApp</p>
-                            <div class="upload-actions">
-                                <div class="qr-container" id="qrContainer">
-                                    <div id="noQrMessage">QR Code não disponível</div>
-                                </div>
-                                <button onclick="refreshQRCode()" class="btn-custom">
-                                    <i class="fas fa-sync"></i> Atualizar QR
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="card">
-                    <div class="card-header bg-gradient-dark">
-                        <h5><i class="fas fa-comments"></i> Histórico de Mensagens</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="message-history-container" id="messageHistoryContainer">
-                            <div class="text-center text-muted">
-                                <i class="fas fa-comments fa-3x mb-3"></i>
-                                <p>Nenhuma mensagem encontrada</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `;
-        
-        // Faturas tab
-        const faturas = document.createElement('div');
-        faturas.id = 'faturas';
-        faturas.className = 'tab-content';
-        faturas.innerHTML = `
-            <div class="dashboard-container">
-                <div class="dashboard-grid-2">
-                    <div class="status-card" data-status="faturas">
-                        <div class="status-icon offline">
-                            <i class="fas fa-file-invoice"></i>
-                        </div>
-                        <div class="status-text">
-                            <h5>Status Faturas</h5>
-                            <p class="status-value">Downloads: 0</p>
-                            <p class="status-detail">Sucessos: 0</p>
-                            <p class="status-detail">Erros: 0</p>
-                        </div>
-                        <div class="status-actions">
-                            <button onclick="downloadFaturas()" class="btn-custom btn-primary">
-                                <i class="fas fa-download"></i> Baixar Faturas
-                            </button>
-                            <button onclick="processFaturas()" class="btn-custom btn-success">
-                                <i class="fas fa-cog"></i> Processar
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <div class="upload-card">
-                        <div class="upload-content">
-                            <div class="upload-icon">
-                                <i class="fas fa-file-excel"></i>
-                            </div>
-                            <h4>Upload de FPD</h4>
-                            <p>Arraste e solte seu arquivo FPD aqui ou clique para selecionar</p>
-                            <div class="upload-actions">
-                                <div class="upload-area" id="fpdUpload">
-                                    <input type="file" id="fpdFile" accept=".xlsx,.xls" style="display:none">
-                                    <label for="fpdFile" class="btn-custom">
-                                        <i class="fas fa-upload"></i> Selecionar Arquivo
-                                    </label>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="card">
-                    <div class="card-header bg-gradient-dark">
-                        <h5><i class="fas fa-list"></i> Lista de Faturas</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="faturas-list" id="faturasList">
-                            <div class="text-center text-muted">
-                                <i class="fas fa-file-invoice fa-3x mb-3"></i>
-                                <p>Nenhuma fatura encontrada</p>
-                            </div>
+            
+            <div id="progressContainer" class="progress-container" style="display:none">
+                <div class="progress-overlay">
+                    <div class="progress-content">
+                        <div id="progressText">Processando...</div>
+                        <div class="progress mt-2">
+                            <div id="progressBar" class="progress-bar progress-bar-animated" style="width: 0%"></div>
                         </div>
                     </div>
                 </div>
@@ -439,7 +253,7 @@ class BlacktemplarBot {
                     </div>
                 </div>
                 <div class="card-body p-0">
-                    <div id="messageHistoryContainer" class="message-history-container">                    </div>
+                    <div id="messageHistoryContainer" class="message-history-container"></div>
                 </div>
             </div>
         `;
@@ -449,126 +263,25 @@ class BlacktemplarBot {
         configuracoes.id = 'configuracoes';
         configuracoes.className = 'tab-content';
         configuracoes.innerHTML = `
-            <div class="dashboard-container">
-                <div class="dashboard-grid-2">
-                    <div class="card">
-                        <div class="card-header bg-gradient-dark">
-                            <h5><i class="fas fa-cog"></i> Configurações do Sistema</h5>
-                        </div>
-                        <div class="card-body">
-                            <div class="config-container">
-                                <div class="config-section">
-                                    <h4>Configurações do WhatsApp</h4>
-                                    <div class="form-group">
-                                        <label>Timeout de Conexão (ms)</label>
-                                        <input type="number" id="whatsapp_timeout" value="30000" min="5000" max="120000">
-                                    </div>
-                                    <div class="form-group">
-                                        <label>Modo Headless</label>
-                                        <input type="checkbox" id="whatsapp_headless" checked>
-                                    </div>
-                                </div>
-                                
-                                <div class="config-section">
-                                    <h4>Configurações do Bot</h4>
-                                    <div class="form-group">
-                                        <label>Delay entre Mensagens (ms)</label>
-                                        <input type="number" id="bot_delay" value="2000" min="500" max="10000">
-                                    </div>
-                                    <div class="form-group">
-                                        <label>Máximo de Tentativas</label>
-                                        <input type="number" id="bot_max_retries" value="3" min="1" max="10">
-                                    </div>
-                                </div>
-                                
-                                <div class="config-section">
-                                    <h4>Configurações de Armazenamento</h4>
-                                    <div class="form-group">
-                                        <label>Limite de Armazenamento (MB)</label>
-                                        <input type="number" id="storage_limit" value="50" min="10" max="500">
-                                    </div>
-                                    <div class="form-group">
-                                        <label>Limpeza Automática</label>
-                                        <input type="checkbox" id="auto_cleanup" checked>
-                                    </div>
-                                </div>
-                                
-                                <div class="config-section">
-                                    <h4>Configurações de Log</h4>
-                                    <div class="form-group">
-                                        <label>Nível de Log</label>
-                                        <select id="log_level">
-                                            <option value="DEBUG">Debug</option>
-                                            <option value="INFO" selected>Info</option>
-                                            <option value="WARNING">Warning</option>
-                                            <option value="ERROR">Error</option>
-                                        </select>
-                                    </div>
-                                    <div class="form-group">
-                                        <label>Logs Detalhados</label>
-                                        <input type="checkbox" id="detailed_logs">
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="text-center mt-4">
-                                <button onclick="saveConfiguration()" class="btn-custom btn-success">
-                                    <i class="fas fa-save"></i> Salvar Configurações
-                                </button>
-                                <button onclick="resetConfiguration()" class="btn-custom btn-warning">
-                                    <i class="fas fa-undo"></i> Resetar
-                                </button>
-                            </div>
-                        </div>
+            <div class="card">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="m-0">Configurações do Sistema</h5>
+                        <button onclick="loadConfiguration()" class="btn btn-sm btn-primary">Recarregar</button>
                     </div>
-                    
-                    <div class="card">
-                        <div class="card-header bg-gradient-dark">
-                            <h5><i class="fas fa-info-circle"></i> Informações do Sistema</h5>
-                        </div>
-                        <div class="card-body">
-                            <div class="system-info">
-                                <div class="info-item">
-                                    <strong>Versão:</strong> <span id="system_version">2.2</span>
-                                </div>
-                                <div class="info-item">
-                                    <strong>Empresa:</strong> <span id="system_company">Desktop</span>
-                                </div>
-                                <div class="info-item">
-                                    <strong>Funcionalidades:</strong> <span id="system_features">13 disponíveis</span>
-                                </div>
-                                <div class="info-item">
-                                    <strong>Última Atualização:</strong> <span id="system_last_update">Hoje</span>
-                                </div>
-                                <div class="info-item">
-                                    <strong>Status:</strong> <span id="system_status" class="status-online">Online</span>
-                                </div>
-                            </div>
-                            
-                            <div class="text-center mt-4">
-                                <button onclick="exportConfiguration()" class="btn-custom btn-primary">
-                                    <i class="fas fa-download"></i> Exportar Config
-                                </button>
-                                <button onclick="importConfiguration()" class="btn-custom btn-info">
-                                    <i class="fas fa-upload"></i> Importar Config
-                                </button>
-                            </div>
-                        </div>
-                    </div>
+                </div>
+                <div class="card-body">
+                    <div id="configContainer" class="config-container"></div>
                 </div>
             </div>
         `;
         
-        // Configurações tab (antiga versão - removida)
-        // Esta seção foi substituída pela nova interface moderna acima
-        
         // Adicionar elementos ao DOM
         main.appendChild(dashboard);
-        main.appendChild(whatsapp);
-        main.appendChild(faturas);
         main.appendChild(logs);
         main.appendChild(metricas);
-        main.appendChild(configTab);
+        main.appendChild(mensagens);
+        main.appendChild(configuracoes);
         
         appContainer.appendChild(header);
         appContainer.appendChild(nav);

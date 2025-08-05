@@ -25,7 +25,7 @@ def main():
     print("🚀 Otimizado para Railway")
     print()
     
-    # Verificar dependências
+    # Verificar e instalar dependências
     print("📦 Verificando dependências...")
     try:
         import fastapi
@@ -35,6 +35,22 @@ def main():
     except ImportError as e:
         print(f"❌ Dependência faltando: {e}")
         sys.exit(1)
+    
+    # Instalar Playwright browsers
+    print("🎭 Instalando Playwright browsers...")
+    try:
+        # Tentar executar script de instalação
+        subprocess.run(["python", "install_playwright.py"], check=True, capture_output=True)
+        print("✅ Playwright instalado via script")
+    except Exception as e:
+        print(f"⚠️ Aviso: Erro ao executar script: {e}")
+        print("🔄 Tentando instalação direta...")
+        try:
+            subprocess.run(["python", "-m", "playwright", "install", "chromium"], check=True, capture_output=True)
+            print("✅ Playwright browsers instalados via pip")
+        except Exception as e2:
+            print(f"❌ Erro ao instalar browsers: {e2}")
+            print("⚠️ Continuando sem browsers...")
     
     # Verificar arquivos essenciais
     essential_files = [
@@ -58,26 +74,9 @@ def main():
     
     # Iniciar aplicação
     print("🚀 Iniciando Claudia Cobranças...")
-    
-    # Mostrar URL real do Railway
-    railway_domain = os.getenv('RAILWAY_PUBLIC_DOMAIN')
-    railway_url = os.getenv('RAILWAY_URL')
-    
-    if railway_domain:
-        base_url = f"https://{railway_domain}"
-        print(f"🌐 URL REAL: {base_url}")
-        print(f"🔐 Login: {base_url}/login")
-        print(f"📊 Dashboard: {base_url}/dashboard")
-    elif railway_url:
-        print(f"🌐 URL REAL: {railway_url}")
-        print(f"🔐 Login: {railway_url}/login")
-        print(f"📊 Dashboard: {railway_url}/dashboard")
-    else:
-        print("🌐 Acesse: https://seu-app.railway.app")
-        print("🔐 Login: /login")
-        print("📊 Dashboard: /dashboard")
-        print("💡 Verifique o painel do Railway para a URL real")
-    
+    print("🌐 Acesse: https://seu-app.railway.app")
+    print("🔐 Login: /login")
+    print("📊 Dashboard: /dashboard")
     print()
     
     # Comando de inicialização CORRIGIDO
