@@ -99,4 +99,3 @@ railway_config = RailwayConfig()
 PORT = railway_config.PORT
 RAILWAY_MODE = railway_config.RAILWAY_DEPLOY
 PLAYWRIGHT_CONFIG = railway_config.PLAYWRIGHT_CONFIG
-DOWNLOADER_CONFIG = railway_config.DOWNLOADER_CONFIG

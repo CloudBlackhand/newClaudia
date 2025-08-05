@@ -39,3 +39,25 @@ structlog==23.2.0
 # e monitore o impacto nos custos!
 # Se precisar de dependências adicionais, adicione gradualmente
 # e monitore o impacto nos custos!
+# Automação Web (WhatsApp + Downloads)
+playwright==1.40.0
+aiohttp==3.9.1
+websockets==12.0
+
+# Processamento de dados
+python-dateutil==2.8.2
+
+# QR Code para WhatsApp
+qrcode[pil]==7.4.2
+
+# Speech Recognition para Anti-Captcha
+SpeechRecognition==3.10.0
+pydub==0.25.1
+
+# Utilitários
+asyncio-throttle==1.0.2
+python-dotenv==1.0.0
+
+# Para desenvolvimento local (opcional)
+# Descomente se precisar rodar localmente
+# uvicorn[standard]==0.24.0 

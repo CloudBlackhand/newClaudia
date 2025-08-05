@@ -321,10 +321,10 @@ class WhatsAppClient:
         """🤖 SIMULAÇÃO HUMANA ULTRA AVANÇADA"""
         try:
             # 🧹 Limpar campo primeiro
-            await element.click()
-            await self.page.keyboard.press('Control+A')
-            await self.page.keyboard.press('Delete')
-            
+        await element.click()
+        await self.page.keyboard.press('Control+A')
+        await self.page.keyboard.press('Delete')
+        
             # ⏱️ PAUSA PARA "PENSAR"
             await asyncio.sleep(random.uniform(0.5, 2.0))
             
@@ -337,7 +337,7 @@ class WhatsAppClient:
                 
                 # ⌨️ DIGITAR PALAVRA CARACTERE POR CARACTERE
                 for char in word:
-                    await element.type(char)
+            await element.type(char)
                     
                     # ⏱️ VELOCIDADE VARIÁVEL POR CARACTERE
                     char_delay = typing_speed + (hash(char) % 100) / 3000
@@ -611,3 +611,168 @@ class WhatsAppClient:
             logger.info("🔒 Cliente WhatsApp fechado")
         except Exception as e:
             logger.error(f"❌ Erro ao fechar cliente: {e}") 
+            await self._type_human_like(message_input, message)
+            
+            # ⏱️ PAUSA ANTES DE ENVIAR
+            await asyncio.sleep(random.uniform(1.5, 3.0))
+            
+            # 📤 ENVIAR MENSAGEM
+            await self.page.keyboard.press('Enter')
+            
+            # ⏱️ AGUARDAR CONFIRMAÇÃO
+            await asyncio.sleep(random.uniform(2, 4))
+            
+            # 📊 ATUALIZAR CONTADORES
+            self.last_message_time = time.time()
+            self.message_count += 1
+            
+            logger.info(f"✅ ULTRA STEALTH: Mensagem enviada para {phone}")
+            return True
+            
+        except Exception as e:
+            logger.error(f"❌ Erro no envio ULTRA STEALTH para {phone}: {e}")
+            return False
+    
+    async def _send_attachment_stealth(self, file_path: str):
+        """📎 ENVIAR ANEXO COM STEALTH"""
+        try:
+            # 🎲 PAUSA ALEATÓRIA
+            await asyncio.sleep(random.uniform(0.5, 1.5))
+            
+            # 📎 CLICAR NO BOTÃO DE ANEXO
+            attach_button = await self.page.wait_for_selector('[data-testid="clip"]')
+            await attach_button.click()
+            
+            await asyncio.sleep(random.uniform(0.8, 1.5))
+            
+            # 📄 CLICAR EM DOCUMENTO
+            doc_button = await self.page.wait_for_selector('[data-testid="attach-document"]')
+            await doc_button.click()
+            
+            # 📤 UPLOAD DO ARQUIVO
+            file_input = await self.page.wait_for_selector('input[type="file"]')
+            await file_input.set_input_files(file_path)
+            
+            await asyncio.sleep(random.uniform(1.5, 3.0))
+            
+            # 📤 ENVIAR ANEXO
+            send_button = await self.page.wait_for_selector('[data-testid="send-button"]')
+            await send_button.click()
+            
+            logger.info(f"✅ Anexo ULTRA STEALTH enviado: {os.path.basename(file_path)}")
+            
+        except Exception as e:
+            logger.error(f"❌ Erro ao enviar anexo ULTRA STEALTH: {e}")
+    
+    async def get_qr_code(self) -> Optional[str]:
+        """Obter QR Code atual"""
+        if not self.is_connected and self.qr_code_data:
+            # Tentar capturar QR atualizado
+            try:
+                new_qr = await self._wait_for_qr_code()
+                if new_qr:
+                    self.qr_code_data = new_qr
+                return self.qr_code_data
+            except:
+                return self.qr_code_data
+        return None
+    
+    async def get_received_messages(self) -> List[Dict[str, Any]]:
+        """Obter mensagens recebidas"""
+        try:
+            if not self.is_connected:
+                return []
+            
+            messages = await self.page.evaluate("""
+                () => {
+                    const unprocessed = window.receivedMessages?.filter(msg => !msg.processed) || [];
+                    
+                    // Marcar como processadas
+                    if (window.receivedMessages) {
+                        window.receivedMessages.forEach(msg => msg.processed = true);
+                    }
+                    
+                    return unprocessed;
+                }
+            """)
+            
+            return messages
+            
+        except Exception as e:
+            logger.error(f"❌ Erro ao obter mensagens: {e}")
+            return []
+    
+    def _format_phone(self, phone: str) -> str:
+        """Formatar número de telefone"""
+        # Remover caracteres não numéricos
+        clean_phone = ''.join(filter(str.isdigit, phone))
+        
+        # Adicionar código do país se necessário
+        if not clean_phone.startswith('55'):
+            clean_phone = '55' + clean_phone
+        
+        return clean_phone
+    
+    async def _save_session(self):
+        """Salvar dados da sessão"""
+        try:
+            # Obter cookies e localStorage
+            cookies = await self.page.context.cookies()
+            local_storage = await self.page.evaluate('() => ({ ...localStorage })')
+            
+            session_data = {
+                'cookies': cookies,
+                'local_storage': local_storage,
+                'timestamp': time.time()
+            }
+            
+            # Salvar em arquivo
+            os.makedirs('sessions', exist_ok=True)
+            with open('sessions/whatsapp_session.json', 'w') as f:
+                json.dump(session_data, f)
+            
+            logger.info("💾 Sessão salva")
+            
+        except Exception as e:
+            logger.error(f"❌ Erro ao salvar sessão: {e}")
+    
+    async def _load_session(self):
+        """Carregar sessão salva"""
+        try:
+            session_file = 'sessions/whatsapp_session.json'
+            if os.path.exists(session_file):
+                with open(session_file, 'r') as f:
+                    session_data = json.load(f)
+                
+                # Verificar se sessão não está muito antiga (7 dias)
+                if time.time() - session_data.get('timestamp', 0) < 7 * 24 * 3600:
+                    # Restaurar cookies
+                    await self.page.context.add_cookies(session_data['cookies'])
+                    
+                    # Restaurar localStorage
+                    await self.page.evaluate(f"""
+                        () => {{
+                            const data = {json.dumps(session_data['local_storage'])};
+                            for (const [key, value] of Object.entries(data)) {{
+                                localStorage.setItem(key, value);
+                            }}
+                        }}
+                    """)
+                    
+                    logger.info("📂 Sessão carregada")
+                    return True
+                    
+        except Exception as e:
+            logger.error(f"❌ Erro ao carregar sessão: {e}")
+        
+        return False
+    
+    async def close(self):
+        """Fechar cliente"""
+        try:
+            if self.browser:
+                await self.browser.close()
+            if self.playwright:
+                await self.playwright.stop()
+            logger.info("🔒 Cliente WhatsApp fechado")
+        except Exception as e:
