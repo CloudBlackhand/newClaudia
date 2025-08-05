@@ -498,8 +498,11 @@ async def dashboard(request: Request):
                         .then(data => {{
                             if (data.success) {{
                                 addLog('WhatsApp conectado com sucesso', 'success');
+                                if (data.qr_data) {{
+                                    addLog('QR Code gerado - Escaneie com WhatsApp', 'info');
+                                }}
                             }} else {{
-                                addLog('Erro ao conectar WhatsApp: ' + data.error, 'error');
+                                addLog('Erro ao conectar WhatsApp: ' + (data.message || data.error || 'Erro desconhecido'), 'error');
                             }}
                         }})
                         .catch(error => {{
@@ -514,7 +517,7 @@ async def dashboard(request: Request):
                             if (data.success) {{
                                 addLog('Bot iniciado com sucesso', 'success');
                             }} else {{
-                                addLog('Erro ao iniciar bot: ' + data.error, 'error');
+                                addLog('Erro ao iniciar bot: ' + (data.message || data.error || 'Erro desconhecido'), 'error');
                             }}
                         }})
                         .catch(error => {{
@@ -529,7 +532,7 @@ async def dashboard(request: Request):
                             if (data.success) {{
                                 addLog('Bot parado com sucesso', 'success');
                             }} else {{
-                                addLog('Erro ao parar bot: ' + data.error, 'error');
+                                addLog('Erro ao parar bot: ' + (data.message || data.error || 'Erro desconhecido'), 'error');
                             }}
                         }})
                         .catch(error => {{
@@ -550,7 +553,7 @@ async def dashboard(request: Request):
                             if (data.success) {{
                                 addLog(`Fatura baixada: ${{data.file_path}}`, 'success');
                             }} else {{
-                                addLog('Erro ao baixar fatura: ' + data.error, 'error');
+                                addLog('Erro ao baixar fatura: ' + (data.message || data.error || 'Erro desconhecido'), 'error');
                             }}
                         }})
                         .catch(error => {{
@@ -578,7 +581,7 @@ async def dashboard(request: Request):
                                 if (data.success) {{
                                     addLog('FPD carregado com sucesso', 'success');
                                 }} else {{
-                                    addLog('Erro ao carregar FPD: ' + data.error, 'error');
+                                    addLog('Erro ao carregar FPD: ' + (data.message || data.error || 'Erro desconhecido'), 'error');
                                 }}
                             }})
                             .catch(error => {{
@@ -736,27 +739,36 @@ async def connect_whatsapp():
     try:
         logger.info("🔌 Iniciando conexão WhatsApp...")
         
+        # Verificar se WhatsApp já está conectado
+        if system_state.get("whatsapp_connected", False):
+            return {
+                "success": True,
+                "message": "WhatsApp já está conectado"
+            }
+        
         # Inicializar cliente WhatsApp
         qr_data = await whatsapp_client.initialize()
         
         if qr_data:
             system_state["whatsapp_connected"] = False
+            logger.info("✅ QR Code gerado com sucesso")
             return {
                 "success": True,
                 "qr_data": qr_data,
-                "message": "Escaneie o QR Code com WhatsApp"
+                "message": "QR Code gerado - Escaneie com WhatsApp"
             }
         else:
+            logger.error("❌ Falha ao gerar QR Code")
             return {
                 "success": False,
-                "message": "Erro ao gerar QR Code"
+                "message": "Falha ao gerar QR Code - Verifique os logs"
             }
             
     except Exception as e:
         logger.error(f"❌ Erro ao conectar WhatsApp: {e}")
         return {
             "success": False,
-            "message": f"Erro: {str(e)}"
+            "message": f"Erro interno: {str(e)}"
         }
 
 @app.get("/api/whatsapp/qr")
