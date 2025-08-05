@@ -157,14 +157,32 @@ async def dashboard(request: Request):
 @app.get("/api/status")
 async def get_status():
     """Status do sistema"""
-    return {
-        "status": "online",
-        "whatsapp_connected": system_state["whatsapp_connected"],
-        "fpd_loaded": system_state["fpd_loaded"],
-        "vendas_loaded": system_state["vendas_loaded"],
-        "bot_active": system_state["bot_active"],
-        "stats": system_state["stats"]
-    }
+    try:
+        # Verificar se o sistema está funcionando
+        status = {
+            "status": "online",
+            "version": "2.2",
+            "whatsapp_connected": system_state["whatsapp_connected"],
+            "bot_active": system_state["bot_active"],
+            "fpd_loaded": system_state["fpd_loaded"],
+            "vendas_loaded": system_state["vendas_loaded"],
+            "stats": system_state["stats"],
+            "timestamp": datetime.now().isoformat(),
+            "railway": True,
+            "health": "ok"
+        }
+        
+        # Log para debug
+        logger.info("✅ Healthcheck realizado com sucesso")
+        
+        return status
+    except Exception as e:
+        logger.error(f"❌ Erro no healthcheck: {e}")
+        return {
+            "status": "error",
+            "error": str(e),
+            "timestamp": datetime.now().isoformat()
+        }
 
 @app.get("/api/storage/stats")
 async def get_storage_stats():

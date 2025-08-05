@@ -54,11 +54,23 @@ def main():
         "python", "-m", "uvicorn", 
         "app:app", 
         "--host", "0.0.0.0", 
-        "--port", port
+        "--port", port,
+        "--timeout-keep-alive", "300",
+        "--log-level", "info"
     ]
     
     print(f"🎯 Iniciando servidor na porta {port}...")
-    subprocess.run(cmd)
+    print(f"🌐 Healthcheck: http://0.0.0.0:{port}/api/status")
+    print(f"📊 Dashboard: http://0.0.0.0:{port}/")
+    
+    try:
+        subprocess.run(cmd, check=True)
+    except subprocess.CalledProcessError as e:
+        print(f"❌ Erro ao iniciar servidor: {e}")
+        sys.exit(1)
+    except KeyboardInterrupt:
+        print("🛑 Servidor interrompido pelo usuário")
+        sys.exit(0)
 
 if __name__ == "__main__":
     main() 
