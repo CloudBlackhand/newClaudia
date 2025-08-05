@@ -1,4 +1,4 @@
-# CLAUDIA COBRANÇAS - REQUIREMENTS OTIMIZADO PARA RAILWAY
+# CLAUDIA COBRANÇAS - REQUIREMENTS SIMPLIFICADO PARA RAILWAY
 # Sistema oficial de cobrança da Desktop
 
 # Core Web Framework
@@ -9,7 +9,6 @@ jinja2==3.1.2
 
 # WhatsApp & Web Automation  
 playwright==1.40.0
-playwright-browsers==1.40.0
 websockets==12.0
 aiohttp==3.9.1
 qrcode[pil]==7.4.2
@@ -19,9 +18,8 @@ Pillow==10.1.0
 pandas==2.1.3
 openpyxl==3.1.2
 
-# Audio Processing (para captcha)
+# Audio Processing (simplificado)
 SpeechRecognition==3.10.0
-# pydub==0.25.1  # Removido - requer ffmpeg que causa problemas no Railway
 
 # Requests
 requests==2.31.0
@@ -31,12 +29,4 @@ structlog==23.2.0
 
 # Utilitários
 python-dateutil==2.8.2
-asyncio-throttle==1.0.2
-python-dotenv==1.0.0
-
-# DEPENDÊNCIAS COMENTADAS PARA RAILWAY (reduzir RAM/CPU)
-# redis==4.6.0  # Desabilitado - consome muita RAM
-# aioredis==2.0.1  # Desabilitado - problema de compatibilidade  
-# psutil==5.9.6  # Desabilitado - só para monitoramento avançado
-# cryptography==41.0.7  # Desabilitado - railway tem https nativo
-# bcrypt==4.1.2  # Desabilitado - usar hash simples 
+python-dotenv==1.0.0 

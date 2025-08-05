@@ -28,13 +28,20 @@ def main():
     # Verificar e instalar dependências
     print("📦 Verificando dependências...")
     try:
-        import fastapi
-        import uvicorn
-        import playwright
-        print("✅ Dependências principais OK")
-    except ImportError as e:
-        print(f"❌ Dependência faltando: {e}")
-        sys.exit(1)
+        # Executar teste de dependências
+        subprocess.run([sys.executable, "test_deps.py"], check=True, capture_output=True)
+        print("✅ Todas as dependências OK")
+    except subprocess.CalledProcessError as e:
+        print(f"❌ Erro no teste de dependências: {e}")
+        print("🔄 Tentando importar dependências principais...")
+        try:
+            import fastapi
+            import uvicorn
+            import playwright
+            print("✅ Dependências principais OK")
+        except ImportError as e2:
+            print(f"❌ Dependência faltando: {e2}")
+            sys.exit(1)
     
     # Instalar e testar Playwright browsers
     print("🎭 Instalando e testando Playwright browsers...")
