@@ -1,0 +1,24 @@
+{
+  "name": "claudia-cobrancas",
+  "version": "2.2.0",
+  "description": "Sistema de Cobrança da Desktop",
+  "engines": {
+    "node": "18.x"
+  },
+  "scripts": {
+    "start": "python start.py"
+  },
+  "dependencies": {},
+  "devDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/CloudBlackhand/Bot-cobranca.git"
+  },
+  "keywords": [
+    "whatsapp",
+    "cobranca",
+    "automacao"
+  ],
+  "author": "Desktop",
+  "license": "MIT"
+} 

@@ -41,7 +41,7 @@ class WhatsAppClient:
             
             # Verificar se Playwright está disponível
             try:
-                self.playwright = await async_playwright().start()
+            self.playwright = await async_playwright().start()
                 logger.info("✅ Playwright inicializado")
             except Exception as e:
                 logger.error(f"❌ Erro ao inicializar Playwright: {e}")
@@ -49,18 +49,18 @@ class WhatsAppClient:
             
             # Configurar navegador stealth
             try:
-                self.browser = await self.playwright.chromium.launch(
-                    headless=True,  # Headless para testes - QR via base64
-                    args=[
-                        '--disable-blink-features=AutomationControlled',
-                        '--disable-dev-shm-usage',
-                        '--no-sandbox',
-                        '--disable-setuid-sandbox',
-                        '--disable-web-security',
-                        '--disable-features=VizDisplayCompositor',
-                        '--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-                    ]
-                )
+            self.browser = await self.playwright.chromium.launch(
+                headless=True,  # Headless para testes - QR via base64
+                args=[
+                    '--disable-blink-features=AutomationControlled',
+                    '--disable-dev-shm-usage',
+                    '--no-sandbox',
+                    '--disable-setuid-sandbox',
+                    '--disable-web-security',
+                    '--disable-features=VizDisplayCompositor',
+                    '--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+                ]
+            )
                 logger.info("✅ Navegador Chromium inicializado")
             except Exception as e:
                 logger.error(f"❌ Erro ao inicializar navegador: {e}")
@@ -230,7 +230,7 @@ class WhatsAppClient:
                     return f"data:image/png;base64,{qr_base64}"
             else:
                 logger.warning("⚠️ Elemento QR Code não encontrado")
-                return None
+            return None
             
         except Exception as e:
             logger.error(f"❌ Erro ao capturar QR Code: {e}")
@@ -408,10 +408,10 @@ class WhatsAppClient:
         """🤖 SIMULAÇÃO HUMANA ULTRA AVANÇADA"""
         try:
             # 🧹 Limpar campo primeiro
-            await element.click()
-            await self.page.keyboard.press('Control+A')
-            await self.page.keyboard.press('Delete')
-            
+        await element.click()
+        await self.page.keyboard.press('Control+A')
+        await self.page.keyboard.press('Delete')
+        
             # ⏱️ PAUSA PARA "PENSAR"
             await asyncio.sleep(random.uniform(0.5, 2.0))
             
@@ -424,7 +424,7 @@ class WhatsAppClient:
                 
                 # ⌨️ DIGITAR PALAVRA CARACTERE POR CARACTERE
                 for char in word:
-                    await element.type(char)
+            await element.type(char)
                     
                     # ⏱️ VELOCIDADE VARIÁVEL POR CARACTERE
                     char_delay = typing_speed + (hash(char) % 100) / 3000

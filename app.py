@@ -61,6 +61,17 @@ app = FastAPI(
     version="2.2"
 )
 
+# Adicionar CORS para WebSockets
+from fastapi.middleware.cors import CORSMiddleware
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Permitir todas as origens
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 # Configurar arquivos estáticos com cabeçalhos anti-cache
 from fastapi.staticfiles import StaticFiles
 from starlette.staticfiles import StaticFiles as StarletteStaticFiles

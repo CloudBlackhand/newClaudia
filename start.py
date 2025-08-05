@@ -13,6 +13,18 @@ def main():
     """Inicialização simples"""
     print("🚀 Iniciando Claudia Cobranças...")
     
+    # Verificar Node.js
+    try:
+        print("🔍 Verificando Node.js...")
+        node_result = subprocess.run(["node", "--version"], 
+                                   capture_output=True, text=True)
+        if node_result.returncode == 0:
+            print(f"✅ Node.js disponível: {node_result.stdout.strip()}")
+        else:
+            print("⚠️ Node.js não encontrado")
+    except Exception as e:
+        print(f"⚠️ Erro ao verificar Node.js: {e}")
+    
     # Instalar Playwright se necessário
     try:
         print("📦 Instalando Playwright...")
