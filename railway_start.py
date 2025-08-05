@@ -46,9 +46,10 @@ def main():
     # Instalar e testar Playwright browsers
     print("🎭 Instalando e testando Playwright browsers...")
     try:
-        # Tentar executar script de instalação
-        subprocess.run(["python", "install_playwright.py"], check=True, capture_output=True)
-        print("✅ Playwright instalado via script")
+        # Instalação direta do Chromium
+        print("📦 Instalando Chromium...")
+        subprocess.run(["python", "-m", "playwright", "install", "chromium"], check=True, capture_output=True)
+        print("✅ Chromium instalado com sucesso")
         
         # Testar Playwright
         print("🧪 Testando Playwright...")
@@ -56,13 +57,14 @@ def main():
         print("✅ Playwright testado e funcionando")
         
     except Exception as e:
-        print(f"⚠️ Aviso: Erro ao executar script: {e}")
-        print("🔄 Tentando instalação direta...")
+        print(f"❌ Erro ao instalar Playwright: {e}")
+        print("⚠️ Tentando método alternativo...")
         try:
-            subprocess.run(["python", "-m", "playwright", "install", "chromium"], check=True, capture_output=True)
-            print("✅ Playwright browsers instalados via pip")
+            # Método alternativo
+            subprocess.run(["python", "-m", "playwright", "install", "--with-deps"], check=True, capture_output=True)
+            print("✅ Playwright instalado com dependências")
         except Exception as e2:
-            print(f"❌ Erro ao instalar browsers: {e2}")
+            print(f"❌ Erro definitivo: {e2}")
             print("⚠️ Continuando sem browsers...")
     
     # Verificar arquivos essenciais

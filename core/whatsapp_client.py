@@ -172,9 +172,9 @@ class WhatsAppClient:
         try:
             logger.info("🔍 Aguardando QR Code aparecer...")
             
-            # Aguardar QR Code aparecer
+            # Aguardar QR Code aparecer com timeout maior para Railway
             qr_selector = '[data-testid="qr-code"]'
-            await self.page.wait_for_selector(qr_selector, timeout=30000)
+            await self.page.wait_for_selector(qr_selector, timeout=90000)  # 90 segundos para Railway
             logger.info("✅ QR Code encontrado na página")
             
             # Aguardar um pouco para garantir que carregou
