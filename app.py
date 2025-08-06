@@ -177,12 +177,12 @@ async def get_status():
     try:
         # Verificar se o sistema está funcionando
         status = {
-            "status": "online",
+        "status": "online",
             "version": "2.2",
-            "whatsapp_connected": system_state["whatsapp_connected"],
+        "whatsapp_connected": system_state["whatsapp_connected"],
             "bot_active": system_state["bot_active"],
-            "fpd_loaded": system_state["fpd_loaded"],
-            "vendas_loaded": system_state["vendas_loaded"],
+        "fpd_loaded": system_state["fpd_loaded"],
+        "vendas_loaded": system_state["vendas_loaded"],
             "stats": system_state["stats"],
             "timestamp": datetime.now().isoformat(),
             "railway": True,
@@ -199,7 +199,7 @@ async def get_status():
             "status": "error",
             "error": str(e),
             "timestamp": datetime.now().isoformat()
-        }
+    }
 
 @app.get("/api/storage/stats")
 async def get_storage_stats():
