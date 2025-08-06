@@ -55,6 +55,7 @@ class BlacktemplarBot {
             <button class="nav-tab" data-tab="metricas">📈 Métricas</button>
             <button class="nav-tab" data-tab="mensagens">💬 Mensagens</button>
             <button class="nav-tab" data-tab="dados-cruzados">📊 Dados Cruzados</button>
+            <button class="nav-tab" data-tab="fpds-carregados">📋 FPDs Carregados</button>
             <button class="nav-tab" data-tab="configuracoes">⚙️ Configurações</button>
         `;
         
@@ -366,6 +367,94 @@ class BlacktemplarBot {
             </div>
         `;
         
+        // FPDs Carregados tab
+        const fpdsCarregados = document.createElement('div');
+        fpdsCarregados.id = 'fpds-carregados';
+        fpdsCarregados.className = 'tab-content';
+        fpdsCarregados.innerHTML = `
+            <div class="card">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="m-0">📋 FPDs Carregados</h5>
+                        <div>
+                            <button onclick="loadFpdData()" class="btn btn-sm btn-primary">🔄 Atualizar</button>
+                            <button onclick="exportFpdData()" class="btn btn-sm btn-success">📥 Exportar</button>
+                            <button onclick="filterFpdData()" class="btn btn-sm btn-info">🔍 Filtrar</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="fpd-summary">
+                        <div class="summary-card">
+                            <div class="summary-title">📊 Total de Registros</div>
+                            <div id="totalFpdRecords" class="summary-value">0</div>
+                        </div>
+                        <div class="summary-card">
+                            <div class="summary-title">✅ Com Protocolo</div>
+                            <div id="fpdWithProtocol" class="summary-value">0</div>
+                        </div>
+                        <div class="summary-card">
+                            <div class="summary-title">❌ Sem Protocolo</div>
+                            <div id="fpdWithoutProtocol" class="summary-value">0</div>
+                        </div>
+                        <div class="summary-card">
+                            <div class="summary-title">💰 Valor Total</div>
+                            <div id="fpdTotalValue" class="summary-value">R$ 0,00</div>
+                        </div>
+                    </div>
+                    
+                    <div class="fpd-filters">
+                        <div class="filter-group">
+                            <label>Status:</label>
+                            <select id="fpdStatusFilter" onchange="filterFpdData()">
+                                <option value="all">Todos</option>
+                                <option value="ativo">Com Protocolo</option>
+                                <option value="sem_protocolo">Sem Protocolo</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label>Valor:</label>
+                            <select id="fpdValueFilter" onchange="filterFpdData()">
+                                <option value="all">Todos</option>
+                                <option value="high">Alto (>R$ 1000)</option>
+                                <option value="medium">Médio (R$ 100-1000)</option>
+                                <option value="low">Baixo (<R$ 100)</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label>Buscar:</label>
+                            <input type="text" id="fpdSearchFilter" placeholder="Nome, telefone, documento..." onchange="filterFpdData()">
+                        </div>
+                    </div>
+                    
+                    <div class="fpd-table-container">
+                        <table id="fpdTable" class="fpd-table">
+                            <thead>
+                                <tr>
+                                    <th>📋 Protocolo</th>
+                                    <th>👤 Cliente</th>
+                                    <th>📱 Telefone</th>
+                                    <th>📄 Documento</th>
+                                    <th>💰 Valor</th>
+                                    <th>✅ Status</th>
+                                    <th>🔍 Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="fpdTableBody">
+                                <!-- Dados serão carregados aqui -->
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="fpd-pagination">
+                        <button onclick="previousFpdPage()" class="btn btn-sm btn-outline-primary">← Anterior</button>
+                        <span id="fpdPageInfo">Página 1 de 1</span>
+                        <button onclick="nextFpdPage()" class="btn btn-sm btn-outline-primary">Próxima →</button>
+                    </div>
+                </div>
+            </div>
+        `;
+        
         // Configurações tab
         const configuracoes = document.createElement('div');
         configuracoes.id = 'configuracoes';
@@ -390,6 +479,7 @@ class BlacktemplarBot {
         main.appendChild(metricas);
         main.appendChild(mensagens);
         main.appendChild(dadosCruzados);
+        main.appendChild(fpdsCarregados);
         main.appendChild(configuracoes);
         
         appContainer.appendChild(header);
@@ -681,6 +771,65 @@ class BlacktemplarBot {
             .detail-section p {
                 margin: 5px 0;
                 font-size: 0.9em;
+            }
+            
+            /* 📋 FPDs CARREGADOS - ESTILOS */
+            .fpd-summary {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                gap: 15px;
+                margin-bottom: 20px;
+            }
+            
+            .fpd-filters {
+                display: flex;
+                gap: 15px;
+                margin-bottom: 20px;
+                flex-wrap: wrap;
+            }
+            
+            .fpd-table-container {
+                overflow-x: auto;
+                margin-bottom: 20px;
+            }
+            
+            .fpd-table {
+                width: 100%;
+                border-collapse: collapse;
+                font-size: 0.9em;
+            }
+            
+            .fpd-table th,
+            .fpd-table td {
+                padding: 10px;
+                border: 1px solid #dee2e6;
+                text-align: left;
+            }
+            
+            .fpd-table th {
+                background: #f8f9fa;
+                font-weight: bold;
+            }
+            
+            .fpd-row.ativo {
+                background: #d4edda;
+            }
+            
+            .fpd-row.sem_protocolo {
+                background: #f8d7da;
+            }
+            
+            .fpd-pagination {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                gap: 15px;
+                margin-top: 20px;
+            }
+            
+            .fpd-pagination span {
+                font-weight: bold;
+                color: #495057;
             }
         `;
         document.head.appendChild(style);
@@ -1634,6 +1783,262 @@ class BlacktemplarBot {
     
     // 📊 DADOS CRUZADOS - NOVAS FUNCIONALIDADES
     
+    // 📋 FPDs CARREGADOS - NOVAS FUNCIONALIDADES
+    
+    async loadFpdData() {
+        try {
+            this.showNotification('📋 Carregando dados dos FPDs...', 'info');
+            
+            const response = await fetch('/api/fpd/data');
+            const data = await response.json();
+            
+            if (data.success) {
+                this.displayFpdData(data.data);
+                this.updateFpdSummary(data);
+                this.showNotification('✅ Dados dos FPDs carregados!', 'success');
+            } else {
+                this.showNotification(`❌ Erro: ${data.message}`, 'error');
+            }
+        } catch (error) {
+            this.showNotification(`❌ Erro ao carregar dados dos FPDs: ${error.message}`, 'error');
+        }
+    }
+    
+    displayFpdData(data) {
+        const tbody = document.getElementById('fpdTableBody');
+        if (!tbody) return;
+        
+        tbody.innerHTML = '';
+        
+        data.forEach(item => {
+            const row = document.createElement('tr');
+            row.className = `fpd-row ${item.status}`;
+            row.innerHTML = `
+                <td>
+                    <div class="protocolo-info">
+                        <strong>${item.protocolo}</strong>
+                        <small>ID: ${item.id}</small>
+                    </div>
+                </td>
+                <td>
+                    <div class="cliente-info">
+                        <strong>${item.cliente?.nome || 'N/A'}</strong>
+                    </div>
+                </td>
+                <td>
+                    <div class="telefone-info">
+                        <strong>${item.cliente?.telefone || 'N/A'}</strong>
+                    </div>
+                </td>
+                <td>
+                    <div class="documento-info">
+                        <strong>${item.cliente?.documento || 'N/A'}</strong>
+                    </div>
+                </td>
+                <td>
+                    <div class="valor-info">
+                        <strong>R$ ${this.formatCurrency(item.valor)}</strong>
+                    </div>
+                </td>
+                <td>
+                    <div class="status-info">
+                        <span class="status-badge ${item.status}">
+                            ${this.getFpdStatusText(item.status)}
+                        </span>
+                    </div>
+                </td>
+                <td>
+                    <div class="actions-info">
+                        <button onclick="BlacktemplarBot.viewFpdDetails('${item.id}')" 
+                                class="btn btn-sm btn-outline-primary" title="Ver detalhes">
+                            👁️
+                        </button>
+                        <button onclick="BlacktemplarBot.editFpdItem('${item.id}')" 
+                                class="btn btn-sm btn-outline-secondary" title="Editar">
+                            ✏️
+                        </button>
+                        <button onclick="BlacktemplarBot.sendFpdMessage('${item.id}')" 
+                                class="btn btn-sm btn-outline-success" title="Enviar mensagem">
+                            📱
+                        </button>
+                    </div>
+                </td>
+            `;
+            
+            tbody.appendChild(row);
+        });
+    }
+    
+    updateFpdSummary(data) {
+        const totalRecords = data.total_records || 0;
+        const shownRecords = data.shown_records || 0;
+        
+        // Calcular estatísticas
+        let withProtocol = 0;
+        let withoutProtocol = 0;
+        let totalValue = 0;
+        
+        data.data.forEach(item => {
+            if (item.status === 'ativo') {
+                withProtocol++;
+            } else {
+                withoutProtocol++;
+            }
+            totalValue += item.valor || 0;
+        });
+        
+        document.getElementById('totalFpdRecords').textContent = totalRecords;
+        document.getElementById('fpdWithProtocol').textContent = withProtocol;
+        document.getElementById('fpdWithoutProtocol').textContent = withoutProtocol;
+        document.getElementById('fpdTotalValue').textContent = `R$ ${this.formatCurrency(totalValue)}`;
+    }
+    
+    async filterFpdData() {
+        const statusFilter = document.getElementById('fpdStatusFilter').value;
+        const valueFilter = document.getElementById('fpdValueFilter').value;
+        const searchFilter = document.getElementById('fpdSearchFilter').value;
+        
+        try {
+            const params = new URLSearchParams({
+                status: statusFilter,
+                value: valueFilter,
+                search: searchFilter
+            });
+            
+            const response = await fetch(`/api/fpd/data/filter?${params}`);
+            const data = await response.json();
+            
+            if (data.success) {
+                this.displayFpdData(data.data);
+                this.showNotification('✅ Filtros aplicados!', 'success');
+            } else {
+                this.showNotification(`❌ Erro: ${data.message}`, 'error');
+            }
+        } catch (error) {
+            this.showNotification(`❌ Erro ao filtrar: ${error.message}`, 'error');
+        }
+    }
+    
+    async exportFpdData() {
+        try {
+            this.showNotification('📥 Exportando dados dos FPDs...', 'info');
+            
+            const response = await fetch('/api/fpd/data/export', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            });
+            
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `fpds-carregados-${new Date().toISOString().split('T')[0]}.xlsx`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+            
+            this.showNotification('✅ Dados exportados com sucesso!', 'success');
+        } catch (error) {
+            this.showNotification(`❌ Erro ao exportar: ${error.message}`, 'error');
+        }
+    }
+    
+    async viewFpdDetails(id) {
+        try {
+            const response = await fetch(`/api/fpd/data/details/${id}`);
+            const data = await response.json();
+            
+            if (data.success) {
+                this.showFpdDetailsModal(data.data);
+            } else {
+                this.showNotification(`❌ Erro: ${data.message}`, 'error');
+            }
+        } catch (error) {
+            this.showNotification(`❌ Erro ao carregar detalhes: ${error.message}`, 'error');
+        }
+    }
+    
+    showFpdDetailsModal(data) {
+        const modal = document.createElement('div');
+        modal.className = 'modal-overlay';
+        modal.innerHTML = `
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5>📋 Detalhes do FPD</h5>
+                    <button onclick="this.closest('.modal-overlay').remove()" class="btn-close">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="details-grid">
+                        <div class="detail-section">
+                            <h6>📋 Informações do Protocolo</h6>
+                            <p><strong>Protocolo:</strong> ${data.protocolo}</p>
+                            <p><strong>ID:</strong> ${data.id}</p>
+                            <p><strong>Status:</strong> ${this.getFpdStatusText(data.status)}</p>
+                        </div>
+                        <div class="detail-section">
+                            <h6>👤 Informações do Cliente</h6>
+                            <p><strong>Nome:</strong> ${data.cliente?.nome || 'N/A'}</p>
+                            <p><strong>Telefone:</strong> ${data.cliente?.telefone || 'N/A'}</p>
+                            <p><strong>Documento:</strong> ${data.cliente?.documento || 'N/A'}</p>
+                        </div>
+                        <div class="detail-section">
+                            <h6>💰 Informações Financeiras</h6>
+                            <p><strong>Valor:</strong> R$ ${this.formatCurrency(data.valor)}</p>
+                            <p><strong>Status:</strong> ${this.getFpdStatusText(data.status)}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button onclick="BlacktemplarBot.sendFpdMessage('${data.id}')" class="btn btn-primary">
+                        📱 Enviar Mensagem
+                    </button>
+                    <button onclick="this.closest('.modal-overlay').remove()" class="btn btn-secondary">
+                        Fechar
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+    }
+    
+    async editFpdItem(id) {
+        // Implementar edição de item
+        this.showNotification('✏️ Funcionalidade de edição em desenvolvimento...', 'info');
+    }
+    
+    async sendFpdMessage(id) {
+        try {
+            this.showNotification('📱 Preparando mensagem...', 'info');
+            
+            const response = await fetch(`/api/fpd/data/send-message/${id}`, {
+                method: 'POST'
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                this.showNotification('✅ Mensagem enviada com sucesso!', 'success');
+            } else {
+                this.showNotification(`❌ Erro: ${result.message}`, 'error');
+            }
+        } catch (error) {
+            this.showNotification(`❌ Erro ao enviar mensagem: ${error.message}`, 'error');
+        }
+    }
+    
+    getFpdStatusText(status) {
+        const statusMap = {
+            'ativo': '✅ Com Protocolo',
+            'sem_protocolo': '❌ Sem Protocolo',
+            'processando': '🔄 Processando'
+        };
+        return statusMap[status] || '❓ Desconhecido';
+    }
+    
+    // 📊 DADOS CRUZADOS - NOVAS FUNCIONALIDADES
+    
     async loadCrossData() {
         try {
             this.showNotification('📊 Carregando dados cruzados...', 'info');
@@ -1959,6 +2364,7 @@ class BlacktemplarBot {
             this.loadConfiguration();
             this.loadMessageHistory();
             this.loadCrossData();
+            this.loadFpdData();
         }, 1000);
     }
     
@@ -1995,6 +2401,11 @@ document.addEventListener('DOMContentLoaded', () => {
     window.loadCrossData = () => window.BlacktemplarBot.loadCrossData();
     window.filterCrossData = () => window.BlacktemplarBot.filterCrossData();
     window.exportCrossData = () => window.BlacktemplarBot.exportCrossData();
+    
+    // 📋 FUNÇÕES GLOBAIS - FPDs CARREGADOS
+    window.loadFpdData = () => window.BlacktemplarBot.loadFpdData();
+    window.filterFpdData = () => window.BlacktemplarBot.filterFpdData();
+    window.exportFpdData = () => window.BlacktemplarBot.exportFpdData();
 });
 
 // Service Worker for offline support

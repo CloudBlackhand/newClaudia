@@ -195,11 +195,77 @@ async def get_status():
         return status
     except Exception as e:
         logger.error(f"❌ Erro no healthcheck: {e}")
-        return {
+                return {
             "status": "error",
             "error": str(e),
             "timestamp": datetime.now().isoformat()
-    }
+        }
+
+@app.get("/api/fpd/data")
+async def get_fpd_data():
+    """Obter dados dos FPDs carregados"""
+    try:
+        if not system_state["fpd_loaded"] or excel_processor.df_fpd is None:
+            return {
+                "success": False,
+                "message": "FPD não carregado"
+            }
+        
+        # Obter dados dos FPDs
+        fpd_data = []
+        df = excel_processor.df_fpd
+        
+        # Limitar a 100 registros para exibição
+        sample_df = df.head(100)
+        
+        for index, row in sample_df.iterrows():
+            try:
+                # Extrair dados do cliente
+                cliente_nome = excel_processor._extract_client_name(row)
+                telefone = excel_processor._extract_phone(row)
+                documento = excel_processor._extract_document(row)
+                
+                # Obter protocolo
+                protocolo = str(row.get(excel_processor.protocolo_column, 'N/A'))
+                
+                # Obter valor (tentar diferentes colunas)
+                valor_cols = ['valor', 'vlr', 'valor_total', 'total']
+                valor = None
+                for col in valor_cols:
+                    if col in df.columns and pd.notna(row[col]):
+                        valor = row[col]
+                        break
+                
+                fpd_data.append({
+                    "id": index,
+                    "protocolo": protocolo,
+                    "cliente": {
+                        "nome": cliente_nome,
+                        "telefone": telefone,
+                        "documento": documento
+                    },
+                    "valor": float(valor) if valor else 0.0,
+                    "status": "ativo" if protocolo != 'N/A' else "sem_protocolo"
+                })
+                
+            except Exception as e:
+                logger.warning(f"⚠️ Erro ao processar linha {index}: {e}")
+                continue
+        
+        return {
+            "success": True,
+            "data": fpd_data,
+            "total_records": len(df),
+            "shown_records": len(fpd_data),
+            "protocol_column": excel_processor.protocolo_column
+        }
+        
+    except Exception as e:
+        logger.error(f"❌ Erro ao obter dados FPD: {e}")
+        return {
+            "success": False,
+            "message": f"Erro: {str(e)}"
+        }
 
 @app.get("/api/storage/stats")
 async def get_storage_stats():
