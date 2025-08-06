@@ -1961,32 +1961,122 @@ body {
 
 .config-section {
     margin: 20px 0;
-    padding: 15px;
+    padding: 20px;
     background: white;
-    border-radius: 5px;
-    border-left: 4px solid #007bff;
+    border-radius: var(--border-radius);
+    box-shadow: var(--card-shadow);
+    border: 1px solid rgba(0,0,0,0.05);
 }
 
 .config-section h4 {
-    margin: 0 0 15px 0;
-    color: #495057;
+    margin: 0 0 20px 0;
+    color: var(--dark-color);
+    font-weight: 600;
+    font-size: 1.1rem;
+    border-bottom: 2px solid var(--primary-color);
+    padding-bottom: 8px;
 }
 
-.config-section label {
-    display: block;
-    margin: 10px 0;
+.config-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+.config-item {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.config-item label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 500;
+    color: var(--text-primary);
     cursor: pointer;
 }
 
-.config-section input {
-    margin-right: 8px;
+.config-item input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    margin: 0;
+    cursor: pointer;
 }
 
-.config-section input[type="number"] {
-    width: 100px;
-    padding: 5px;
-    border: 1px solid #ced4da;
-    border-radius: 3px;
+.config-item input[type="number"],
+.config-item input[type="time"],
+.config-item select {
+    padding: 10px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-sm);
+    font-size: 0.9rem;
+    background: white;
+    transition: border-color 0.3s ease;
+}
+
+.config-item input[type="number"] {
+    width: 120px;
+}
+
+.config-item input[type="time"] {
+    width: 140px;
+}
+
+.config-item select {
+    width: 200px;
+    cursor: pointer;
+}
+
+.config-item input:focus,
+.config-item select:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px rgba(74, 111, 237, 0.1);
+}
+
+.config-actions {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    margin-top: 30px;
+    padding: 20px;
+    background: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--card-shadow);
+}
+
+.config-actions .btn {
+    padding: 12px 24px;
+    font-weight: 600;
+    border-radius: var(--border-radius-sm);
+    transition: all 0.3s ease;
+    cursor: pointer;
+    border: none;
+    font-size: 0.95rem;
+}
+
+.config-actions .btn-primary {
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+    color: white;
+    box-shadow: 0 4px 10px rgba(74, 111, 237, 0.3);
+}
+
+.config-actions .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(74, 111, 237, 0.4);
+}
+
+.config-actions .btn-secondary {
+    background: linear-gradient(135deg, #6c757d, #495057);
+    color: white;
+    box-shadow: 0 4px 10px rgba(108, 117, 125, 0.3);
+}
+
+.config-actions .btn-secondary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(108, 117, 125, 0.4);
 }
 
 /* Tabs para navegação */

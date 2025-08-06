@@ -1035,40 +1035,178 @@ class BlacktemplarBot {
         
         container.innerHTML = `
             <div class="config-section">
-                <h4>🤖 Bot</h4>
-                <label>
-                    <input type="checkbox" ${config.bot.autoStart ? 'checked' : ''} 
-                           onchange="BlacktemplarBot.updateConfig('bot.autoStart', this.checked)">
-                    Auto-iniciar bot
-                </label>
-                <label>
-                    <input type="number" value="${config.bot.messageDelay || 1000}" 
-                           onchange="BlacktemplarBot.updateConfig('bot.messageDelay', this.value)">
-                    Delay entre mensagens (ms)
-                </label>
+                <h4>🤖 Configurações do Bot</h4>
+                <div class="config-grid">
+                    <div class="config-item">
+                        <label>
+                            <input type="checkbox" ${config.bot?.autoStart ? 'checked' : ''} 
+                                   onchange="BlacktemplarBot.updateConfig('bot.autoStart', this.checked)">
+                            Auto-iniciar bot
+                        </label>
+                    </div>
+                    <div class="config-item">
+                        <label>
+                            <input type="number" value="${config.bot?.messageDelay || 2000}" 
+                                   onchange="BlacktemplarBot.updateConfig('bot.messageDelay', this.value)">
+                            Delay entre mensagens (ms)
+                        </label>
+                    </div>
+                    <div class="config-item">
+                        <label>
+                            <input type="number" value="${config.bot?.maxMessagesPerHour || 50}" 
+                                   onchange="BlacktemplarBot.updateConfig('bot.maxMessagesPerHour', this.value)">
+                            Máximo de mensagens/hora
+                        </label>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="config-section">
+                <h4>⏰ Horário de Funcionamento</h4>
+                <div class="config-grid">
+                    <div class="config-item">
+                        <label>
+                            <input type="checkbox" ${config.schedule?.enabled ? 'checked' : ''} 
+                                   onchange="BlacktemplarBot.updateConfig('schedule.enabled', this.checked)">
+                            Ativar horário de funcionamento
+                        </label>
+                    </div>
+                    <div class="config-item">
+                        <label>Início do expediente:</label>
+                        <input type="time" value="${config.schedule?.startTime || '08:00'}" 
+                               onchange="BlacktemplarBot.updateConfig('schedule.startTime', this.value)">
+                    </div>
+                    <div class="config-item">
+                        <label>Fim do expediente:</label>
+                        <input type="time" value="${config.schedule?.endTime || '18:00'}" 
+                               onchange="BlacktemplarBot.updateConfig('schedule.endTime', this.value)">
+                    </div>
+                    <div class="config-item">
+                        <label>Dias de funcionamento:</label>
+                        <select onchange="BlacktemplarBot.updateConfig('schedule.workDays', this.value)">
+                            <option value="1-5" ${config.schedule?.workDays === '1-5' ? 'selected' : ''}>Segunda a Sexta</option>
+                            <option value="1-6" ${config.schedule?.workDays === '1-6' ? 'selected' : ''}>Segunda a Sábado</option>
+                            <option value="0-6" ${config.schedule?.workDays === '0-6' ? 'selected' : ''}>Todos os dias</option>
+                        </select>
+                    </div>
+                </div>
             </div>
             
             <div class="config-section">
                 <h4>📱 WhatsApp</h4>
-                <label>
-                    <input type="checkbox" ${config.whatsapp.stealthMode ? 'checked' : ''} 
-                           onchange="BlacktemplarBot.updateConfig('whatsapp.stealthMode', this.checked)">
-                    Modo Stealth
-                </label>
-                <label>
-                    <input type="checkbox" ${config.whatsapp.autoReconnect ? 'checked' : ''} 
-                           onchange="BlacktemplarBot.updateConfig('whatsapp.autoReconnect', this.checked)">
-                    Auto-reconexão
-                </label>
+                <div class="config-grid">
+                    <div class="config-item">
+                        <label>
+                            <input type="checkbox" ${config.whatsapp?.stealthMode ? 'checked' : ''} 
+                                   onchange="BlacktemplarBot.updateConfig('whatsapp.stealthMode', this.checked)">
+                            Modo Stealth (anti-detecção)
+                        </label>
+                    </div>
+                    <div class="config-item">
+                        <label>
+                            <input type="checkbox" ${config.whatsapp?.autoReconnect ? 'checked' : ''} 
+                                   onchange="BlacktemplarBot.updateConfig('whatsapp.autoReconnect', this.checked)">
+                            Auto-reconexão
+                        </label>
+                    </div>
+                    <div class="config-item">
+                        <label>
+                            <input type="number" value="${config.whatsapp?.reconnectDelay || 30000}" 
+                                   onchange="BlacktemplarBot.updateConfig('whatsapp.reconnectDelay', this.value)">
+                            Delay para reconexão (ms)
+                        </label>
+                    </div>
+                </div>
             </div>
             
             <div class="config-section">
-                <h4>🗃️ Dados</h4>
-                <label>
-                    <input type="checkbox" ${config.data.autoBackup ? 'checked' : ''} 
-                           onchange="BlacktemplarBot.updateConfig('data.autoBackup', this.checked)">
-                    Backup automático
-                </label>
+                <h4>📊 Logs e Monitoramento</h4>
+                <div class="config-grid">
+                    <div class="config-item">
+                        <label>
+                            <input type="checkbox" ${config.logs?.enabled ? 'checked' : ''} 
+                                   onchange="BlacktemplarBot.updateConfig('logs.enabled', this.checked)">
+                            Ativar logs detalhados
+                        </label>
+                    </div>
+                    <div class="config-item">
+                        <label>
+                            <input type="number" value="${config.logs?.retentionDays || 30}" 
+                                   onchange="BlacktemplarBot.updateConfig('logs.retentionDays', this.value)">
+                            Retenção de logs (dias)
+                        </label>
+                    </div>
+                    <div class="config-item">
+                        <label>
+                            <input type="checkbox" ${config.logs?.saveToDatabase ? 'checked' : ''} 
+                                   onchange="BlacktemplarBot.updateConfig('logs.saveToDatabase', this.checked)">
+                            Salvar logs no banco (futuro)
+                        </label>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="config-section">
+                <h4>🗃️ Dados e Backup</h4>
+                <div class="config-grid">
+                    <div class="config-item">
+                        <label>
+                            <input type="checkbox" ${config.data?.autoBackup ? 'checked' : ''} 
+                                   onchange="BlacktemplarBot.updateConfig('data.autoBackup', this.checked)">
+                            Backup automático
+                        </label>
+                    </div>
+                    <div class="config-item">
+                        <label>
+                            <input type="number" value="${config.data?.backupInterval || 24}" 
+                                   onchange="BlacktemplarBot.updateConfig('data.backupInterval', this.value)">
+                            Intervalo de backup (horas)
+                        </label>
+                    </div>
+                    <div class="config-item">
+                        <label>
+                            <input type="number" value="${config.data?.maxStorageMB || 50}" 
+                                   onchange="BlacktemplarBot.updateConfig('data.maxStorageMB', this.value)">
+                            Limite de armazenamento (MB)
+                        </label>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="config-section">
+                <h4>🔧 Configurações Avançadas</h4>
+                <div class="config-grid">
+                    <div class="config-item">
+                        <label>
+                            <input type="checkbox" ${config.advanced?.debugMode ? 'checked' : ''} 
+                                   onchange="BlacktemplarBot.updateConfig('advanced.debugMode', this.checked)">
+                            Modo debug
+                        </label>
+                    </div>
+                    <div class="config-item">
+                        <label>
+                            <input type="number" value="${config.advanced?.maxRetries || 3}" 
+                                   onchange="BlacktemplarBot.updateConfig('advanced.maxRetries', this.value)">
+                            Máximo de tentativas
+                        </label>
+                    </div>
+                    <div class="config-item">
+                        <label>
+                            <input type="number" value="${config.advanced?.timeout || 30000}" 
+                                   onchange="BlacktemplarBot.updateConfig('advanced.timeout', this.value)">
+                            Timeout padrão (ms)
+                        </label>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="config-actions">
+                <button onclick="BlacktemplarBot.saveAllConfig()" class="btn btn-primary">
+                    💾 Salvar Todas as Configurações
+                </button>
+                <button onclick="BlacktemplarBot.resetConfig()" class="btn btn-secondary">
+                    🔄 Restaurar Padrões
+                </button>
             </div>
         `;
     }
@@ -1086,6 +1224,60 @@ class BlacktemplarBot {
                 this.showNotification('✅ Configuração atualizada!', 'success');
             } else {
                 this.showNotification(`❌ Erro: ${result.message}`, 'error');
+            }
+        } catch (error) {
+            this.showNotification(`❌ Erro: ${error.message}`, 'error');
+        }
+    }
+    
+    async saveAllConfig() {
+        try {
+            this.showNotification('💾 Salvando todas as configurações...', 'info');
+            
+            // Coletar todas as configurações do formulário
+            const configs = {};
+            const inputs = document.querySelectorAll('#configContainer input, #configContainer select');
+            
+            inputs.forEach(input => {
+                if (input.name) {
+                    configs[input.name] = input.type === 'checkbox' ? input.checked : input.value;
+                }
+            });
+            
+            const response = await fetch('/api/config/save-all', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(configs)
+            });
+            
+            const result = await response.json();
+            if (result.success) {
+                this.showNotification('✅ Todas as configurações salvas com sucesso!', 'success');
+            } else {
+                this.showNotification(`❌ Erro ao salvar: ${result.message}`, 'error');
+            }
+        } catch (error) {
+            this.showNotification(`❌ Erro: ${error.message}`, 'error');
+        }
+    }
+    
+    async resetConfig() {
+        try {
+            if (confirm('⚠️ Tem certeza que deseja restaurar todas as configurações para os valores padrão?')) {
+                this.showNotification('🔄 Restaurando configurações padrão...', 'info');
+                
+                const response = await fetch('/api/config/reset', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                
+                const result = await response.json();
+                if (result.success) {
+                    this.showNotification('✅ Configurações restauradas para os padrões!', 'success');
+                    this.loadConfiguration(); // Recarregar interface
+                } else {
+                    this.showNotification(`❌ Erro ao restaurar: ${result.message}`, 'error');
+                }
             }
         } catch (error) {
             this.showNotification(`❌ Erro: ${error.message}`, 'error');
