@@ -90,7 +90,8 @@ def main():
         "--port", port,
         "--timeout-keep-alive", "300",
         "--log-level", "info",
-        "--access-log"
+        "--access-log",
+        "--reload", "false"  # Desabilitar reload no Railway
     ]
     
     # Configurações específicas para Railway
@@ -98,7 +99,8 @@ def main():
         cmd.extend([
             "--workers", "1",
             "--limit-concurrency", "10",
-            "--limit-max-requests", "1000"
+            "--limit-max-requests", "1000",
+            "--backlog", "100"
         ])
     
     print(f"🎯 Iniciando servidor na porta {port}...")

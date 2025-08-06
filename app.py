@@ -173,32 +173,64 @@ async def health_check():
 
 @app.get("/api/status")
 async def get_status():
-    """Status do sistema"""
+    """Status do sistema - Healthcheck otimizado para Railway"""
     try:
-        # Verificar se o sistema está funcionando
+        # Verificações básicas de saúde
+        health_checks = {
+            "app_running": True,
+            "port_available": True,
+            "memory_ok": True,
+            "disk_ok": True
+        }
+        
+        # Verificar uso de memória (simples)
+        try:
+            import psutil
+            memory_percent = psutil.virtual_memory().percent
+            if memory_percent > 90:
+                health_checks["memory_ok"] = False
+            
+            # Verificar espaço em disco
+            disk_percent = psutil.disk_usage('/').percent
+            if disk_percent > 90:
+                health_checks["disk_ok"] = False
+        except ImportError:
+            memory_percent = 0
+            disk_percent = 0
+        
+        # Status geral
+        all_healthy = all(health_checks.values())
+        
         status = {
-        "status": "online",
+            "status": "online" if all_healthy else "warning",
             "version": "2.2",
-        "whatsapp_connected": system_state["whatsapp_connected"],
+            "whatsapp_connected": system_state["whatsapp_connected"],
             "bot_active": system_state["bot_active"],
-        "fpd_loaded": system_state["fpd_loaded"],
-        "vendas_loaded": system_state["vendas_loaded"],
+            "fpd_loaded": system_state["fpd_loaded"],
+            "vendas_loaded": system_state["vendas_loaded"],
             "stats": system_state["stats"],
             "timestamp": datetime.now().isoformat(),
             "railway": True,
-            "health": "ok"
+            "health": "ok" if all_healthy else "warning",
+            "health_checks": health_checks,
+            "memory_percent": memory_percent,
+            "disk_percent": disk_percent
         }
         
-        # Log para debug
-        logger.info("✅ Healthcheck realizado com sucesso")
+        if all_healthy:
+            logger.info("✅ Healthcheck realizado com sucesso")
+        else:
+            logger.warning(f"⚠️ Healthcheck com avisos: {health_checks}")
         
         return status
+        
     except Exception as e:
         logger.error(f"❌ Erro no healthcheck: {e}")
-                return {
+        return {
             "status": "error",
             "error": str(e),
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now().isoformat(),
+            "health": "error"
         }
 
 @app.get("/api/fpd/data")

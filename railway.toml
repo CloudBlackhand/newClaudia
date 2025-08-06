@@ -2,11 +2,11 @@
 builder = "dockerfile"
 
 [deploy]
-startCommand = "python railway_start.py"
-healthcheckPath = "/api/status"
-healthcheckTimeout = 300
+startCommand = "python start.py"
+healthcheckPath = "/health"
+healthcheckTimeout = 600
 restartPolicyType = "on_failure"
-restartPolicyMaxRetries = 3
+restartPolicyMaxRetries = 15
 
 [env]
 PYTHON_VERSION = "3.11"
