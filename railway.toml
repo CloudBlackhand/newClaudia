@@ -2,11 +2,11 @@
 builder = "dockerfile"
 
 [deploy]
-startCommand = "python start.py"
+startCommand = "python -m uvicorn app:app --host 0.0.0.0 --port 8000"
 healthcheckPath = "/health"
-healthcheckTimeout = 600
+healthcheckTimeout = 300
 restartPolicyType = "on_failure"
-restartPolicyMaxRetries = 15
+restartPolicyMaxRetries = 10
 
 [env]
 PYTHON_VERSION = "3.11"
