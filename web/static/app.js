@@ -54,6 +54,7 @@ class BlacktemplarBot {
             <button class="nav-tab" data-tab="logs">📝 Logs</button>
             <button class="nav-tab" data-tab="metricas">📈 Métricas</button>
             <button class="nav-tab" data-tab="mensagens">💬 Mensagens</button>
+            <button class="nav-tab" data-tab="dados-cruzados">📊 Dados Cruzados</button>
             <button class="nav-tab" data-tab="configuracoes">⚙️ Configurações</button>
         `;
         
@@ -271,6 +272,100 @@ class BlacktemplarBot {
             </div>
         `;
         
+        // Dados Cruzados tab
+        const dadosCruzados = document.createElement('div');
+        dadosCruzados.id = 'dados-cruzados';
+        dadosCruzados.className = 'tab-content';
+        dadosCruzados.innerHTML = `
+            <div class="card">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="m-0">📊 Análise de Dados Cruzados</h5>
+                        <div>
+                            <button onclick="loadCrossData()" class="btn btn-sm btn-primary">🔄 Atualizar</button>
+                            <button onclick="exportCrossData()" class="btn btn-sm btn-success">📥 Exportar</button>
+                            <button onclick="filterCrossData()" class="btn btn-sm btn-info">🔍 Filtrar</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="cross-data-summary">
+                        <div class="summary-card">
+                            <div class="summary-title">📋 Total de FPDs</div>
+                            <div id="totalFpds" class="summary-value">0</div>
+                        </div>
+                        <div class="summary-card">
+                            <div class="summary-title">📈 Total de Vendas</div>
+                            <div id="totalVendas" class="summary-value">0</div>
+                        </div>
+                        <div class="summary-card">
+                            <div class="summary-title">✅ Correspondências</div>
+                            <div id="correspondencias" class="summary-value">0</div>
+                        </div>
+                        <div class="summary-card">
+                            <div class="summary-title">❌ Sem Correspondência</div>
+                            <div id="semCorrespondencia" class="summary-value">0</div>
+                        </div>
+                    </div>
+                    
+                    <div class="cross-data-filters">
+                        <div class="filter-group">
+                            <label>Status:</label>
+                            <select id="statusFilter" onchange="filterCrossData()">
+                                <option value="all">Todos</option>
+                                <option value="matched">Com Correspondência</option>
+                                <option value="unmatched">Sem Correspondência</option>
+                                <option value="pending">Pendente</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label>Valor:</label>
+                            <select id="valorFilter" onchange="filterCrossData()">
+                                <option value="all">Todos</option>
+                                <option value="high">Alto (>R$ 1000)</option>
+                                <option value="medium">Médio (R$ 100-1000)</option>
+                                <option value="low">Baixo (<R$ 100)</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label>Data:</label>
+                            <input type="date" id="dataFilter" onchange="filterCrossData()">
+                        </div>
+                    </div>
+                    
+                    <div class="cross-data-table-container">
+                        <table id="crossDataTable" class="cross-data-table">
+                            <thead>
+                                <tr>
+                                    <th>📋 FPD</th>
+                                    <th>📈 Venda</th>
+                                    <th>💰 Valor</th>
+                                    <th>📅 Data</th>
+                                    <th>📱 Cliente</th>
+                                    <th>✅ Status</th>
+                                    <th>🔍 Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="crossDataTableBody">
+                                <!-- Dados serão carregados aqui -->
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="cross-data-charts">
+                        <div class="chart-container">
+                            <h6>📊 Distribuição por Status</h6>
+                            <div id="statusChart" class="chart"></div>
+                        </div>
+                        <div class="chart-container">
+                            <h6>💰 Distribuição por Valor</h6>
+                            <div id="valorChart" class="chart"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
         // Configurações tab
         const configuracoes = document.createElement('div');
         configuracoes.id = 'configuracoes';
@@ -294,6 +389,7 @@ class BlacktemplarBot {
         main.appendChild(logs);
         main.appendChild(metricas);
         main.appendChild(mensagens);
+        main.appendChild(dadosCruzados);
         main.appendChild(configuracoes);
         
         appContainer.appendChild(header);
@@ -333,6 +429,258 @@ class BlacktemplarBot {
             @media (max-width: 768px) {
                 .row { flex-direction: column; }
                 .col-md-4, .col-md-8 { width: 100%; }
+            }
+            
+            /* 📊 DADOS CRUZADOS - ESTILOS */
+            .cross-data-summary {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                gap: 15px;
+                margin-bottom: 20px;
+            }
+            
+            .summary-card {
+                background: #f8f9fa;
+                border: 1px solid #dee2e6;
+                border-radius: 8px;
+                padding: 15px;
+                text-align: center;
+            }
+            
+            .summary-title {
+                font-size: 0.9em;
+                color: #6c757d;
+                margin-bottom: 5px;
+            }
+            
+            .summary-value {
+                font-size: 1.5em;
+                font-weight: bold;
+                color: #007bff;
+            }
+            
+            .cross-data-filters {
+                display: flex;
+                gap: 15px;
+                margin-bottom: 20px;
+                flex-wrap: wrap;
+            }
+            
+            .filter-group {
+                display: flex;
+                flex-direction: column;
+                gap: 5px;
+            }
+            
+            .filter-group label {
+                font-size: 0.9em;
+                font-weight: bold;
+                color: #495057;
+            }
+            
+            .filter-group select,
+            .filter-group input {
+                padding: 5px 10px;
+                border: 1px solid #ced4da;
+                border-radius: 4px;
+                font-size: 0.9em;
+            }
+            
+            .cross-data-table-container {
+                overflow-x: auto;
+                margin-bottom: 20px;
+            }
+            
+            .cross-data-table {
+                width: 100%;
+                border-collapse: collapse;
+                font-size: 0.9em;
+            }
+            
+            .cross-data-table th,
+            .cross-data-table td {
+                padding: 10px;
+                border: 1px solid #dee2e6;
+                text-align: left;
+            }
+            
+            .cross-data-table th {
+                background: #f8f9fa;
+                font-weight: bold;
+            }
+            
+            .cross-data-row.matched {
+                background: #d4edda;
+            }
+            
+            .cross-data-row.unmatched {
+                background: #f8d7da;
+            }
+            
+            .cross-data-row.pending {
+                background: #fff3cd;
+            }
+            
+            .status-badge {
+                padding: 2px 8px;
+                border-radius: 12px;
+                font-size: 0.8em;
+                font-weight: bold;
+            }
+            
+            .status-badge.matched {
+                background: #28a745;
+                color: white;
+            }
+            
+            .status-badge.unmatched {
+                background: #dc3545;
+                color: white;
+            }
+            
+            .status-badge.pending {
+                background: #ffc107;
+                color: #212529;
+            }
+            
+            .actions-info {
+                display: flex;
+                gap: 5px;
+            }
+            
+            .cross-data-charts {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+                gap: 20px;
+                margin-top: 20px;
+            }
+            
+            .chart-container {
+                background: #f8f9fa;
+                border: 1px solid #dee2e6;
+                border-radius: 8px;
+                padding: 15px;
+            }
+            
+            .chart-container h6 {
+                margin-bottom: 15px;
+                color: #495057;
+            }
+            
+            .chart-bars {
+                display: flex;
+                flex-direction: column;
+                gap: 8px;
+            }
+            
+            .chart-bar {
+                height: 30px;
+                border-radius: 4px;
+                display: flex;
+                align-items: center;
+                padding: 0 10px;
+                color: white;
+                font-size: 0.9em;
+                font-weight: bold;
+            }
+            
+            .chart-bar.matched {
+                background: #28a745;
+            }
+            
+            .chart-bar.unmatched {
+                background: #dc3545;
+            }
+            
+            .chart-bar.pending {
+                background: #ffc107;
+                color: #212529;
+            }
+            
+            .chart-bar.high {
+                background: #dc3545;
+            }
+            
+            .chart-bar.medium {
+                background: #ffc107;
+                color: #212529;
+            }
+            
+            .chart-bar.low {
+                background: #28a745;
+            }
+            
+            /* Modal styles */
+            .modal-overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.5);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 1000;
+            }
+            
+            .modal-content {
+                background: white;
+                border-radius: 8px;
+                max-width: 600px;
+                width: 90%;
+                max-height: 80vh;
+                overflow-y: auto;
+            }
+            
+            .modal-header {
+                padding: 15px 20px;
+                border-bottom: 1px solid #dee2e6;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+            
+            .modal-body {
+                padding: 20px;
+            }
+            
+            .modal-footer {
+                padding: 15px 20px;
+                border-top: 1px solid #dee2e6;
+                display: flex;
+                gap: 10px;
+                justify-content: flex-end;
+            }
+            
+            .btn-close {
+                background: none;
+                border: none;
+                font-size: 1.5em;
+                cursor: pointer;
+                color: #6c757d;
+            }
+            
+            .details-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+                gap: 20px;
+            }
+            
+            .detail-section {
+                background: #f8f9fa;
+                padding: 15px;
+                border-radius: 8px;
+            }
+            
+            .detail-section h6 {
+                margin-bottom: 10px;
+                color: #495057;
+            }
+            
+            .detail-section p {
+                margin: 5px 0;
+                font-size: 0.9em;
             }
         `;
         document.head.appendChild(style);
@@ -1284,6 +1632,319 @@ class BlacktemplarBot {
         }
     }
     
+    // 📊 DADOS CRUZADOS - NOVAS FUNCIONALIDADES
+    
+    async loadCrossData() {
+        try {
+            this.showNotification('📊 Carregando dados cruzados...', 'info');
+            
+            const response = await fetch('/api/cross-data');
+            const data = await response.json();
+            
+            if (data.success) {
+                this.displayCrossData(data.data);
+                this.updateCrossDataSummary(data.summary);
+                this.updateCrossDataCharts(data.charts);
+                this.showNotification('✅ Dados cruzados carregados!', 'success');
+            } else {
+                this.showNotification(`❌ Erro: ${data.message}`, 'error');
+            }
+        } catch (error) {
+            this.showNotification(`❌ Erro ao carregar dados cruzados: ${error.message}`, 'error');
+        }
+    }
+    
+    displayCrossData(data) {
+        const tbody = document.getElementById('crossDataTableBody');
+        if (!tbody) return;
+        
+        tbody.innerHTML = '';
+        
+        data.forEach(item => {
+            const row = document.createElement('tr');
+            row.className = `cross-data-row ${item.status}`;
+            row.innerHTML = `
+                <td>
+                    <div class="fpd-info">
+                        <strong>${item.fpd?.numero || 'N/A'}</strong>
+                        <small>${item.fpd?.cliente || 'Cliente não encontrado'}</small>
+                    </div>
+                </td>
+                <td>
+                    <div class="venda-info">
+                        <strong>${item.venda?.numero || 'N/A'}</strong>
+                        <small>${item.venda?.produto || 'Produto não encontrado'}</small>
+                    </div>
+                </td>
+                <td>
+                    <div class="valor-info">
+                        <strong>R$ ${this.formatCurrency(item.valor)}</strong>
+                        <small>${item.valor_original ? `Original: R$ ${this.formatCurrency(item.valor_original)}` : ''}</small>
+                    </div>
+                </td>
+                <td>
+                    <div class="data-info">
+                        <strong>${this.formatDate(item.data)}</strong>
+                        <small>${item.dias_vencimento ? `${item.dias_vencimento} dias` : ''}</small>
+                    </div>
+                </td>
+                <td>
+                    <div class="cliente-info">
+                        <strong>${item.cliente?.nome || 'N/A'}</strong>
+                        <small>${item.cliente?.telefone || 'Telefone não encontrado'}</small>
+                    </div>
+                </td>
+                <td>
+                    <div class="status-info">
+                        <span class="status-badge ${item.status}">
+                            ${this.getStatusText(item.status)}
+                        </span>
+                        <small>${item.status_details || ''}</small>
+                    </div>
+                </td>
+                <td>
+                    <div class="actions-info">
+                        <button onclick="BlacktemplarBot.viewCrossDataDetails('${item.id}')" 
+                                class="btn btn-sm btn-outline-primary" title="Ver detalhes">
+                            👁️
+                        </button>
+                        <button onclick="BlacktemplarBot.editCrossDataItem('${item.id}')" 
+                                class="btn btn-sm btn-outline-secondary" title="Editar">
+                            ✏️
+                        </button>
+                        <button onclick="BlacktemplarBot.sendCrossDataMessage('${item.id}')" 
+                                class="btn btn-sm btn-outline-success" title="Enviar mensagem">
+                            📱
+                        </button>
+                    </div>
+                </td>
+            `;
+            
+            tbody.appendChild(row);
+        });
+    }
+    
+    updateCrossDataSummary(summary) {
+        document.getElementById('totalFpds').textContent = summary.total_fpds || 0;
+        document.getElementById('totalVendas').textContent = summary.total_vendas || 0;
+        document.getElementById('correspondencias').textContent = summary.correspondencias || 0;
+        document.getElementById('semCorrespondencia').textContent = summary.sem_correspondencia || 0;
+    }
+    
+    updateCrossDataCharts(charts) {
+        // Implementar gráficos se necessário
+        if (charts.status) {
+            this.updateStatusChart(charts.status);
+        }
+        if (charts.valor) {
+            this.updateValorChart(charts.valor);
+        }
+    }
+    
+    updateStatusChart(data) {
+        const chartContainer = document.getElementById('statusChart');
+        if (!chartContainer) return;
+        
+        // Implementar gráfico de status
+        chartContainer.innerHTML = `
+            <div class="chart-bars">
+                <div class="chart-bar matched" style="width: ${data.matched}%">
+                    <span>Com Correspondência (${data.matched}%)</span>
+                </div>
+                <div class="chart-bar unmatched" style="width: ${data.unmatched}%">
+                    <span>Sem Correspondência (${data.unmatched}%)</span>
+                </div>
+                <div class="chart-bar pending" style="width: ${data.pending}%">
+                    <span>Pendente (${data.pending}%)</span>
+                </div>
+            </div>
+        `;
+    }
+    
+    updateValorChart(data) {
+        const chartContainer = document.getElementById('valorChart');
+        if (!chartContainer) return;
+        
+        // Implementar gráfico de valores
+        chartContainer.innerHTML = `
+            <div class="chart-bars">
+                <div class="chart-bar high" style="width: ${data.high}%">
+                    <span>Alto (${data.high}%)</span>
+                </div>
+                <div class="chart-bar medium" style="width: ${data.medium}%">
+                    <span>Médio (${data.medium}%)</span>
+                </div>
+                <div class="chart-bar low" style="width: ${data.low}%">
+                    <span>Baixo (${data.low}%)</span>
+                </div>
+            </div>
+        `;
+    }
+    
+    async filterCrossData() {
+        const statusFilter = document.getElementById('statusFilter').value;
+        const valorFilter = document.getElementById('valorFilter').value;
+        const dataFilter = document.getElementById('dataFilter').value;
+        
+        try {
+            const params = new URLSearchParams({
+                status: statusFilter,
+                valor: valorFilter,
+                data: dataFilter
+            });
+            
+            const response = await fetch(`/api/cross-data/filter?${params}`);
+            const data = await response.json();
+            
+            if (data.success) {
+                this.displayCrossData(data.data);
+                this.showNotification('✅ Filtros aplicados!', 'success');
+            } else {
+                this.showNotification(`❌ Erro: ${data.message}`, 'error');
+            }
+        } catch (error) {
+            this.showNotification(`❌ Erro ao filtrar: ${error.message}`, 'error');
+        }
+    }
+    
+    async exportCrossData() {
+        try {
+            this.showNotification('📥 Exportando dados...', 'info');
+            
+            const response = await fetch('/api/cross-data/export', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            });
+            
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `dados-cruzados-${new Date().toISOString().split('T')[0]}.xlsx`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+            
+            this.showNotification('✅ Dados exportados com sucesso!', 'success');
+        } catch (error) {
+            this.showNotification(`❌ Erro ao exportar: ${error.message}`, 'error');
+        }
+    }
+    
+    async viewCrossDataDetails(id) {
+        try {
+            const response = await fetch(`/api/cross-data/details/${id}`);
+            const data = await response.json();
+            
+            if (data.success) {
+                this.showCrossDataDetailsModal(data.data);
+            } else {
+                this.showNotification(`❌ Erro: ${data.message}`, 'error');
+            }
+        } catch (error) {
+            this.showNotification(`❌ Erro ao carregar detalhes: ${error.message}`, 'error');
+        }
+    }
+    
+    showCrossDataDetailsModal(data) {
+        const modal = document.createElement('div');
+        modal.className = 'modal-overlay';
+        modal.innerHTML = `
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5>📊 Detalhes dos Dados Cruzados</h5>
+                    <button onclick="this.closest('.modal-overlay').remove()" class="btn-close">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="details-grid">
+                        <div class="detail-section">
+                            <h6>📋 Informações do FPD</h6>
+                            <p><strong>Número:</strong> ${data.fpd?.numero || 'N/A'}</p>
+                            <p><strong>Cliente:</strong> ${data.fpd?.cliente || 'N/A'}</p>
+                            <p><strong>Valor:</strong> R$ ${this.formatCurrency(data.fpd?.valor)}</p>
+                            <p><strong>Data:</strong> ${this.formatDate(data.fpd?.data)}</p>
+                        </div>
+                        <div class="detail-section">
+                            <h6>📈 Informações da Venda</h6>
+                            <p><strong>Número:</strong> ${data.venda?.numero || 'N/A'}</p>
+                            <p><strong>Produto:</strong> ${data.venda?.produto || 'N/A'}</p>
+                            <p><strong>Valor:</strong> R$ ${this.formatCurrency(data.venda?.valor)}</p>
+                            <p><strong>Data:</strong> ${this.formatDate(data.venda?.data)}</p>
+                        </div>
+                        <div class="detail-section">
+                            <h6>📱 Informações do Cliente</h6>
+                            <p><strong>Nome:</strong> ${data.cliente?.nome || 'N/A'}</p>
+                            <p><strong>Telefone:</strong> ${data.cliente?.telefone || 'N/A'}</p>
+                            <p><strong>Email:</strong> ${data.cliente?.email || 'N/A'}</p>
+                            <p><strong>Status:</strong> ${this.getStatusText(data.status)}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button onclick="BlacktemplarBot.sendCrossDataMessage('${data.id}')" class="btn btn-primary">
+                        📱 Enviar Mensagem
+                    </button>
+                    <button onclick="this.closest('.modal-overlay').remove()" class="btn btn-secondary">
+                        Fechar
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+    }
+    
+    async editCrossDataItem(id) {
+        // Implementar edição de item
+        this.showNotification('✏️ Funcionalidade de edição em desenvolvimento...', 'info');
+    }
+    
+    async sendCrossDataMessage(id) {
+        try {
+            this.showNotification('📱 Preparando mensagem...', 'info');
+            
+            const response = await fetch(`/api/cross-data/send-message/${id}`, {
+                method: 'POST'
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                this.showNotification('✅ Mensagem enviada com sucesso!', 'success');
+            } else {
+                this.showNotification(`❌ Erro: ${result.message}`, 'error');
+            }
+        } catch (error) {
+            this.showNotification(`❌ Erro ao enviar mensagem: ${error.message}`, 'error');
+        }
+    }
+    
+    // Métodos auxiliares para formatação
+    formatCurrency(value) {
+        if (!value) return '0,00';
+        return new Intl.NumberFormat('pt-BR', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        }).format(value);
+    }
+    
+    formatDate(dateString) {
+        if (!dateString) return 'N/A';
+        const date = new Date(dateString);
+        return date.toLocaleDateString('pt-BR');
+    }
+    
+    getStatusText(status) {
+        const statusMap = {
+            'matched': '✅ Com Correspondência',
+            'unmatched': '❌ Sem Correspondência',
+            'pending': '⏳ Pendente',
+            'processing': '🔄 Processando'
+        };
+        return statusMap[status] || '❓ Desconhecido';
+    }
+    
     // Inicializar funcionalidades avançadas
     initAdvancedFeatures() {
         // Auto-refresh de métricas
@@ -1297,6 +1958,7 @@ class BlacktemplarBot {
             this.loadMetrics();
             this.loadConfiguration();
             this.loadMessageHistory();
+            this.loadCrossData();
         }, 1000);
     }
     
@@ -1328,6 +1990,11 @@ document.addEventListener('DOMContentLoaded', () => {
     window.loadMessageHistory = (phone = null) => window.BlacktemplarBot.loadMessageHistory(phone);
     window.loadConfiguration = () => window.BlacktemplarBot.loadConfiguration();
     window.updateConfig = (key, value) => window.BlacktemplarBot.updateConfig(key, value);
+    
+    // 📊 FUNÇÕES GLOBAIS - DADOS CRUZADOS
+    window.loadCrossData = () => window.BlacktemplarBot.loadCrossData();
+    window.filterCrossData = () => window.BlacktemplarBot.filterCrossData();
+    window.exportCrossData = () => window.BlacktemplarBot.exportCrossData();
 });
 
 // Service Worker for offline support
