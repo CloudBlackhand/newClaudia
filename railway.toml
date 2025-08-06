@@ -2,7 +2,7 @@
 builder = "dockerfile"
 
 [deploy]
-startCommand = "python app_ultra_simple.py"
+startCommand = "python -m uvicorn app:app --host 0.0.0.0 --port 8000 --log-level info"
 healthcheckPath = "/health"
 healthcheckTimeout = 300
 restartPolicyType = "on_failure"
