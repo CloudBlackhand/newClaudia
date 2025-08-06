@@ -20,6 +20,7 @@ import json
 import time
 from datetime import datetime, timedelta
 from pydantic import BaseModel
+import pandas as pd
 
 # Configurar logging
 logging.basicConfig(level=logging.INFO)

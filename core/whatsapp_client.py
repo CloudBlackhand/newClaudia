@@ -260,8 +260,6 @@ class WhatsAppClient:
                     self.is_connected = True
                     
                     # Atualizar estado global
-                    from app import system_state
-                    system_state["whatsapp_connected"] = True
                     logger.info("🔄 Estado do WhatsApp atualizado para conectado")
                     
                     # Salvar sessão
