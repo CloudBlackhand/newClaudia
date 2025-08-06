@@ -1,10 +1,10 @@
 [phases.setup]
-nixPkgs = ["python311"]
+nixPkgs = ["python311", "pip"]
 
 [phases.install]
 cmds = [
-    "pip install -r requirements.txt",
-    "playwright install chromium"
+    "python -m pip install -r requirements.txt",
+    "python -m playwright install chromium"
 ]
 
 [start]
