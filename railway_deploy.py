@@ -167,34 +167,4 @@ def start_application():
         logger.info("🛑 Aplicação interrompida")
         sys.exit(0)
 
-def main():
-    """Função principal"""
-    logger.info("=" * 50)
-    logger.info("🚀 CLAUDIA COBRANÇAS - RAILWAY DEPLOY")
-    logger.info("=" * 50)
-    
-    # Verificar ambiente
-    is_railway = check_railway_environment()
-    
-    # Configurar variáveis de ambiente
-    set_environment_variables()
-    
-    # Criar diretórios
-    create_directories()
-    
-    # Instalar dependências
-    if not install_dependencies():
-        logger.error("❌ Falha ao instalar dependências críticas")
-        sys.exit(1)
-    
-    # Tentar instalar Playwright (opcional)
-    if is_railway:
-        logger.info("🎭 Playwright será configurado sob demanda no Railway")
-    else:
-        try_install_playwright()
-    
-    # Iniciar aplicação
-    start_application()
-
-if __name__ == "__main__":
-    main()
+# Removido bloco de inicialização direta do servidor para evitar conflito com Dockerfile

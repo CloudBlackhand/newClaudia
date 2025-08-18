@@ -146,27 +146,4 @@ def start_server():
         logger.info("🛑 Servidor interrompido pelo usuário")
         sys.exit(0)
 
-def main():
-    """Função principal"""
-    logger.info("🚀 Iniciando Claudia Cobranças no Railway...")
-    
-    # Configurar handler de sinais
-    signal.signal(signal.SIGINT, signal_handler)
-    signal.signal(signal.SIGTERM, signal_handler)
-    
-    # Verificar dependências
-    if not check_dependencies():
-        logger.error("❌ Dependências críticas não encontradas")
-        sys.exit(1)
-    
-    # Criar diretórios
-    create_directories()
-    
-    # Instalar Playwright (opcional)
-    install_playwright()
-    
-    # Iniciar servidor
-    start_server()
-
-if __name__ == "__main__":
-    main()
+# Removido bloco de inicialização direta do servidor para evitar conflito com Dockerfile
