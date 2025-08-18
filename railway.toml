@@ -2,7 +2,7 @@
 builder = "dockerfile"
 
 [deploy]
-startCommand = "python -m uvicorn app:app --host 0.0.0.0 --port 8000 --log-level info"
+startCommand = "python railway_startup.py"
 healthcheckPath = "/health"
 healthcheckTimeout = 600
 restartPolicyType = "on_failure"
