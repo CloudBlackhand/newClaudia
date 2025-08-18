@@ -35,10 +35,5 @@ EXPOSE 8000
 HEALTHCHECK --interval=60s --timeout=90s --start-period=180s --retries=5 \
     CMD curl -f http://localhost:8000/health || exit 1
 
-<<<<<<< Current (Your changes)
 # Start the application
-CMD ["python", "-m", "uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000", "--log-level", "info"] 
-=======
-# Start using the optimized deploy script
-CMD ["python", "railway_deploy.py"]
->>>>>>> Incoming (Background Agent changes)
+CMD ["python", "-m", "uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000", "--log-level", "info"]
