@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node railway-start.js",
     "whatsapp": "node whatsapp-server.js",
-    "python": "python app.py",
+    "python": "venv/bin/uvicorn app:app --host 0.0.0.0 --port 8000",
     "dev": "concurrently \"npm run whatsapp\" \"npm run python\"",
     "postinstall": "npm install --save whatsapp-web.js puppeteer"
   },
@@ -26,15 +26,15 @@
   "author": "Desktop",
   "license": "MIT",
   "dependencies": {
-    "whatsapp-web.js": "^1.23.0",
-    "express": "^4.18.2",
+    "concurrently": "^8.2.2",
     "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "puppeteer": "^21.11.0",
     "qrcode": "^1.5.3",
-    "puppeteer": "^21.6.0",
-    "concurrently": "^8.2.2"
+    "whatsapp-web.js": "^1.32.0"
   },
   "repository": {
     "type": "git",
     "url": "https://github.com/CloudBlackhand/Bot-cobranca"
   }
-} 
+}

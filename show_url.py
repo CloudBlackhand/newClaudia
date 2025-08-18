@@ -6,8 +6,6 @@ Script para mostrar a URL do Railway
 
 import os
 
-# Removido bloco de inicialização direta do servidor para evitar conflito com Dockerfile
-
 def main():
     print("🌐 CLAUDIA COBRANÇAS - URL DO RAILWAY")
     print("=" * 50)
@@ -53,8 +51,6 @@ def main():
     print(f"3. Tente fazer login")
     print(f"4. Aprove o login no terminal")
     print(f"5. Acesse o dashboard")
-
-# Removido bloco de inicialização direta do servidor para evitar conflito com Dockerfile
 
 if __name__ == "__main__":
     main() 

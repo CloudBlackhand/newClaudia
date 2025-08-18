@@ -390,67 +390,7 @@ async def upload_fpd(file: UploadFile = File(...)):
             "message": f"Erro: {str(e)}"
         }
 
-@app.post("/api/upload/vendas")
-async def upload_vendas(file: UploadFile = File(...)):
-    """Upload planilha VENDAS/contratos"""
-    try:
-        # Salvar arquivo
-        file_path = f"uploads/vendas_{file.filename}"
-        os.makedirs("uploads", exist_ok=True)
-        
-        with open(file_path, "wb") as f:
-            content = await file.read()
-            f.write(content)
-        
-        # Processar planilha
-        result = excel_processor.load_vendas(file_path)
-        
-        if result["success"]:
-            system_state["vendas_loaded"] = True
-            return {
-                "success": True,
-                "message": f"VENDAS carregada: {result['total_records']} registros",
-                "sheets": result["sheets"]
-            }
-        else:
-            return {
-                "success": False,
-                "message": result["error"]
-            }
-            
-    except Exception as e:
-        logger.error(f"❌ Erro no upload VENDAS: {e}")
-        return {
-            "success": False,
-            "message": f"Erro: {str(e)}"
-        }
-
-@app.post("/api/process/match")
-async def process_match():
-    """Processar matching FPD x VENDAS"""
-    try:
-        if not system_state["fpd_loaded"] or not system_state["vendas_loaded"]:
-            return {
-                "success": False,
-                "message": "Carregue FPD e VENDAS primeiro"
-            }
-        
-        # Processar matching
-        result = excel_processor.process_matching()
-        
-        return {
-            "success": True,
-            "matched_records": result["matched"],
-            "total_protocols": result["total_protocols"],
-            "ready_for_cobranca": result["ready_for_cobranca"]
-        }
-        
-    except Exception as e:
-        logger.error(f"❌ Erro no matching: {e}")
-        return {
-            "success": False,
-            "message": f"Erro: {str(e)}"
-        }
+# Removidos endpoints e lógicas de cruzamento de dados, upload de vendas e matching. O sistema agora só aceita upload de uma planilha de clientes.
 
 @app.post("/api/bot/start")
 async def start_bot(background_tasks: BackgroundTasks):
@@ -1212,32 +1152,4 @@ async def auth_middleware(request: Request, call_next):
     # Adicionar informações do usuário ao request
     request.state.user = active_sessions[token]
     
-    return await call_next(request)
-
-if __name__ == "__main__":
-    # Criar diretórios necessários
-    os.makedirs("uploads", exist_ok=True)
-    os.makedirs("faturas", exist_ok=True)
-    os.makedirs("web/static", exist_ok=True)
-    
-    # 🧹 Inicializar limpeza automática de armazenamento
-    async def startup_storage_cleanup():
-        """Inicializar sistema de limpeza automática"""
-        logger.info("🗂️ Iniciando sistema de gerenciamento de armazenamento...")
-        await storage_manager.cleanup_expired_files()  # Limpeza inicial
-        # Agendar limpeza periódica em background
-        asyncio.create_task(storage_manager.schedule_periodic_cleanup())
-        logger.info("✅ Sistema de armazenamento inicializado!")
-    
-    # Adicionar evento de startup
-    @app.on_event("startup")
-    async def startup_event():
-        await startup_storage_cleanup()
-    
-    # Iniciar servidor
-    uvicorn.run(
-        "app:app",
-        host="0.0.0.0",
-        port=int(os.getenv("PORT", 8000)),
-        reload=False
-    ) 
+    return await call_next(request) 

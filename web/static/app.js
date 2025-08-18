@@ -54,8 +54,7 @@ class BlacktemplarBot {
             <button class="nav-tab" data-tab="logs">📝 Logs</button>
             <button class="nav-tab" data-tab="metricas">📈 Métricas</button>
             <button class="nav-tab" data-tab="mensagens">💬 Mensagens</button>
-            <button class="nav-tab" data-tab="dados-cruzados">📊 Dados Cruzados</button>
-            <button class="nav-tab" data-tab="fpds-carregados">📋 FPDs Carregados</button>
+            <button class="nav-tab" data-tab="clientes-carregados">👥 Clientes Carregados</button>
             <button class="nav-tab" data-tab="configuracoes">⚙️ Configurações</button>
         `;
         
@@ -85,28 +84,15 @@ class BlacktemplarBot {
                                     </div>
                                 </div>
                                 <div class="col-md-3 col-sm-6">
-                                    <div class="status-card" data-status="fpd">
-                                        <h5>FPD</h5>
+                                    <div class="status-card" data-status="client-data">
+                                        <h5>Planilha Clientes</h5>
                                         <div class="status-icon offline">
                                             <i class="fas fa-file-excel"></i>
                                         </div>
                                         <div class="status-text">Não carregado</div>
-                                        <div class="upload-area" id="fpdUpload">
-                                            <label for="fpdFile" class="btn btn-sm btn-primary">Carregar FPD</label>
-                                            <input type="file" id="fpdFile" style="display:none">
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-md-3 col-sm-6">
-                                    <div class="status-card" data-status="vendas">
-                                        <h5>VENDAS</h5>
-                                        <div class="status-icon offline">
-                                            <i class="fas fa-chart-line"></i>
-                                        </div>
-                                        <div class="status-text">Não carregado</div>
-                                        <div class="upload-area" id="vendasUpload">
-                                            <label for="vendasFile" class="btn btn-sm btn-primary">Carregar VENDAS</label>
-                                            <input type="file" id="vendasFile" style="display:none">
+                                        <div class="upload-area" id="clientDataUpload">
+                                            <label for="clientDataFile" class="btn btn-sm btn-primary">Carregar Planilha</label>
+                                            <input type="file" id="clientDataFile" style="display:none">
                                         </div>
                                     </div>
                                 </div>
@@ -273,148 +259,54 @@ class BlacktemplarBot {
             </div>
         `;
         
-        // Dados Cruzados tab
-        const dadosCruzados = document.createElement('div');
-        dadosCruzados.id = 'dados-cruzados';
-        dadosCruzados.className = 'tab-content';
-        dadosCruzados.innerHTML = `
+        // Clientes Carregados tab (antigo FPDs Carregados)
+        const clientesCarregados = document.createElement('div');
+        clientesCarregados.id = 'clientes-carregados';
+        clientesCarregados.className = 'tab-content';
+        clientesCarregados.innerHTML = `
             <div class="card">
                 <div class="card-header">
                     <div class="d-flex justify-content-between align-items-center">
-                        <h5 class="m-0">📊 Análise de Dados Cruzados</h5>
+                        <h5 class="m-0">👥 Clientes Carregados</h5>
                         <div>
-                            <button onclick="loadCrossData()" class="btn btn-sm btn-primary">🔄 Atualizar</button>
-                            <button onclick="exportCrossData()" class="btn btn-sm btn-success">📥 Exportar</button>
-                            <button onclick="filterCrossData()" class="btn btn-sm btn-info">🔍 Filtrar</button>
+                            <button onclick="loadClientData()" class="btn btn-sm btn-primary">🔄 Atualizar</button>
+                            <button onclick="exportClientData()" class="btn btn-sm btn-success">📥 Exportar</button>
+                            <button onclick="filterClientData()" class="btn btn-sm btn-info">🔍 Filtrar</button>
                         </div>
                     </div>
                 </div>
                 <div class="card-body">
-                    <div class="cross-data-summary">
-                        <div class="summary-card">
-                            <div class="summary-title">📋 Total de FPDs</div>
-                            <div id="totalFpds" class="summary-value">0</div>
-                        </div>
-                        <div class="summary-card">
-                            <div class="summary-title">📈 Total de Vendas</div>
-                            <div id="totalVendas" class="summary-value">0</div>
-                        </div>
-                        <div class="summary-card">
-                            <div class="summary-title">✅ Correspondências</div>
-                            <div id="correspondencias" class="summary-value">0</div>
-                        </div>
-                        <div class="summary-card">
-                            <div class="summary-title">❌ Sem Correspondência</div>
-                            <div id="semCorrespondencia" class="summary-value">0</div>
-                        </div>
-                    </div>
-                    
-                    <div class="cross-data-filters">
-                        <div class="filter-group">
-                            <label>Status:</label>
-                            <select id="statusFilter" onchange="filterCrossData()">
-                                <option value="all">Todos</option>
-                                <option value="matched">Com Correspondência</option>
-                                <option value="unmatched">Sem Correspondência</option>
-                                <option value="pending">Pendente</option>
-                            </select>
-                        </div>
-                        <div class="filter-group">
-                            <label>Valor:</label>
-                            <select id="valorFilter" onchange="filterCrossData()">
-                                <option value="all">Todos</option>
-                                <option value="high">Alto (>R$ 1000)</option>
-                                <option value="medium">Médio (R$ 100-1000)</option>
-                                <option value="low">Baixo (<R$ 100)</option>
-                            </select>
-                        </div>
-                        <div class="filter-group">
-                            <label>Data:</label>
-                            <input type="date" id="dataFilter" onchange="filterCrossData()">
-                        </div>
-                    </div>
-                    
-                    <div class="cross-data-table-container">
-                        <table id="crossDataTable" class="cross-data-table">
-                            <thead>
-                                <tr>
-                                    <th>📋 FPD</th>
-                                    <th>📈 Venda</th>
-                                    <th>💰 Valor</th>
-                                    <th>📅 Data</th>
-                                    <th>📱 Cliente</th>
-                                    <th>✅ Status</th>
-                                    <th>🔍 Ações</th>
-                                </tr>
-                            </thead>
-                            <tbody id="crossDataTableBody">
-                                <!-- Dados serão carregados aqui -->
-                            </tbody>
-                        </table>
-                    </div>
-                    
-                    <div class="cross-data-charts">
-                        <div class="chart-container">
-                            <h6>📊 Distribuição por Status</h6>
-                            <div id="statusChart" class="chart"></div>
-                        </div>
-                        <div class="chart-container">
-                            <h6>💰 Distribuição por Valor</h6>
-                            <div id="valorChart" class="chart"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `;
-        
-        // FPDs Carregados tab
-        const fpdsCarregados = document.createElement('div');
-        fpdsCarregados.id = 'fpds-carregados';
-        fpdsCarregados.className = 'tab-content';
-        fpdsCarregados.innerHTML = `
-            <div class="card">
-                <div class="card-header">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <h5 class="m-0">📋 FPDs Carregados</h5>
-                        <div>
-                            <button onclick="loadFpdData()" class="btn btn-sm btn-primary">🔄 Atualizar</button>
-                            <button onclick="exportFpdData()" class="btn btn-sm btn-success">📥 Exportar</button>
-                            <button onclick="filterFpdData()" class="btn btn-sm btn-info">🔍 Filtrar</button>
-                        </div>
-                    </div>
-                </div>
-                <div class="card-body">
-                    <div class="fpd-summary">
+                    <div class="client-data-summary">
                         <div class="summary-card">
                             <div class="summary-title">📊 Total de Registros</div>
-                            <div id="totalFpdRecords" class="summary-value">0</div>
+                            <div id="totalClientRecords" class="summary-value">0</div>
                         </div>
                         <div class="summary-card">
-                            <div class="summary-title">✅ Com Protocolo</div>
-                            <div id="fpdWithProtocol" class="summary-value">0</div>
+                            <div class="summary-title">✅ Com Telefone</div>
+                            <div id="clientWithPhone" class="summary-value">0</div>
                         </div>
                         <div class="summary-card">
-                            <div class="summary-title">❌ Sem Protocolo</div>
-                            <div id="fpdWithoutProtocol" class="summary-value">0</div>
+                            <div class="summary-title">❌ Sem Telefone</div>
+                            <div id="clientWithoutPhone" class="summary-value">0</div>
                         </div>
                         <div class="summary-card">
-                            <div class="summary-title">💰 Valor Total</div>
-                            <div id="fpdTotalValue" class="summary-value">R$ 0,00</div>
+                            <div class="summary-title">💰 Valor Total Dívida</div>
+                            <div id="clientTotalDebtValue" class="summary-value">R$ 0,00</div>
                         </div>
                     </div>
                     
-                    <div class="fpd-filters">
+                    <div class="client-data-filters">
                         <div class="filter-group">
                             <label>Status:</label>
-                            <select id="fpdStatusFilter" onchange="filterFpdData()">
+                            <select id="clientStatusFilter" onchange="filterClientData()">
                                 <option value="all">Todos</option>
-                                <option value="ativo">Com Protocolo</option>
-                                <option value="sem_protocolo">Sem Protocolo</option>
+                                <option value="ativo">Ativo</option>
+                                <option value="inativo">Inativo</option>
                             </select>
                         </div>
                         <div class="filter-group">
-                            <label>Valor:</label>
-                            <select id="fpdValueFilter" onchange="filterFpdData()">
+                            <label>Valor Dívida:</label>
+                            <select id="clientDebtValueFilter" onchange="filterClientData()">
                                 <option value="all">Todos</option>
                                 <option value="high">Alto (>R$ 1000)</option>
                                 <option value="medium">Médio (R$ 100-1000)</option>
@@ -423,33 +315,32 @@ class BlacktemplarBot {
                         </div>
                         <div class="filter-group">
                             <label>Buscar:</label>
-                            <input type="text" id="fpdSearchFilter" placeholder="Nome, telefone, documento..." onchange="filterFpdData()">
+                            <input type="text" id="clientSearchFilter" placeholder="Nome, telefone, documento..." onchange="filterClientData()">
                         </div>
                     </div>
                     
-                    <div class="fpd-table-container">
-                        <table id="fpdTable" class="fpd-table">
+                    <div class="client-data-table-container">
+                        <table id="clientDataTable" class="client-data-table">
                             <thead>
                                 <tr>
-                                    <th>📋 Protocolo</th>
                                     <th>👤 Cliente</th>
                                     <th>📱 Telefone</th>
                                     <th>📄 Documento</th>
-                                    <th>💰 Valor</th>
+                                    <th>💰 Dívida</th>
                                     <th>✅ Status</th>
                                     <th>🔍 Ações</th>
                                 </tr>
                             </thead>
-                            <tbody id="fpdTableBody">
+                            <tbody id="clientDataTableBody">
                                 <!-- Dados serão carregados aqui -->
                             </tbody>
                         </table>
                     </div>
                     
-                    <div class="fpd-pagination">
-                        <button onclick="previousFpdPage()" class="btn btn-sm btn-outline-primary">← Anterior</button>
-                        <span id="fpdPageInfo">Página 1 de 1</span>
-                        <button onclick="nextFpdPage()" class="btn btn-sm btn-outline-primary">Próxima →</button>
+                    <div class="client-data-pagination">
+                        <button onclick="previousClientPage()" class="btn btn-sm btn-outline-primary">← Anterior</button>
+                        <span id="clientPageInfo">Página 1 de 1</span>
+                        <button onclick="nextClientPage()" class="btn btn-sm btn-outline-primary">Próxima →</button>
                     </div>
                 </div>
             </div>
@@ -478,8 +369,7 @@ class BlacktemplarBot {
         main.appendChild(logs);
         main.appendChild(metricas);
         main.appendChild(mensagens);
-        main.appendChild(dadosCruzados);
-        main.appendChild(fpdsCarregados);
+        main.appendChild(clientesCarregados);
         main.appendChild(configuracoes);
         
         appContainer.appendChild(header);

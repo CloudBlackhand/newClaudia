@@ -2463,4 +2463,58 @@ body {
         max-width: 95%;
     }
 } 
+
+/* --- CLIENTES CARREGADOS - MELHORIA VISUAL --- */
+.client-data-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  justify-content: center;
+  margin-bottom: 25px;
+}
+.summary-card {
+  background: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 10px;
+  padding: 18px 28px;
+  text-align: center;
+  min-width: 180px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  transition: box-shadow 0.2s;
+  margin: 0;
+}
+.summary-card:hover {
+  box-shadow: 0 6px 18px rgba(74,111,237,0.10);
+}
+.summary-title {
+  font-size: 1em;
+  color: #6c757d;
+  margin-bottom: 6px;
+  font-weight: 500;
+}
+.summary-value {
+  font-size: 2em;
+  font-weight: bold;
+  color: #007bff;
+}
+@media (max-width: 900px) {
+  .client-data-summary {
+    flex-direction: column;
+    align-items: center;
+  }
+  .summary-card {
+    min-width: 90%;
+    margin-bottom: 10px;
+  }
+}
+/* Botões alinhados à direita na header da card */
+.card-header .d-flex > div {
+  margin-left: auto;
+  display: flex;
+  gap: 10px;
+}
+/* Ajuste do container da tabela de clientes */
+.client-data-table-container {
+  margin-top: 20px;
+}
  
