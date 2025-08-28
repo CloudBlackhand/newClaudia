@@ -18,6 +18,7 @@ import logging
 import uuid
 import json
 import time
+import httpx
 from datetime import datetime, timedelta
 from pydantic import BaseModel
 
@@ -108,8 +109,79 @@ async def health_check():
         "status": "healthy",
         "timestamp": datetime.now().isoformat(),
         "version": "2.2",
-        "bot_active": system_state["bot_active"]
+        "bot_active": system_state["bot_active"],
+        "waha_url": os.getenv("WAHA_URL", "Não configurado")
     }
+
+# 🔗 WEBHOOK PARA INTEGRAÇÃO COM WAHA
+@app.post("/webhook")
+async def waha_webhook(request: Request):
+    """Webhook para receber mensagens do WAHA"""
+    try:
+        data = await request.json()
+        logger.info(f"📱 Webhook recebido: {data}")
+        
+        # Processar mensagem do WhatsApp
+        if data.get("event") == "message":
+            message_data = data.get("data", {})
+            phone = message_data.get("from")
+            message = message_data.get("text", "")
+            
+            if not message or not phone:
+                return {"success": False, "error": "Dados inválidos"}
+            
+            logger.info(f"💬 Mensagem do WhatsApp: {phone} -> {message}")
+            
+            # Processar com engine de conversação
+            response = conversation_engine.process_message(message)
+            
+            # Atualizar estatísticas
+            system_state["stats"]["messages_processed"] += 1
+            
+            # Enviar resposta de volta para WAHA
+            await send_waha_response(phone, response)
+            
+            logger.info(f"✅ Resposta enviada para {phone}: {response}")
+            
+        return {"success": True}
+        
+    except Exception as e:
+        logger.error(f"❌ Erro no webhook: {e}")
+        return {"success": False, "error": str(e)}
+
+async def send_waha_response(phone: str, message: str):
+    """Enviar resposta para WAHA"""
+    waha_url = os.getenv("WAHA_URL")
+    
+    if not waha_url:
+        logger.error("❌ WAHA_URL não configurado")
+        return
+    
+    try:
+        response_data = {
+            "to": phone,
+            "text": message
+        }
+        
+        headers = {
+            "Content-Type": "application/json"
+        }
+        
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                f"https://{waha_url}/api/sendText",
+                json=response_data,
+                headers=headers,
+                timeout=30.0
+            )
+            
+            if response.status_code == 200:
+                logger.info(f"✅ Resposta enviada com sucesso para {phone}")
+            else:
+                logger.error(f"❌ Erro ao enviar resposta: {response.status_code} - {response.text}")
+            
+    except Exception as e:
+        logger.error(f"❌ Erro ao enviar resposta para WAHA: {e}")
 
 @app.get("/", response_class=HTMLResponse)
 async def dashboard(request: Request):
@@ -154,6 +226,11 @@ async def dashboard(request: Request):
                             <li class="nav-item">
                                 <a class="nav-link" href="#" onclick="showSection('conversation')">
                                     <i class="fas fa-comments"></i> Conversação
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="#" onclick="showSection('waha')">
+                                    <i class="fab fa-whatsapp"></i> WAHA Status
                                 </a>
                             </li>
                             <li class="nav-item">
@@ -223,6 +300,31 @@ async def dashboard(request: Request):
                                     <i class="fas fa-paper-plane"></i> Testar Resposta
                                 </button>
                                 <div id="conversationResult" class="mt-3"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- WAHA Status Section -->
+                    <div id="waha-section" class="content-section" style="display: none;">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5><i class="fab fa-whatsapp"></i> Status WAHA</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <h6>Configuração WAHA:</h6>
+                                        <p><strong>URL:</strong> <span id="wahaUrl">Carregando...</span></p>
+                                        <p><strong>Instance:</strong> <span id="wahaInstance">Carregando...</span></p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h6>Status:</h6>
+                                        <p><strong>Webhook:</strong> <span id="webhookStatus">Carregando...</span></p>
+                                        <button type="button" class="btn btn-sm btn-outline-primary" onclick="testWebhook()">
+                                            <i class="fas fa-test"></i> Testar Webhook
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -394,7 +496,9 @@ async def get_stats():
     return {
         "success": True,
         "stats": system_state["stats"],
-        "bot_active": system_state["bot_active"]
+        "bot_active": system_state["bot_active"],
+        "waha_url": os.getenv("WAHA_URL", "Não configurado"),
+        "waha_instance": os.getenv("WAHA_INSTANCE_NAME", "Não configurado")
     }
 
 @app.post("/api/conversation/test")
@@ -430,7 +534,8 @@ async def get_logs():
         # Logs básicos do sistema
         logs = [
             {"timestamp": datetime.now().isoformat(), "level": "INFO", "message": "Sistema iniciado"},
-            {"timestamp": datetime.now().isoformat(), "level": "INFO", "message": "Bot ativo"}
+            {"timestamp": datetime.now().isoformat(), "level": "INFO", "message": "Bot ativo"},
+            {"timestamp": datetime.now().isoformat(), "level": "INFO", "message": f"WAHA URL: {os.getenv('WAHA_URL', 'Não configurado')}"}
         ]
         
         return {

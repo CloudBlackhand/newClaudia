@@ -40,6 +40,7 @@ class ClaudiaCobrancas {
                 <div class="nav-container">
                     <button class="nav-btn active" data-tab="dashboard">📊 Dashboard</button>
                     <button class="nav-btn" data-tab="conversation">💬 Conversação</button>
+                    <button class="nav-btn" data-tab="waha">📱 WAHA</button>
                     <button class="nav-btn" data-tab="logs">📋 Logs</button>
                 </div>
             </nav>
@@ -107,6 +108,44 @@ class ClaudiaCobrancas {
                     </div>
                 </div>
                 
+                <!-- WAHA Tab -->
+                <div class="tab-content" id="waha">
+                    <div class="waha-container">
+                        <div class="waha-section">
+                            <h2>📱 Status WAHA</h2>
+                            <div class="waha-status">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="status-card">
+                                            <h4>🔗 Configuração</h4>
+                                            <div class="status-item">
+                                                <span class="label">URL:</span>
+                                                <span class="value" id="wahaUrl">Carregando...</span>
+                                            </div>
+                                            <div class="status-item">
+                                                <span class="label">Instance:</span>
+                                                <span class="value" id="wahaInstance">Carregando...</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="status-card">
+                                            <h4>📊 Status</h4>
+                                            <div class="status-item">
+                                                <span class="label">Webhook:</span>
+                                                <span class="value" id="webhookStatus">Carregando...</span>
+                                            </div>
+                                            <button class="btn btn-primary" onclick="claudia.testWebhook()">
+                                                <i class="fas fa-test"></i> Testar Webhook
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
                 <!-- Logs Tab -->
                 <div class="tab-content" id="logs">
                     <div class="logs-container">
@@ -168,6 +207,7 @@ class ClaudiaCobrancas {
             if (data.success) {
                 this.updateStats(data.stats);
                 this.updateSystemStatus(data.bot_active);
+                this.updateWahaStatus(data.waha_url, data.waha_instance);
             }
         } catch (error) {
             console.error('Erro ao atualizar status:', error);
@@ -190,6 +230,19 @@ class ClaudiaCobrancas {
         } else {
             statusElement.textContent = 'Inativo';
             statusDot.className = 'status-dot offline';
+        }
+    }
+    
+    updateWahaStatus(wahaUrl, wahaInstance) {
+        document.getElementById('wahaUrl').textContent = wahaUrl || 'Não configurado';
+        document.getElementById('wahaInstance').textContent = wahaInstance || 'Não configurado';
+        
+        if (wahaUrl && wahaUrl !== 'Não configurado') {
+            document.getElementById('webhookStatus').textContent = 'Configurado';
+            document.getElementById('webhookStatus').className = 'value text-success';
+        } else {
+            document.getElementById('webhookStatus').textContent = 'Não configurado';
+            document.getElementById('webhookStatus').className = 'value text-danger';
         }
     }
     
@@ -234,6 +287,39 @@ class ClaudiaCobrancas {
         } catch (error) {
             this.showConversationResult('Erro ao testar conversação: ' + error.message, 'error');
             this.addLog(`Erro no teste: ${error.message}`, 'error');
+        }
+    }
+    
+    async testWebhook() {
+        try {
+            const testData = {
+                "event": "message",
+                "data": {
+                    "from": "5511999999999",
+                    "text": "teste webhook"
+                }
+            };
+            
+            const response = await fetch('/webhook', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(testData)
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                this.addLog('✅ Webhook testado com sucesso', 'success');
+                alert('Webhook funcionando!');
+            } else {
+                this.addLog(`❌ Erro no webhook: ${result.error}`, 'error');
+                alert('Erro no webhook: ' + result.error);
+            }
+        } catch (error) {
+            this.addLog(`❌ Erro ao testar webhook: ${error.message}`, 'error');
+            alert('Erro ao testar webhook: ' + error.message);
         }
     }
     
