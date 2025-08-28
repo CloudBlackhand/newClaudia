@@ -20,7 +20,9 @@ class WAHAWhatsAppClient:
     """Cliente WhatsApp via WAHA (WhatsApp HTTP API)"""
     
     def __init__(self, waha_url: str = None):
-        self.waha_url = waha_url or os.getenv('WAHA_URL', 'http://localhost:3000')
+        # URL padrão para Railway - deve ser configurada via variável de ambiente
+        default_url = os.getenv('WAHA_URL', 'https://waha-claudia.up.railway.app')
+        self.waha_url = waha_url or default_url
         self.session = requests.Session()
         self.is_connected = False
         self.instance_id = None
@@ -52,7 +54,7 @@ class WAHAWhatsAppClient:
                 logger.info(f"✅ Instância WAHA criada: {self.instance_id}")
             else:
                 logger.error(f"❌ Erro ao criar instância: {response.text}")
-                return None
+            return None
             
             # Iniciar instância
             start_response = self.session.post(
@@ -86,7 +88,7 @@ class WAHAWhatsAppClient:
                     return "CONNECTED"
                 else:
                     logger.error(f"❌ Erro ao verificar código: {code_response.text}")
-                    return None
+            return None
             
             # Verificar se já está conectado
             info_response = self.session.get(

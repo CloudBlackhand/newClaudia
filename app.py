@@ -188,22 +188,41 @@ async def get_status():
 async def waha_status():
     """Verificar status do WAHA"""
     try:
+        # Primeiro verificar se o WAHA está disponível
+        try:
+            response = whatsapp_client.session.get(
+                f"{whatsapp_client.waha_url}/api/instances",
+                timeout=10
+            )
+            waha_available = response.status_code == 200
+        except Exception:
+            waha_available = False
+        
+        if not waha_available:
+            return {
+                "connected": False,
+                "waha_available": False,
+                "error": "WAHA não está disponível"
+            }
+        
+        # Se WAHA disponível, verificar conexão
         connected = await whatsapp_client.check_connection()
         return {
             "connected": connected,
+            "waha_available": True,
             "instance_id": whatsapp_client.instance_id,
             "waha_url": whatsapp_client.waha_url
         }
     except Exception as e:
         logger.error(f"❌ Erro ao verificar status WAHA: {e}")
-        return {"connected": False, "error": str(e)}
+        return {"connected": False, "waha_available": False, "error": str(e)}
 
 @app.post("/api/waha/connect")
 async def waha_connect(request: Request):
     """Conectar ao WAHA com código e número"""
     try:
         data = await request.json()
-        waha_url = data.get("waha_url", "http://localhost:3000")
+        waha_url = data.get("waha_url", "https://waha-claudia.up.railway.app")
         phone_number = data.get("phone_number")
         code = data.get("code")
         
