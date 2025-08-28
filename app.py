@@ -1087,6 +1087,46 @@ async def auth_pending():
     }
 
 # ================================
+# 📱 WEBHOOK WAHA (WHATSAPP HTTP API)
+# ================================
+
+@app.post("/webhook")
+async def waha_webhook(request: Request):
+    """Webhook para receber mensagens do WAHA"""
+    try:
+        data = await request.json()
+        logger.info(f"📱 Webhook WAHA recebido: {data}")
+        
+        # Processar mensagem recebida
+        if data.get("event") == "messages.upsert":
+            message = data.get("data", {}).get("messages", [{}])[0]
+            
+            if message.get("key", {}).get("fromMe") == False:  # Mensagem recebida
+                phone = message.get("key", {}).get("remoteJid", "").split("@")[0]
+                text = message.get("message", {}).get("conversation", "")
+                
+                if text:
+                    logger.info(f"📱 Mensagem recebida de {phone}: {text}")
+                    
+                    # Processar com engine de conversação
+                    conversation_engine = SuperConversationEngine()
+                    response = conversation_engine.process_message(text)
+                    
+                    if response.get("success"):
+                        # Enviar resposta via WAHA
+                        from core.whatsapp_client import WAHAWhatsAppClient
+                        whatsapp_client = WAHAWhatsAppClient()
+                        
+                        await whatsapp_client.send_message(phone, response["response"])
+                        logger.info(f"✅ Resposta enviada para {phone}")
+        
+        return {"success": True, "message": "Webhook processado"}
+        
+    except Exception as e:
+        logger.error(f"❌ Erro no webhook WAHA: {e}")
+        return {"success": False, "error": str(e)}
+
+# ================================
 # 🔒 MIDDLEWARE DE AUTENTICAÇÃO
 # ================================
 
@@ -1098,6 +1138,7 @@ async def auth_middleware(request: Request, call_next):
     public_paths = [
         "/",
         "/health",
+        "/webhook",
         "/api/status",
         "/api/auth/request",
         "/api/auth/approve",

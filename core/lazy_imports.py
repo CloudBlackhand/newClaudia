@@ -51,25 +51,21 @@ def get_playwright_status() -> dict:
     }
 
 class LazyWhatsAppClient:
-    """Cliente WhatsApp com carregamento lazy"""
+    """Cliente WAHA WhatsApp com carregamento lazy"""
     
     def __init__(self):
         self._client = None
         self.available = False
         
     def initialize(self):
-        """Inicializar cliente se possível"""
-        if PLAYWRIGHT_AVAILABLE:
-            try:
-                from .whatsapp_client import WhatsAppClient
-                self._client = WhatsAppClient()
-                self.available = True
-                logger.info("✅ WhatsApp Client inicializado")
-            except Exception as e:
-                logger.error(f"❌ Erro ao inicializar WhatsApp Client: {e}")
-                self.available = False
-        else:
-            logger.warning("⚠️ WhatsApp Client não disponível sem Playwright")
+        """Inicializar cliente WAHA se possível"""
+        try:
+            from .whatsapp_client import WAHAWhatsAppClient
+            self._client = WAHAWhatsAppClient()
+            self.available = True
+            logger.info("✅ WAHA WhatsApp Client inicializado")
+        except Exception as e:
+            logger.error(f"❌ Erro ao inicializar WAHA WhatsApp Client: {e}")
             self.available = False
     
     def __getattr__(self, name):
@@ -78,7 +74,7 @@ class LazyWhatsAppClient:
             return getattr(self._client, name)
         else:
             def unavailable(*args, **kwargs):
-                return {"error": "WhatsApp Client não disponível - Playwright não instalado"}
+                return {"error": "WAHA WhatsApp Client não disponível"}
             return unavailable
 
 class LazyFaturaDownloader:

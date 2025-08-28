@@ -80,6 +80,7 @@
 - Respostas personalizadas por contexto
 - Detecção emocional avançada
 - Sistema de conversação contextual
+- **Integração WAHA (WhatsApp HTTP API)**
 
 ### 📄 **DOWNLOAD DE FATURAS DESKTOP**
 - Integração com SAC Desktop (sac.desktop.com.br)
@@ -104,12 +105,13 @@
 ├── runtime.txt                # Python 3.11.7
 ├── railway_start.py           # Startup otimizado
 ├── nixpacks.toml             # Configuração de build
+├── waha-config.json          # Configuração WAHA
 ├── web/
 │   ├── login.html            # Página de login
 │   └── static/               # CSS/JS
 └── core/
     ├── conversation.py       # 🧠 ENGINE ULTRA INTELIGENTE
-    ├── whatsapp_client.py   # Cliente WhatsApp
+    ├── whatsapp_client.py   # Cliente WAHA WhatsApp
     ├── fatura_downloader.py  # Download faturas Desktop
     ├── captcha_solver.py     # Anti-captcha
     └── ...
@@ -186,7 +188,46 @@ curl https://seu-app.railway.app/health
 - Performance máxima
 - Custos controlados
 - Zero dependências desnecessárias
+- **Integração WAHA para WhatsApp**
 - **HEALTHCHECK FUNCIONANDO PERFEITAMENTE!**
+
+## 🚀 **MIGRAÇÃO PARA WAHA (WHATSAPP HTTP API)**
+
+### ✅ **MUDANÇAS REALIZADAS:**
+
+1. **✅ Removido WhatsApp Web.js**
+   - Deletado `whatsapp-server.js`
+   - Removido `node_modules` e `package.json`
+   - Eliminado `whatsapp-sessions/`
+
+2. **✅ Implementado Cliente WAHA**
+   - Novo `WAHAWhatsAppClient` em `core/whatsapp_client.py`
+   - Integração via HTTP API
+   - Compatível com Railway
+
+3. **✅ Configurações Atualizadas**
+   - `waha-config.json` para configurações
+   - Variáveis de ambiente atualizadas
+   - Dependências otimizadas
+
+### 📋 **CONFIGURAÇÃO WAHA:**
+
+1. **Deploy WAHA no Railway:**
+   ```bash
+   # Criar novo projeto Railway para WAHA
+   # Usar imagem: whatsapp/whatsapp-http-api
+   ```
+
+2. **Configurar variáveis:**
+   ```env
+   WAHA_URL=https://seu-waha-app.railway.app
+   WEBHOOK_URL=https://seu-claudia-app.railway.app/webhook
+   ```
+
+3. **Conectar Claudia ao WAHA:**
+   - QR Code via API
+   - Mensagens via HTTP
+   - Webhooks para receber mensagens
 
 ---
 

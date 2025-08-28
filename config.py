@@ -48,11 +48,14 @@ class RailwayConfig:
             'sac_url': 'https://sac.desktop.com.br/Cliente_Documento.jsp'
         }
         
-        # WhatsApp config (conservador)
-        self.WHATSAPP_CONFIG = {
-            'headless': True,
-            'timeout': 20000 if self.RAILWAY_DEPLOY else 30000,
-            'user_agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+        # WAHA config (WhatsApp HTTP API)
+        self.WAHA_CONFIG = {
+            'url': os.getenv('WAHA_URL', 'http://localhost:3000'),
+            'instance_name': 'claudia-cobrancas',
+            'webhook_url': os.getenv('WEBHOOK_URL', ''),
+            'timeout': 30000 if self.RAILWAY_DEPLOY else 60000,
+            'max_retries': 3,
+            'auto_reconnect': True
         }
         
         # Logging (minimal para Railway)

@@ -43,11 +43,14 @@ PLAYWRIGHT_MAX_RETRIES=2
 PLAYWRIGHT_WAIT_FOR_DOWNLOAD=5
 
 # ================================
-# 📱 CONFIGURAÇÕES DO WHATSAPP
+# 📱 CONFIGURAÇÕES DO WAHA (WHATSAPP HTTP API)
 # ================================
-WHATSAPP_HEADLESS=True
-WHATSAPP_TIMEOUT=20000
-WHATSAPP_USER_AGENT=Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36
+WAHA_URL=https://seu-waha-app.railway.app
+WEBHOOK_URL=https://seu-claudia-app.railway.app/webhook
+WAHA_INSTANCE_NAME=claudia-cobrancas
+WAHA_TIMEOUT=30000
+WAHA_MAX_RETRIES=3
+WAHA_AUTO_RECONNECT=True
 
 # ================================
 # 💾 CONFIGURAÇÕES DE ARMAZENAMENTO

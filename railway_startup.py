@@ -22,16 +22,21 @@ health_app = FastAPI()
 async def health_check():
     return {"status": "healthy", "railway": True}
 
-def install_playwright_async():
-    """Instalar Playwright em background"""
+def check_waha_connection():
+    """Verificar conexão com WAHA"""
     try:
-        print("📦 Instalando Playwright em background...")
-        subprocess.run([
-            "python", "-m", "playwright", "install", "chromium"
-        ], check=True, capture_output=True, timeout=300)
-        print("✅ Playwright instalado")
+        import requests
+        waha_url = os.getenv('WAHA_URL', 'http://localhost:3000')
+        response = requests.get(f"{waha_url}/api/instances", timeout=10)
+        if response.status_code == 200:
+            print("✅ WAHA disponível")
+            return True
+        else:
+            print("⚠️ WAHA não respondeu corretamente")
+            return False
     except Exception as e:
-        print(f"⚠️ Aviso ao instalar Playwright: {e}")
+        print(f"⚠️ WAHA não disponível: {e}")
+        return False
 
 def create_directories():
     """Criar diretórios necessários"""
@@ -54,9 +59,9 @@ def main():
     # Criar diretórios imediatamente
     create_directories()
     
-    # Iniciar instalação do Playwright em background
+    # Verificar conexão com WAHA
     if railway_mode:
-        threading.Thread(target=install_playwright_async, daemon=True).start()
+        threading.Thread(target=check_waha_connection, daemon=True).start()
     
     # Configurações do servidor
     config = {

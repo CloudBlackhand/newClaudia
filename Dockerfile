@@ -9,6 +9,8 @@ RUN apt-get update && apt-get install -y \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
+# Remove Playwright installation (now using WAHA)
+
 # Copy requirements files
 COPY requirements_minimal.txt requirements.txt ./
 
