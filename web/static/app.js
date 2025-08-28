@@ -988,24 +988,139 @@ class BlacktemplarBot {
     }
     
     async connectWhatsApp() {
-        this.showProgress('Conectando ao WhatsApp...');
+        // Mostrar modal de configuração WAHA
+        this.showWAHAModal();
+    }
+    
+    showWAHAModal() {
+        const modal = document.createElement('div');
+        modal.className = 'modal fade';
+        modal.id = 'wahaModal';
+        modal.innerHTML = `
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">📱 Configurar WAHA</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">URL do WAHA:</label>
+                            <input type="text" id="wahaUrl" class="form-control" 
+                                   placeholder="https://seu-waha.railway.app" 
+                                   value="http://localhost:3000">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Número do WhatsApp:</label>
+                            <input type="text" id="phoneNumber" class="form-control" 
+                                   placeholder="5511999999999">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Código de Verificação:</label>
+                            <div class="input-group">
+                                <input type="text" id="verificationCode" class="form-control" 
+                                       placeholder="123456" maxlength="6">
+                                <button class="btn btn-outline-primary" onclick="window.blacktemplarBot.sendCode()">
+                                    Enviar Código
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="button" class="btn btn-primary" onclick="window.blacktemplarBot.connectWAHA()">
+                            Conectar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        
+        // Inicializar modal Bootstrap
+        const modalInstance = new bootstrap.Modal(modal);
+        modalInstance.show();
+        
+        // Remover modal do DOM quando fechado
+        modal.addEventListener('hidden.bs.modal', () => {
+            document.body.removeChild(modal);
+        });
+    }
+    
+    async sendCode() {
+        const phoneNumber = document.getElementById('phoneNumber').value;
+        
+        if (!phoneNumber) {
+            this.showNotification('❌ Digite o número do WhatsApp', 'error');
+            return;
+        }
+        
+        this.showProgress('Enviando código...');
         
         try {
-            const response = await fetch('/api/whatsapp/connect', {
-                method: 'POST'
+            const response = await fetch('/api/waha/send-code', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ phone_number: phoneNumber })
             });
             
             const result = await response.json();
             
-            if (result.success && result.qr_data) {
-                this.showQRCode(result.qr_data);
-                this.showNotification('QR Code gerado! Escaneie com seu WhatsApp.', 'info');
+            if (result.success) {
+                this.showNotification('✅ Código enviado! Verifique seu WhatsApp', 'success');
             } else {
-                this.showNotification(`Erro: ${result.message}`, 'error');
+                this.showNotification(`❌ Erro: ${result.error}`, 'error');
             }
             
         } catch (error) {
-            this.showNotification(`Erro de conexão: ${error.message}`, 'error');
+            this.showNotification(`❌ Erro: ${error.message}`, 'error');
+        } finally {
+            this.hideProgress();
+        }
+    }
+    
+    async connectWAHA() {
+        const wahaUrl = document.getElementById('wahaUrl').value;
+        const phoneNumber = document.getElementById('phoneNumber').value;
+        const code = document.getElementById('verificationCode').value;
+        
+        if (!wahaUrl || !phoneNumber || !code) {
+            this.showNotification('❌ Preencha todos os campos', 'error');
+            return;
+        }
+        
+        this.showProgress('Conectando ao WAHA...');
+        
+        try {
+            const response = await fetch('/api/waha/connect', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    waha_url: wahaUrl,
+                    phone_number: phoneNumber,
+                    code: code
+                })
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                if (result.connected) {
+                    this.showNotification('✅ WhatsApp conectado com sucesso!', 'success');
+                    this.updateSystemStatus();
+                    // Fechar modal
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('wahaModal'));
+                    modal.hide();
+                } else {
+                    this.showNotification('📱 Aguardando conexão...', 'info');
+                }
+            } else {
+                this.showNotification(`❌ Erro: ${result.error}`, 'error');
+            }
+            
+        } catch (error) {
+            this.showNotification(`❌ Erro: ${error.message}`, 'error');
         } finally {
             this.hideProgress();
         }
@@ -1127,16 +1242,24 @@ class BlacktemplarBot {
         return classes[type] || 'text-info';
     }
     
-    updateSystemStatus(status = null) {
+    async updateSystemStatus(status = null) {
         if (status) {
             // Update status cards based on received data
             this.updateStatusCard('whatsapp', status.whatsapp_connected);
-            this.updateStatusCard('fpd', status.fpd_loaded);
             this.updateStatusCard('bot', status.bot_active);
             
             // Update stats
             if (status.stats) {
                 this.updateStats(status.stats);
+            }
+        } else {
+            // Verificar status do WAHA
+            try {
+                const response = await fetch('/api/waha/status');
+                const wahaStatus = await response.json();
+                this.updateStatusCard('whatsapp', wahaStatus.connected);
+            } catch (error) {
+                console.error('Erro ao verificar status WAHA:', error);
             }
         }
     }

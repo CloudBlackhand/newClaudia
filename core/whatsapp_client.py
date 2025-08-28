@@ -29,8 +29,8 @@ class WAHAWhatsAppClient:
         self.last_message_time = 0
         self.message_count = 0
         
-    async def initialize(self) -> Optional[str]:
-        """Inicializar instância WAHA e gerar QR Code"""
+    async def initialize(self, phone_number: str = None, code: str = None) -> Optional[str]:
+        """Inicializar instância WAHA com código e número"""
         try:
             logger.info("🚀 Inicializando WAHA WhatsApp...")
             
@@ -52,7 +52,7 @@ class WAHAWhatsAppClient:
                 logger.info(f"✅ Instância WAHA criada: {self.instance_id}")
             else:
                 logger.error(f"❌ Erro ao criar instância: {response.text}")
-            return None
+                return None
             
             # Iniciar instância
             start_response = self.session.post(
@@ -65,25 +65,47 @@ class WAHAWhatsAppClient:
                 logger.error(f"❌ Erro ao iniciar instância: {start_response.text}")
                 return None
             
-            # Gerar QR Code
-            qr_response = self.session.get(
-                f"{self.waha_url}/api/instances/{self.instance_id}/qr"
+            # Se fornecido código e número, conectar diretamente
+            if phone_number and code:
+                logger.info(f"📱 Conectando com número: {phone_number}")
+                
+                # Enviar código de verificação
+                code_data = {
+                    "code": code,
+                    "phoneNumber": phone_number
+                }
+                
+                code_response = self.session.post(
+                    f"{self.waha_url}/api/instances/{self.instance_id}/auth/verify",
+                    json=code_data
+                )
+                
+                if code_response.status_code == 200:
+                    logger.info("✅ Código verificado, WhatsApp conectado")
+                    self.is_connected = True
+                    return "CONNECTED"
+                else:
+                    logger.error(f"❌ Erro ao verificar código: {code_response.text}")
+                    return None
+            
+            # Verificar se já está conectado
+            info_response = self.session.get(
+                f"{self.waha_url}/api/instances/{self.instance_id}/info"
             )
             
-            if qr_response.status_code == 200:
-                qr_data = qr_response.json()
-                if qr_data.get('qr'):
-                    self.qr_code_data = qr_data['qr']
-                    logger.info("✅ QR Code gerado")
-                    return self.qr_code_data
-                else:
+            if info_response.status_code == 200:
+                info = info_response.json()
+                if info.get('status') == 'qr':
                     logger.info("✅ WhatsApp já conectado")
                     self.is_connected = True
                     return "CONNECTED"
+                else:
+                    logger.info("📱 Aguardando conexão...")
+                    return "WAITING_CONNECTION"
             else:
-                logger.error(f"❌ Erro ao gerar QR Code: {qr_response.text}")
-            return None
-            
+                logger.error(f"❌ Erro ao verificar status: {info_response.text}")
+                return None
+                
         except Exception as e:
             logger.error(f"❌ Erro ao inicializar WAHA: {e}")
             return None
