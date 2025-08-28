@@ -286,6 +286,13 @@ async def waha_send_code(request: Request):
         if not phone_number:
             return {"success": False, "error": "Número de telefone é obrigatório"}
         
+        # Garantir que a instância existe
+        if not whatsapp_client.instance_id:
+            # Criar instância se não existir
+            result = await whatsapp_client.initialize()
+            if not result:
+                return {"success": False, "error": "Falha ao criar instância WAHA"}
+        
         # Enviar código via SMS
         code_data = {
             "phoneNumber": phone_number
@@ -299,7 +306,7 @@ async def waha_send_code(request: Request):
         if response.status_code == 200:
             return {"success": True, "message": "Código enviado com sucesso"}
         else:
-            return {"success": False, "error": "Falha ao enviar código"}
+            return {"success": False, "error": f"Falha ao enviar código: {response.text}"}
             
     except Exception as e:
         logger.error(f"❌ Erro ao enviar código: {e}")

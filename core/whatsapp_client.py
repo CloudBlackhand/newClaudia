@@ -54,7 +54,7 @@ class WAHAWhatsAppClient:
                 logger.info(f"✅ Instância WAHA criada: {self.instance_id}")
             else:
                 logger.error(f"❌ Erro ao criar instância: {response.text}")
-            return None
+                return None
             
             # Iniciar instância
             start_response = self.session.post(
