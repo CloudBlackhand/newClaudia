@@ -104,12 +104,9 @@ whatsapp_client = WAHAWhatsAppClient()
 system_state = {
     "whatsapp_connected": False,
     "current_session": None,
-    "fpd_loaded": False,
-    "vendas_loaded": False,
     "bot_active": False,
     "stats": {
         "messages_sent": 0,
-        "faturas_sent": 0,
         "conversations": 0
     }
 }
@@ -117,42 +114,216 @@ system_state = {
 
 @app.get("/", response_class=HTMLResponse)
 async def dashboard(request: Request):
-    """Dashboard principal - carrega o sistema JavaScript completo"""
-    import time
-    # Adicionar timestamp para evitar cache do navegador
-    timestamp = int(time.time())
-    return HTMLResponse(content=f"""
+    """Dashboard principal - Interface WAHA"""
+    return HTMLResponse(content="""
     <!DOCTYPE html>
-        <html lang="pt-BR">
+    <html lang="pt-BR">
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>Claudia Cobranças - Sistema de Cobrança da Desktop</title>
+        <title>Claudia Cobranças - WAHA Setup</title>
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
         <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-        <link href="/static/style.css?v={timestamp}" rel="stylesheet">
+        <style>
+            body { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; }
+            .card { border: none; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+            .btn-primary { background: linear-gradient(45deg, #667eea, #764ba2); border: none; }
+            .status-connected { color: #28a745; }
+            .status-disconnected { color: #dc3545; }
+        </style>
     </head>
     <body>
-        <div id="loading" class="loading-overlay">
-            <div class="spinner-border text-primary" role="status">
-                <span class="visually-hidden">Carregando...</span>
+        <div class="container mt-5">
+            <div class="row justify-content-center">
+                <div class="col-md-8">
+                    <div class="card">
+                        <div class="card-header bg-primary text-white text-center">
+                            <h3><i class="fas fa-robot"></i> Claudia Cobranças - WAHA Setup</h3>
+                        </div>
+                        <div class="card-body">
+                            <!-- Status do WAHA -->
+                            <div class="row mb-4">
+                                <div class="col-md-6">
+                                    <div class="card bg-light">
+                                        <div class="card-body text-center">
+                                            <h5><i class="fas fa-wifi"></i> Status WAHA</h5>
+                                            <div id="waha-status" class="status-disconnected">
+                                                <i class="fas fa-times-circle"></i> Desconectado
+                                            </div>
+                                            <button class="btn btn-sm btn-outline-primary mt-2" onclick="checkWahaStatus()">
+                                                Verificar Status
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="card bg-light">
+                                        <div class="card-body text-center">
+                                            <h5><i class="fas fa-qrcode"></i> QR Code</h5>
+                                            <div id="qr-container">
+                                                <p class="text-muted">Clique em "Conectar" para gerar QR Code</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Configuração WAHA -->
+                            <div class="mb-4">
+                                <h5><i class="fas fa-cog"></i> Configuração WAHA</h5>
+                                <div class="row">
+                                    <div class="col-md-8">
+                                        <input type="text" id="waha-url" class="form-control" 
+                                               placeholder="URL do WAHA (ex: https://seu-waha.railway.app)" 
+                                               value="http://localhost:3000">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <button class="btn btn-primary w-100" onclick="connectWaha()">
+                                            <i class="fas fa-plug"></i> Conectar
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Teste de Mensagem -->
+                            <div class="mb-4">
+                                <h5><i class="fas fa-comment"></i> Teste de Mensagem</h5>
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <input type="text" id="test-phone" class="form-control" 
+                                               placeholder="Telefone (ex: 5511999999999)">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <input type="text" id="test-message" class="form-control" 
+                                               placeholder="Mensagem de teste" 
+                                               value="🧪 Teste da Claudia Cobranças!">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <button class="btn btn-success w-100" onclick="sendTestMessage()">
+                                            <i class="fas fa-paper-plane"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Logs -->
+                            <div class="mb-4">
+                                <h5><i class="fas fa-list"></i> Logs</h5>
+                                <div id="logs" class="bg-dark text-light p-3 rounded" style="height: 200px; overflow-y: auto; font-family: monospace; font-size: 12px;">
+                                    Sistema iniciado...
+                                </div>
+                                <button class="btn btn-sm btn-outline-secondary mt-2" onclick="clearLogs()">
+                                    Limpar Logs
+                                </button>
+                            </div>
                         </div>
                     </div>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            function log(message) {
+                const logs = document.getElementById('logs');
+                const timestamp = new Date().toLocaleTimeString();
+                logs.innerHTML += `[${timestamp}] ${message}\\n`;
+                logs.scrollTop = logs.scrollHeight;
+            }
+
+            function clearLogs() {
+                document.getElementById('logs').innerHTML = 'Logs limpos...\\n';
+            }
+
+            async function checkWahaStatus() {
+                try {
+                    log('Verificando status do WAHA...');
+                    const response = await fetch('/api/waha/status');
+                    const data = await response.json();
                     
-        <script src="/static/app.js?v={timestamp}"></script>
-            <script>
-            // Inicializar o sistema quando a página carregar
-                document.addEventListener('DOMContentLoaded', function() {{
-                // Remover loading
-                document.getElementById('loading').style.display = 'none';
-                
-                // Inicializar Blacktemplar Bot
-                window.blacktemplarBot = new BlacktemplarBot();
-                }});
-            </script>
+                    const statusDiv = document.getElementById('waha-status');
+                    if (data.connected) {
+                        statusDiv.className = 'status-connected';
+                        statusDiv.innerHTML = '<i class="fas fa-check-circle"></i> Conectado';
+                        log('✅ WAHA conectado');
+                    } else {
+                        statusDiv.className = 'status-disconnected';
+                        statusDiv.innerHTML = '<i class="fas fa-times-circle"></i> Desconectado';
+                        log('❌ WAHA desconectado');
+                    }
+                } catch (error) {
+                    log('❌ Erro ao verificar status: ' + error.message);
+                }
+            }
+
+            async function connectWaha() {
+                try {
+                    const wahaUrl = document.getElementById('waha-url').value;
+                    log('Conectando ao WAHA: ' + wahaUrl);
+                    
+                    const response = await fetch('/api/waha/connect', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ waha_url: wahaUrl })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        if (data.qr_code) {
+                            document.getElementById('qr-container').innerHTML = 
+                                `<img src="${data.qr_code}" style="max-width: 200px;" class="img-fluid">`;
+                            log('📱 QR Code gerado - escaneie para conectar');
+                        } else {
+                            log('✅ WAHA já conectado');
+                            checkWahaStatus();
+                        }
+                    } else {
+                        log('❌ Erro ao conectar: ' + data.error);
+                    }
+                } catch (error) {
+                    log('❌ Erro na conexão: ' + error.message);
+                }
+            }
+
+            async function sendTestMessage() {
+                try {
+                    const phone = document.getElementById('test-phone').value;
+                    const message = document.getElementById('test-message').value;
+                    
+                    if (!phone || !message) {
+                        log('❌ Preencha telefone e mensagem');
+                        return;
+                    }
+                    
+                    log(`Enviando mensagem para ${phone}...`);
+                    
+                    const response = await fetch('/api/waha/send', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ phone, message })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        log('✅ Mensagem enviada com sucesso!');
+                    } else {
+                        log('❌ Erro ao enviar: ' + data.error);
+                    }
+                } catch (error) {
+                    log('❌ Erro no envio: ' + error.message);
+                }
+            }
+
+            // Verificar status ao carregar
+            document.addEventListener('DOMContentLoaded', function() {
+                log('🚀 Claudia Cobranças iniciado');
+                checkWahaStatus();
+            });
+        </script>
     </body>
     </html>
-        """)
+    """)
 
 @app.get("/health")
 async def health_check():
@@ -164,12 +335,10 @@ async def get_status():
     """Status do sistema"""
     try:
         status = {
-        "status": "online",
+            "status": "online",
             "version": "2.2",
-        "whatsapp_connected": system_state["whatsapp_connected"],
+            "whatsapp_connected": system_state["whatsapp_connected"],
             "bot_active": system_state["bot_active"],
-        "fpd_loaded": system_state["fpd_loaded"],
-        "vendas_loaded": system_state["vendas_loaded"],
             "stats": system_state["stats"],
             "timestamp": datetime.now().isoformat(),
             "railway": True,
@@ -184,6 +353,72 @@ async def get_status():
             "error": str(e),
             "timestamp": datetime.now().isoformat()
         }
+
+# ================================
+# 📱 API WAHA
+# ================================
+
+@app.get("/api/waha/status")
+async def waha_status():
+    """Verificar status do WAHA"""
+    try:
+        connected = await whatsapp_client.check_connection()
+        return {
+            "connected": connected,
+            "instance_id": whatsapp_client.instance_id,
+            "waha_url": whatsapp_client.waha_url
+        }
+    except Exception as e:
+        logger.error(f"❌ Erro ao verificar status WAHA: {e}")
+        return {"connected": False, "error": str(e)}
+
+@app.post("/api/waha/connect")
+async def waha_connect(request: Request):
+    """Conectar ao WAHA"""
+    try:
+        data = await request.json()
+        waha_url = data.get("waha_url", "http://localhost:3000")
+        
+        # Atualizar URL do WAHA
+        whatsapp_client.waha_url = waha_url
+        
+        # Inicializar conexão
+        qr_code = await whatsapp_client.initialize()
+        
+        if qr_code == "CONNECTED":
+            system_state["whatsapp_connected"] = True
+            return {"success": True, "connected": True}
+        elif qr_code:
+            return {"success": True, "qr_code": qr_code}
+        else:
+            return {"success": False, "error": "Falha ao inicializar WAHA"}
+            
+    except Exception as e:
+        logger.error(f"❌ Erro ao conectar WAHA: {e}")
+        return {"success": False, "error": str(e)}
+
+@app.post("/api/waha/send")
+async def waha_send_message(request: Request):
+    """Enviar mensagem via WAHA"""
+    try:
+        data = await request.json()
+        phone = data.get("phone")
+        message = data.get("message")
+        
+        if not phone or not message:
+            return {"success": False, "error": "Telefone e mensagem são obrigatórios"}
+        
+        success = await whatsapp_client.send_message(phone, message)
+        
+        if success:
+            system_state["stats"]["messages_sent"] += 1
+            return {"success": True, "message": "Mensagem enviada"}
+        else:
+            return {"success": False, "error": "Falha ao enviar mensagem"}
+            
+    except Exception as e:
+        logger.error(f"❌ Erro ao enviar mensagem: {e}")
+        return {"success": False, "error": str(e)}
 
 @app.get("/api/fpd/data")
 async def get_fpd_data():
