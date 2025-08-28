@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 Script de Instalação Otimizado para Railway
-Instala apenas as dependências essenciais para o sistema básico
+Instala apenas as dependências essenciais para o bot de conversação
 """
 
 import os
@@ -20,19 +20,11 @@ def install_requirements():
     # Lista de dependências essenciais
     essential_packages = [
         "fastapi==0.104.1",
-        "uvicorn[standard]==0.24.0", 
-        "python-multipart==0.0.6",
+        "uvicorn[standard]==0.24.0",
         "requests==2.31.0",
         "python-dateutil==2.8.2",
         "python-dotenv==1.0.0"
     ]
-    
-    # Instalar psutil se possível (para monitoramento)
-    try:
-        subprocess.check_call([sys.executable, "-m", "pip", "install", "psutil==5.9.6"])
-        logger.info("✅ psutil instalado")
-    except:
-        logger.warning("⚠️ psutil não instalado - monitoramento limitado")
     
     # Instalar dependências essenciais
     for package in essential_packages:
@@ -45,39 +37,11 @@ def install_requirements():
     
     return True
 
-def install_optional_packages():
-    """Instalar pacotes opcionais se necessário"""
-    logger.info("📦 Instalando pacotes opcionais...")
-    
-    # Verificar se é necessário instalar pandas/openpyxl
-    railway_mode = os.getenv('RAILWAY_DEPLOY', 'False') == 'True'
-    
-    if not railway_mode:
-        # Modo desenvolvimento - instalar tudo
-        optional_packages = [
-            "pandas==2.1.3",
-            "openpyxl==3.1.2",
-            "playwright==1.40.0",
-            "SpeechRecognition==3.10.0"
-        ]
-        
-        for package in optional_packages:
-            try:
-                subprocess.check_call([sys.executable, "-m", "pip", "install", package])
-                logger.info(f"✅ {package} instalado")
-            except Exception as e:
-                logger.warning(f"⚠️ {package} não instalado: {e}")
-    else:
-        # Modo Railway - instalar apenas se necessário
-        logger.info("🚂 Modo Railway - pacotes opcionais não instalados")
-
 def create_directories():
     """Criar diretórios necessários"""
     logger.info("📁 Criando diretórios...")
     
     directories = [
-        "uploads",
-        "faturas", 
         "logs",
         "temp",
         "web/static"
@@ -102,11 +66,8 @@ def main():
         logger.error("❌ Falha na instalação de dependências essenciais")
         sys.exit(1)
     
-    # Instalar pacotes opcionais
-    install_optional_packages()
-    
     logger.info("✅ Instalação concluída com sucesso!")
-    logger.info("🚀 Sistema pronto para execução")
+    logger.info("🚀 Bot de conversação pronto para execução")
 
 if __name__ == "__main__":
     main()

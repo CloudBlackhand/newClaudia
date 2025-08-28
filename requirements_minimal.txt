@@ -1,16 +1,12 @@
-# CLAUDIA COBRANÇAS - REQUIREMENTS MÍNIMOS PARA RAILWAY
-# Apenas dependências essenciais para o sistema básico
+# CLAUDIA COBRANÇAS - BOT DE CONVERSAÇÃO
+# Apenas dependências essenciais para o bot inteligente
 
 # Core Web Framework
 fastapi==0.104.1
 uvicorn[standard]==0.24.0
-python-multipart==0.0.6
 
 # HTTP Requests
 requests==2.31.0
-
-# System Monitoring
-psutil==5.9.6
 
 # Utilitários
 python-dateutil==2.8.2

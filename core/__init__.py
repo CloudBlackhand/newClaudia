@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 CLAUDIA COBRANÇAS - Core Modules
-Módulos essenciais do sistema de cobrança
+Módulos essenciais do bot de conversação
 """
 
 import logging
@@ -11,28 +11,12 @@ import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Importar módulos essenciais
-from .excel_processor import ExcelProcessor
+# Importar módulo essencial
 from .conversation import SuperConversationEngine
-from .storage_manager import storage_manager
-from .fatura_downloader import FaturaDownloader
-from .captcha_solver import CaptchaSolver
-from .logger import Logger
-from .monitoring import SystemMonitor
-from .performance import PerformanceOptimizer
-from .security import SecurityManager
 
-# Exportar classes principais
+# Exportar classe principal
 __all__ = [
-    'ExcelProcessor',
-    'SuperConversationEngine', 
-    'storage_manager',
-    'FaturaDownloader',
-    'CaptchaSolver',
-    'Logger',
-    'SystemMonitor',
-    'PerformanceOptimizer',
-    'SecurityManager'
+    'SuperConversationEngine'
 ]
 
 # Versão do sistema
@@ -40,21 +24,13 @@ __version__ = "2.2"
 
 def initialize_core():
     """Inicializar módulos core"""
-    logger.info("🚀 Inicializando módulos core da Claudia Cobranças...")
+    logger.info("🚀 Inicializando bot de conversação Claudia Cobranças...")
     
     try:
-        # Inicializar componentes essenciais
-        logger.info("✅ Excel Processor inicializado")
+        # Inicializar engine de conversação
         logger.info("✅ Conversation Engine inicializado")
-        logger.info("✅ Storage Manager inicializado")
-        logger.info("✅ Fatura Downloader inicializado")
-        logger.info("✅ Captcha Solver inicializado")
-        logger.info("✅ Logger inicializado")
-        logger.info("✅ System Monitor inicializado")
-        logger.info("✅ Performance Optimizer inicializado")
-        logger.info("✅ Security Manager inicializado")
         
-        logger.info("🎯 Sistema core inicializado com sucesso!")
+        logger.info("🎯 Bot de conversação inicializado com sucesso!")
         return True
         
     except Exception as e:

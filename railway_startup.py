@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 Railway Startup Script - Claudia Cobranças
-Script otimizado para Railway com healthcheck rápido
+Script otimizado para Railway com bot de conversação
 """
 
 import os
@@ -24,7 +24,7 @@ async def health_check():
 
 def create_directories():
     """Criar diretórios necessários"""
-    dirs = ["uploads", "faturas", "web/static", "logs", "temp"]
+    dirs = ["logs", "temp", "web/static"]
     for dir_name in dirs:
         os.makedirs(dir_name, exist_ok=True)
     print("✅ Diretórios criados")
@@ -50,7 +50,7 @@ def install_dependencies():
 
 def main():
     """Inicialização otimizada para Railway"""
-    print("🚀 Iniciando Claudia Cobranças - Railway Mode")
+    print("🚀 Iniciando Claudia Cobranças - Bot de Conversação")
     
     # Configurações
     port = int(os.getenv("PORT", 8000))

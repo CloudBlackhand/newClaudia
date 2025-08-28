@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-CLAUDIA COBRANÇAS - Sistema de Cobrança da Desktop
-Aplicação principal FastAPI com interface web
+CLAUDIA COBRANÇAS - Bot de Conversação Inteligente
+Aplicação principal FastAPI focada apenas no bot de conversação
 """
 
 import os
 import asyncio
 from fastapi.websockets import WebSocketDisconnect
 import uvicorn
-from fastapi import FastAPI, File, UploadFile, Form, HTTPException, BackgroundTasks
+from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import HTMLResponse, JSONResponse, FileResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.requests import Request
 from typing import List, Optional
 import logging
@@ -20,7 +20,6 @@ import json
 import time
 from datetime import datetime, timedelta
 from pydantic import BaseModel
-import pandas as pd
 
 # Configurar logging
 logging.basicConfig(level=logging.INFO)
@@ -46,16 +45,14 @@ auth_settings = {
     "max_pending": 10
 }
 
-# Importar módulos core essenciais
-from core.excel_processor import ExcelProcessor
+# Importar módulo core essencial
 from core.conversation import SuperConversationEngine
-from core.storage_manager import storage_manager
 from config import Config, CLAUDIA_CONFIG
 
 # Inicializar FastAPI
 app = FastAPI(
-    title="Claudia Cobranças",
-    description="Sistema oficial de cobrança da Desktop",
+    title="Claudia Cobranças - Bot de Conversação",
+    description="Bot inteligente de conversação da Desktop",
     version="2.2"
 )
 
@@ -93,16 +90,14 @@ app.mount("/static", NoCacheStaticFiles(directory="web/static"), name="static")
 
 # Instâncias globais
 config = Config()
-excel_processor = ExcelProcessor()
 conversation_engine = SuperConversationEngine()
 
 # Estado do sistema
 system_state = {
-    "bot_active": False,
+    "bot_active": True,
     "stats": {
         "messages_processed": 0,
-        "conversations": 0,
-        "faturas_downloaded": 0
+        "conversations": 0
     }
 }
 
@@ -128,7 +123,7 @@ async def dashboard(request: Request):
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>Claudia Cobranças - Sistema de Cobrança da Desktop</title>
+            <title>Claudia Cobranças - Bot de Conversação</title>
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
         <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
         <link href="/static/style.css?v={timestamp}" rel="stylesheet">
@@ -147,18 +142,13 @@ async def dashboard(request: Request):
                     <div class="position-sticky pt-3">
                         <div class="text-center mb-4">
                             <h4 class="text-white">🤖 Claudia Cobranças</h4>
-                            <p class="text-muted">Sistema de Cobrança</p>
+                            <p class="text-muted">Bot de Conversação</p>
                         </div>
                         
                         <ul class="nav flex-column">
                             <li class="nav-item">
                                 <a class="nav-link active" href="#" onclick="showSection('dashboard')">
                                     <i class="fas fa-tachometer-alt"></i> Dashboard
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="#" onclick="showSection('upload')">
-                                    <i class="fas fa-upload"></i> Upload Excel
                                 </a>
                             </li>
                             <li class="nav-item">
@@ -214,27 +204,6 @@ async def dashboard(request: Request):
                                         <p class="card-text" id="conversationsCount">0</p>
                                     </div>
                                 </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Upload Section -->
-                    <div id="upload-section" class="content-section" style="display: none;">
-                        <div class="card">
-                            <div class="card-header">
-                                <h5><i class="fas fa-upload"></i> Upload de Arquivo Excel</h5>
-                            </div>
-                            <div class="card-body">
-                                <form id="uploadForm" enctype="multipart/form-data">
-                                    <div class="mb-3">
-                                        <label for="excelFile" class="form-label">Selecione o arquivo Excel:</label>
-                                        <input type="file" class="form-control" id="excelFile" name="file" accept=".xlsx,.xls" required>
-                                    </div>
-                                    <button type="submit" class="btn btn-primary">
-                                        <i class="fas fa-upload"></i> Enviar Arquivo
-                                    </button>
-                                </form>
-                                <div id="uploadResult" class="mt-3"></div>
                             </div>
                         </div>
                     </div>
@@ -428,33 +397,6 @@ async def get_stats():
         "bot_active": system_state["bot_active"]
     }
 
-@app.post("/api/upload")
-async def upload_excel(file: UploadFile = File(...)):
-    """Upload de arquivo Excel"""
-    try:
-        if not file.filename.endswith(('.xlsx', '.xls')):
-            raise HTTPException(status_code=400, detail="Apenas arquivos Excel são aceitos")
-        
-        # Salvar arquivo
-        file_path = f"uploads/{file.filename}"
-        os.makedirs("uploads", exist_ok=True)
-        with open(file_path, "wb") as buffer:
-            content = await file.read()
-            buffer.write(content)
-        
-        # Processar Excel
-        result = excel_processor.process_file(file_path)
-        
-        return {
-            "success": True,
-            "message": "Arquivo processado com sucesso",
-            "data": result
-        }
-        
-    except Exception as e:
-        logger.error(f"Erro no upload: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-
 @app.post("/api/conversation/test")
 async def test_conversation(request: Request):
     """Testar conversação"""
@@ -467,6 +409,9 @@ async def test_conversation(request: Request):
         
         # Processar com engine de conversação
         response = conversation_engine.process_message(message)
+        
+        # Atualizar estatísticas
+        system_state["stats"]["messages_processed"] += 1
         
         return {
             "success": True,
@@ -482,7 +427,7 @@ async def test_conversation(request: Request):
 async def get_logs():
     """Obter logs do sistema"""
     try:
-        # Implementar sistema de logs
+        # Logs básicos do sistema
         logs = [
             {"timestamp": datetime.now().isoformat(), "level": "INFO", "message": "Sistema iniciado"},
             {"timestamp": datetime.now().isoformat(), "level": "INFO", "message": "Bot ativo"}

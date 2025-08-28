@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-CLAUDIA COBRANÇAS - Sistema de Cobrança da Desktop
-Configurações Específicas para Railway
-Otimizado para custos baixos e performance adequada
+CLAUDIA COBRANÇAS - Bot de Conversação
+Configurações específicas para Railway
+Otimizado para bot de conversação inteligente
 """
 
 import os
@@ -13,7 +13,7 @@ CLAUDIA_CONFIG = {
     'name': 'Claudia Cobranças',
     'company': 'Desktop',
     'version': '2.2',
-    'description': 'Sistema oficial de cobrança da Desktop',
+    'description': 'Bot inteligente de conversação da Desktop',
     'website': 'https://sac.desktop.com.br/Cliente_Documento.jsp',
     'support_email': 'cobranca@desktop.com.br'
 }
@@ -28,17 +28,8 @@ class RailwayConfig:
         
         # Configurações de recursos (conservadoras)
         self.MAX_WORKERS = 1 if self.RAILWAY_DEPLOY else 4
-        self.CONCURRENT_DOWNLOADS = 1 if self.RAILWAY_DEPLOY else 3
+        self.CONCURRENT_REQUESTS = 1 if self.RAILWAY_DEPLOY else 3
         self.CACHE_TTL = 3600 if self.RAILWAY_DEPLOY else 1800
-        
-        # Downloader config
-        self.DOWNLOADER_CONFIG = {
-            'headless': True,
-            'timeout': 30000,
-            'max_retries': 2,  # Reduzido para Railway
-            'wait_for_download': 5,  # Reduzido para Railway
-            'sac_url': 'https://sac.desktop.com.br/Cliente_Documento.jsp'
-        }
         
         # Logging (minimal para Railway)
         self.LOG_LEVEL = 'WARNING' if self.RAILWAY_DEPLOY else 'INFO'
@@ -90,10 +81,6 @@ class Config:
         # Configurações básicas
         self.DEBUG = os.getenv('DEBUG', 'False') == 'True'
         self.SECRET_KEY = os.getenv('SECRET_KEY', 'claudia-cobrancas-secret-key')
-        
-        # Configurações de upload
-        self.MAX_FILE_SIZE = 10 * 1024 * 1024  # 10MB
-        self.ALLOWED_EXTENSIONS = ['.xlsx', '.xls']
         
         # Configurações de sessão
         self.SESSION_TIMEOUT = 3600  # 1 hora

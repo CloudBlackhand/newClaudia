@@ -1,4 +1,4 @@
-// Claudia Cobranças - Frontend Básico
+// Claudia Cobranças - Bot de Conversação
 class ClaudiaCobrancas {
     constructor() {
         this.messages = [];
@@ -10,7 +10,7 @@ class ClaudiaCobrancas {
         this.createInterface();
         this.setupEventListeners();
         this.startStatusPolling();
-        console.log('🚀 Claudia Cobranças - Sistema básico iniciado!');
+        console.log('🚀 Claudia Cobranças - Bot de Conversação iniciado!');
     }
     
     createInterface() {
@@ -23,7 +23,7 @@ class ClaudiaCobrancas {
                     <div class="logo">
                         <span class="logo-icon">🤖</span>
                         <h1>Claudia Cobranças</h1>
-                        <span class="version">v2.2 - Sistema Básico</span>
+                        <span class="version">v2.2 - Bot de Conversação</span>
                     </div>
                     <div class="header-actions">
                         <div class="status-indicator" id="systemStatus">
@@ -39,7 +39,6 @@ class ClaudiaCobrancas {
             <nav class="main-nav">
                 <div class="nav-container">
                     <button class="nav-btn active" data-tab="dashboard">📊 Dashboard</button>
-                    <button class="nav-btn" data-tab="upload">📤 Upload</button>
                     <button class="nav-btn" data-tab="conversation">💬 Conversação</button>
                     <button class="nav-btn" data-tab="logs">📋 Logs</button>
                 </div>
@@ -52,7 +51,7 @@ class ClaudiaCobrancas {
                     <div class="dashboard-grid">
                         <div class="status-card system-card">
                             <div class="card-header">
-                                <h3>🤖 Sistema</h3>
+                                <h3>🤖 Bot de Conversação</h3>
                             </div>
                             <div class="card-body">
                                 <div class="status-info">
@@ -82,31 +81,8 @@ class ClaudiaCobrancas {
                                         <span class="stat-number" id="conversations">0</span>
                                         <span class="stat-label">Conversações</span>
                                     </div>
-                                    <div class="stat-item">
-                                        <span class="stat-number" id="faturasDownloaded">0</span>
-                                        <span class="stat-label">Faturas Baixadas</span>
-                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Upload Tab -->
-                <div class="tab-content" id="upload">
-                    <div class="upload-container">
-                        <div class="upload-section">
-                            <h2>📤 Upload de Arquivo Excel</h2>
-                            <div class="upload-form">
-                                <div class="form-group">
-                                    <label for="excelFile">Selecione o arquivo Excel:</label>
-                                    <input type="file" id="excelFile" accept=".xlsx,.xls" class="form-control">
-                                </div>
-                                <button class="btn btn-primary" onclick="claudia.uploadFile()">
-                                    <i class="fas fa-upload"></i> Enviar Arquivo
-                                </button>
-                            </div>
-                            <div id="uploadResult" class="upload-result"></div>
                         </div>
                     </div>
                 </div>
@@ -162,14 +138,6 @@ class ClaudiaCobrancas {
                 this.switchTab(tab);
             });
         });
-        
-        // Drag and drop para upload
-        const fileInput = document.getElementById('excelFile');
-        if (fileInput) {
-            fileInput.addEventListener('change', (e) => {
-                this.handleFileSelect(e.target.files[0]);
-            });
-        }
     }
     
     switchTab(tabName) {
@@ -210,7 +178,6 @@ class ClaudiaCobrancas {
     updateStats(stats) {
         document.getElementById('messagesProcessed').textContent = stats.messages_processed || 0;
         document.getElementById('conversations').textContent = stats.conversations || 0;
-        document.getElementById('faturasDownloaded').textContent = stats.faturas_downloaded || 0;
     }
     
     updateSystemStatus(botActive) {
@@ -224,57 +191,6 @@ class ClaudiaCobrancas {
             statusElement.textContent = 'Inativo';
             statusDot.className = 'status-dot offline';
         }
-    }
-    
-    handleFileSelect(file) {
-        if (file) {
-            this.addLog(`Arquivo selecionado: ${file.name}`, 'info');
-        }
-    }
-    
-    async uploadFile() {
-        const fileInput = document.getElementById('excelFile');
-        const file = fileInput.files[0];
-        
-        if (!file) {
-            this.showUploadResult('Por favor, selecione um arquivo.', 'error');
-            return;
-        }
-        
-        if (!file.name.match(/\.(xlsx|xls)$/)) {
-            this.showUploadResult('Por favor, selecione um arquivo Excel (.xlsx ou .xls).', 'error');
-            return;
-        }
-        
-        const formData = new FormData();
-        formData.append('file', file);
-        
-        try {
-            this.showUploadResult('Enviando arquivo...', 'info');
-            
-            const response = await fetch('/api/upload', {
-                method: 'POST',
-                body: formData
-            });
-            
-            const result = await response.json();
-            
-            if (result.success) {
-                this.showUploadResult('Arquivo processado com sucesso!', 'success');
-                this.addLog(`Arquivo ${file.name} processado com sucesso`, 'success');
-            } else {
-                this.showUploadResult('Erro ao processar arquivo: ' + result.message, 'error');
-                this.addLog(`Erro ao processar ${file.name}: ${result.message}`, 'error');
-            }
-        } catch (error) {
-            this.showUploadResult('Erro ao enviar arquivo: ' + error.message, 'error');
-            this.addLog(`Erro no upload: ${error.message}`, 'error');
-        }
-    }
-    
-    showUploadResult(message, type) {
-        const resultDiv = document.getElementById('uploadResult');
-        resultDiv.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
     }
     
     async testConversation() {
