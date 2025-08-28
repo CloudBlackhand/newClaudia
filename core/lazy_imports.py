@@ -1,155 +1,145 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Sistema de importação lazy para módulos que dependem do Playwright
-Permite que o sistema funcione mesmo sem o Playwright instalado
+CLAUDIA COBRANÇAS - Lazy Imports
+Carregamento lazy de módulos para otimização
 """
 
 import logging
-from typing import Optional, Any
+from typing import Dict, Any, Optional
 
 logger = logging.getLogger(__name__)
 
-# Flag global para indicar se o Playwright está disponível
-PLAYWRIGHT_AVAILABLE = False
-
-# Tentar importar Playwright
+# Verificar disponibilidade de módulos
 try:
-    from playwright.async_api import async_playwright, Browser, Page
-    PLAYWRIGHT_AVAILABLE = True
-    logger.info("✅ Playwright disponível")
+    import pandas as pd
+    PANDAS_AVAILABLE = True
 except ImportError:
-    logger.warning("⚠️ Playwright não disponível - funcionalidades limitadas")
-    
-    # Classes mock para quando o Playwright não estiver disponível
-    class Browser:
-        pass
-    
-    class Page:
-        pass
-    
-    async def async_playwright():
-        class MockPlaywright:
-            async def start(self):
-                raise NotImplementedError("Playwright não está instalado")
-        return MockPlaywright()
+    PANDAS_AVAILABLE = False
+    logger.warning("⚠️ Pandas não disponível")
 
-def check_playwright() -> bool:
-    """Verificar se o Playwright está disponível"""
-    return PLAYWRIGHT_AVAILABLE
+try:
+    import openpyxl
+    OPENPYXL_AVAILABLE = True
+except ImportError:
+    OPENPYXL_AVAILABLE = False
+    logger.warning("⚠️ OpenPyXL não disponível")
 
-def get_playwright_status() -> dict:
-    """Retornar status do Playwright"""
-    return {
-        "available": PLAYWRIGHT_AVAILABLE,
-        "message": "Playwright disponível" if PLAYWRIGHT_AVAILABLE else "Playwright não instalado",
-        "features": {
-            "whatsapp": PLAYWRIGHT_AVAILABLE,
-            "fatura_download": PLAYWRIGHT_AVAILABLE,
-            "captcha_solver": PLAYWRIGHT_AVAILABLE
-        }
-    }
+try:
+    import requests
+    REQUESTS_AVAILABLE = True
+except ImportError:
+    REQUESTS_AVAILABLE = False
+    logger.warning("⚠️ Requests não disponível")
 
-class LazyWhatsAppClient:
-    """Cliente WAHA WhatsApp com carregamento lazy"""
+# Status de disponibilidade
+MODULE_STATUS = {
+    "pandas": PANDAS_AVAILABLE,
+    "openpyxl": OPENPYXL_AVAILABLE,
+    "requests": REQUESTS_AVAILABLE
+}
+
+class LazyExcelProcessor:
+    """Processador Excel com carregamento lazy"""
     
     def __init__(self):
-        self._client = None
-        self.available = False
-        
-    def initialize(self):
-        """Inicializar cliente WAHA se possível"""
-        try:
-            from .whatsapp_client import WAHAWhatsAppClient
-            self._client = WAHAWhatsAppClient()
-            self.available = True
-            logger.info("✅ WAHA WhatsApp Client inicializado")
-        except Exception as e:
-            logger.error(f"❌ Erro ao inicializar WAHA WhatsApp Client: {e}")
-            self.available = False
+        self._processor = None
     
-    def __getattr__(self, name):
-        """Proxy para métodos do cliente real"""
-        if self._client:
-            return getattr(self._client, name)
-        else:
-            def unavailable(*args, **kwargs):
-                return {"error": "WAHA WhatsApp Client não disponível"}
-            return unavailable
+    def _load_processor(self):
+        """Carregar processador se necessário"""
+        if self._processor is None:
+            try:
+                from .excel_processor import ExcelProcessor
+                self._processor = ExcelProcessor()
+                logger.info("✅ Excel Processor carregado")
+            except Exception as e:
+                logger.error(f"❌ Erro ao carregar Excel Processor: {e}")
+                raise
+    
+    def process_file(self, file_path: str) -> Dict[str, Any]:
+        """Processar arquivo Excel"""
+        self._load_processor()
+        return self._processor.process_file(file_path)
+    
+    def get_available_methods(self) -> Dict[str, Any]:
+        """Obter métodos disponíveis"""
+        if self._processor is None:
+            return {"error": "Excel Processor não disponível"}
+        return {"methods": ["process_file", "validate_file", "extract_data"]}
+
+class LazyConversationEngine:
+    """Engine de conversação com carregamento lazy"""
+    
+    def __init__(self):
+        self._engine = None
+    
+    def _load_engine(self):
+        """Carregar engine se necessário"""
+        if self._engine is None:
+            try:
+                from .conversation import SuperConversationEngine
+                self._engine = SuperConversationEngine()
+                logger.info("✅ Conversation Engine carregado")
+            except Exception as e:
+                logger.error(f"❌ Erro ao carregar Conversation Engine: {e}")
+                raise
+    
+    def process_message(self, message: str) -> Dict[str, Any]:
+        """Processar mensagem"""
+        self._load_engine()
+        return self._engine.process_message(message)
+    
+    def get_available_methods(self) -> Dict[str, Any]:
+        """Obter métodos disponíveis"""
+        if self._engine is None:
+            return {"error": "Conversation Engine não disponível"}
+        return {"methods": ["process_message", "analyze_intent", "generate_response"]}
 
 class LazyFaturaDownloader:
     """Downloader de faturas com carregamento lazy"""
     
-    def __init__(self, page=None):
+    def __init__(self):
         self._downloader = None
-        self.available = False
-        self.page = page
-        
-    def initialize(self):
-        """Inicializar downloader se possível"""
-        if PLAYWRIGHT_AVAILABLE and self.page:
+    
+    def _load_downloader(self):
+        """Carregar downloader se necessário"""
+        if self._downloader is None:
             try:
                 from .fatura_downloader import FaturaDownloader
-                self._downloader = FaturaDownloader(self.page)
-                self.available = True
-                logger.info("✅ Fatura Downloader inicializado")
+                self._downloader = FaturaDownloader()
+                logger.info("✅ Fatura Downloader carregado")
             except Exception as e:
-                logger.error(f"❌ Erro ao inicializar Fatura Downloader: {e}")
-                self.available = False
-        else:
-            logger.warning("⚠️ Fatura Downloader não disponível sem Playwright")
-            self.available = False
+                logger.error(f"❌ Erro ao carregar Fatura Downloader: {e}")
+                raise
     
-    def __getattr__(self, name):
-        """Proxy para métodos do downloader real"""
-        if self._downloader:
-            return getattr(self._downloader, name)
-        else:
-            async def unavailable(*args, **kwargs):
-                return {"error": "Fatura Downloader não disponível - Playwright não instalado"}
-            return unavailable
+    def download_fatura(self, cpf: str, periodo: str) -> Dict[str, Any]:
+        """Download de fatura"""
+        self._load_downloader()
+        return self._downloader.download_fatura(cpf, periodo)
+    
+    def get_available_methods(self) -> Dict[str, Any]:
+        """Obter métodos disponíveis"""
+        if self._downloader is None:
+            return {"error": "Fatura Downloader não disponível"}
+        return {"methods": ["download_fatura", "validate_cpf", "check_periodo"]}
 
-class LazyCaptchaSolver:
-    """Solver de captcha com carregamento lazy"""
-    
-    def __init__(self, page=None):
-        self._solver = None
-        self.available = False
-        self.page = page
-        
-    def initialize(self):
-        """Inicializar solver se possível"""
-        if PLAYWRIGHT_AVAILABLE:
-            try:
-                from .captcha_solver import CaptchaSolver
-                self._solver = CaptchaSolver(self.page)
-                self.available = True
-                logger.info("✅ Captcha Solver inicializado")
-            except Exception as e:
-                logger.error(f"❌ Erro ao inicializar Captcha Solver: {e}")
-                self.available = False
-        else:
-            logger.warning("⚠️ Captcha Solver não disponível sem Playwright")
-            self.available = False
-    
-    def __getattr__(self, name):
-        """Proxy para métodos do solver real"""
-        if self._solver:
-            return getattr(self._solver, name)
-        else:
-            def unavailable(*args, **kwargs):
-                return {"error": "Captcha Solver não disponível - Playwright não instalado"}
-            return unavailable
+# Instâncias lazy
+lazy_excel_processor = LazyExcelProcessor()
+lazy_conversation_engine = LazyConversationEngine()
+lazy_fatura_downloader = LazyFaturaDownloader()
 
-# Função helper para obter informações do sistema
-def get_system_capabilities():
-    """Retornar capacidades do sistema"""
+def get_module_status() -> Dict[str, bool]:
+    """Obter status de todos os módulos"""
+    return MODULE_STATUS.copy()
+
+def check_dependencies() -> Dict[str, Any]:
+    """Verificar dependências do sistema"""
     return {
-        "playwright": PLAYWRIGHT_AVAILABLE,
-        "whatsapp": PLAYWRIGHT_AVAILABLE,
-        "fatura_download": PLAYWRIGHT_AVAILABLE,
-        "captcha_solver": PLAYWRIGHT_AVAILABLE,
-        "excel_processing": True,  # Sempre disponível
-        "conversation_engine": True,  # Sempre disponível
-        "storage_manager": True  # Sempre disponível
+        "core_modules": {
+            "excel_processor": lazy_excel_processor.get_available_methods(),
+            "conversation_engine": lazy_conversation_engine.get_available_methods(),
+            "fatura_downloader": lazy_fatura_downloader.get_available_methods()
+        },
+        "dependencies": MODULE_STATUS,
+        "status": "ready" if all(MODULE_STATUS.values()) else "missing_dependencies"
     }

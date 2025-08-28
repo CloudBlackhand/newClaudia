@@ -31,14 +31,6 @@ class RailwayConfig:
         self.CONCURRENT_DOWNLOADS = 1 if self.RAILWAY_DEPLOY else 3
         self.CACHE_TTL = 3600 if self.RAILWAY_DEPLOY else 1800
         
-        # Playwright config (otimizado)
-        self.PLAYWRIGHT_CONFIG = {
-            'headless': True,
-            'timeout': 90000 if self.RAILWAY_DEPLOY else 60000,
-            'max_retries': 2 if self.RAILWAY_DEPLOY else 3,
-            'wait_for_download': 5 if self.RAILWAY_DEPLOY else 10
-        }
-        
         # Downloader config
         self.DOWNLOADER_CONFIG = {
             'headless': True,
@@ -46,16 +38,6 @@ class RailwayConfig:
             'max_retries': 2,  # Reduzido para Railway
             'wait_for_download': 5,  # Reduzido para Railway
             'sac_url': 'https://sac.desktop.com.br/Cliente_Documento.jsp'
-        }
-        
-        # WAHA config (WhatsApp HTTP API)
-        self.WAHA_CONFIG = {
-            'url': os.getenv('WAHA_URL', 'http://localhost:3000'),
-            'instance_name': 'claudia-cobrancas',
-            'webhook_url': os.getenv('WEBHOOK_URL', ''),
-            'timeout': 30000 if self.RAILWAY_DEPLOY else 60000,
-            'max_retries': 3,
-            'auto_reconnect': True
         }
         
         # Logging (minimal para Railway)
@@ -98,19 +80,21 @@ class RailwayConfig:
 # Instância global
 railway_config = RailwayConfig()
 
-# Classe Config para compatibilidade
 class Config:
-    """Classe de configuração para compatibilidade"""
+    """Configuração principal do sistema"""
+    
     def __init__(self):
-        self.PORT = railway_config.PORT
-        self.RAILWAY_MODE = railway_config.RAILWAY_DEPLOY
-        self.PLAYWRIGHT_CONFIG = railway_config.PLAYWRIGHT_CONFIG
-        self.DOWNLOADER_CONFIG = railway_config.DOWNLOADER_CONFIG
-        self.WAHA_CONFIG = railway_config.WAHA_CONFIG
-        self.LOG_LEVEL = railway_config.LOG_LEVEL
-        self.ENABLE_DETAILED_LOGS = railway_config.ENABLE_DETAILED_LOGS
-
-# Exportar configurações principais
-PORT = railway_config.PORT
-RAILWAY_MODE = railway_config.RAILWAY_DEPLOY
-PLAYWRIGHT_CONFIG = railway_config.PLAYWRIGHT_CONFIG
+        self.railway_config = railway_config
+        self.claudia_config = CLAUDIA_CONFIG
+        
+        # Configurações básicas
+        self.DEBUG = os.getenv('DEBUG', 'False') == 'True'
+        self.SECRET_KEY = os.getenv('SECRET_KEY', 'claudia-cobrancas-secret-key')
+        
+        # Configurações de upload
+        self.MAX_FILE_SIZE = 10 * 1024 * 1024  # 10MB
+        self.ALLOWED_EXTENSIONS = ['.xlsx', '.xls']
+        
+        # Configurações de sessão
+        self.SESSION_TIMEOUT = 3600  # 1 hora
+        self.REQUEST_TIMEOUT = 300   # 5 minutos

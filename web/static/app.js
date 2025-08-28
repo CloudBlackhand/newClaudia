@@ -1,9 +1,8 @@
-// Claudia Cobranças - Frontend WAHA
+// Claudia Cobranças - Frontend Básico
 class ClaudiaCobrancas {
     constructor() {
-        this.wahaStatus = { connected: false, instance: null, phone: null };
         this.messages = [];
-        this.webhookEvents = [];
+        this.logs = [];
         this.init();
     }
     
@@ -11,7 +10,7 @@ class ClaudiaCobrancas {
         this.createInterface();
         this.setupEventListeners();
         this.startStatusPolling();
-        console.log('🚀 Claudia Cobranças - Frontend WAHA iniciado!');
+        console.log('🚀 Claudia Cobranças - Sistema básico iniciado!');
     }
     
     createInterface() {
@@ -22,28 +21,28 @@ class ClaudiaCobrancas {
             <header class="app-header">
                 <div class="header-content">
                     <div class="logo">
-                        <span class="logo-icon">🧠</span>
+                        <span class="logo-icon">🤖</span>
                         <h1>Claudia Cobranças</h1>
-                        <span class="version">v2.2 - WAHA Integration</span>
-                </div>
+                        <span class="version">v2.2 - Sistema Básico</span>
+                    </div>
                     <div class="header-actions">
-                        <div class="status-indicator" id="connectionStatus">
-                            <span class="status-dot offline"></span>
-                            <span class="status-text">Offline</span>
-            </div>
+                        <div class="status-indicator" id="systemStatus">
+                            <span class="status-dot online"></span>
+                            <span class="status-text">Online</span>
+                        </div>
                         <button class="btn-refresh" onclick="claudia.refreshStatus()">🔄</button>
-                                        </div>
-                                    </div>
+                    </div>
+                </div>
             </header>
 
             <!-- Navigation -->
             <nav class="main-nav">
                 <div class="nav-container">
                     <button class="nav-btn active" data-tab="dashboard">📊 Dashboard</button>
-                    <button class="nav-btn" data-tab="waha">📱 WAHA</button>
-                    <button class="nav-btn" data-tab="messages">💬 Mensagens</button>
-                    <button class="nav-btn" data-tab="webhooks">🔗 Webhooks</button>
-                            </div>
+                    <button class="nav-btn" data-tab="upload">📤 Upload</button>
+                    <button class="nav-btn" data-tab="conversation">💬 Conversação</button>
+                    <button class="nav-btn" data-tab="logs">📋 Logs</button>
+                </div>
             </nav>
 
             <!-- Main Content -->
@@ -51,910 +50,339 @@ class ClaudiaCobrancas {
                 <!-- Dashboard -->
                 <div class="tab-content active" id="dashboard">
                     <div class="dashboard-grid">
-                        <div class="status-card waha-card">
+                        <div class="status-card system-card">
                             <div class="card-header">
-                                <h3>📱 WhatsApp WAHA</h3>
-                                <div class="card-actions">
-                                    <button class="btn-test" onclick="claudia.testWaha()">Testar</button>
-                                    <button class="btn-connect" onclick="claudia.showWahaModal()">Conectar</button>
-                        </div>
-                    </div>
+                                <h3>🤖 Sistema</h3>
+                            </div>
                             <div class="card-body">
                                 <div class="status-info">
                                     <div class="status-item">
                                         <span class="label">Status:</span>
-                                        <span class="value" id="wahaStatus">Desconectado</span>
-                </div>
+                                        <span class="value" id="botStatus">Ativo</span>
+                                    </div>
                                     <div class="status-item">
-                                        <span class="label">Telefone:</span>
-                                        <span class="value" id="wahaPhone">-</span>
-                            </div>
+                                        <span class="label">Versão:</span>
+                                        <span class="value">2.2</span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    
+                        
                         <div class="status-card stats-card">
                             <div class="card-header">
                                 <h3>📈 Estatísticas</h3>
                             </div>
-                        <div class="card-body">
+                            <div class="card-body">
                                 <div class="stats-grid">
-                            <div class="stat-item">
-                                        <span class="stat-number" id="messagesSent">0</span>
-                                        <span class="stat-label">Mensagens</span>
+                                    <div class="stat-item">
+                                        <span class="stat-number" id="messagesProcessed">0</span>
+                                        <span class="stat-label">Mensagens Processadas</span>
+                                    </div>
+                                    <div class="stat-item">
+                                        <span class="stat-number" id="conversations">0</span>
+                                        <span class="stat-label">Conversações</span>
+                                    </div>
+                                    <div class="stat-item">
+                                        <span class="stat-number" id="faturasDownloaded">0</span>
+                                        <span class="stat-label">Faturas Baixadas</span>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="stat-item">
-                                        <span class="stat-number" id="webhooksReceived">0</span>
-                                        <span class="stat-label">Webhooks</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Upload Tab -->
+                <div class="tab-content" id="upload">
+                    <div class="upload-container">
+                        <div class="upload-section">
+                            <h2>📤 Upload de Arquivo Excel</h2>
+                            <div class="upload-form">
+                                <div class="form-group">
+                                    <label for="excelFile">Selecione o arquivo Excel:</label>
+                                    <input type="file" id="excelFile" accept=".xlsx,.xls" class="form-control">
+                                </div>
+                                <button class="btn btn-primary" onclick="claudia.uploadFile()">
+                                    <i class="fas fa-upload"></i> Enviar Arquivo
+                                </button>
                             </div>
+                            <div id="uploadResult" class="upload-result"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Conversation Tab -->
+                <div class="tab-content" id="conversation">
+                    <div class="conversation-container">
+                        <div class="conversation-section">
+                            <h2>💬 Teste de Conversação</h2>
+                            <div class="conversation-form">
+                                <div class="form-group">
+                                    <label for="testMessage">Digite uma mensagem para testar:</label>
+                                    <textarea id="testMessage" class="form-control" rows="3" 
+                                              placeholder="Ex: quanto eu devo?"></textarea>
+                                </div>
+                                <button class="btn btn-primary" onclick="claudia.testConversation()">
+                                    <i class="fas fa-paper-plane"></i> Testar Resposta
+                                </button>
                             </div>
+                            <div id="conversationResult" class="conversation-result"></div>
                         </div>
                     </div>
                 </div>
-            </div>
-            
-                <!-- WAHA Tab -->
-                <div class="tab-content" id="waha">
-                    <div class="waha-container">
-                        <div class="waha-config">
-                            <h2>⚙️ Configuração WAHA</h2>
-                            <div class="config-form">
-                                <div class="form-group">
-                                    <label>URL do WAHA:</label>
-                                    <input type="text" id="wahaUrl" value="http://localhost:8000/waha" readonly>
-                                    <small>WAHA embutido - URL automática</small>
-                        </div>
-                                <div class="form-group">
-                                    <label>Número do WhatsApp:</label>
-                                    <input type="text" id="phoneNumber" placeholder="5511999999999">
-                    </div>
-                                <div class="form-group">
-                                    <label>Código de Verificação:</label>
-                                    <div class="code-input-group">
-                                        <input type="text" id="verificationCode" placeholder="Digite o código recebido" maxlength="6">
-                                        <button class="btn-send-code" onclick="claudia.sendCode()">Enviar</button>
-                </div>
-                                    <small class="code-info">Digite o código de 6 dígitos enviado via SMS</small>
-            </div>
-                                <div class="form-actions">
-                                    <button class="btn-primary" onclick="claudia.connectWaha()">Conectar WhatsApp</button>
-                                    <button class="btn-secondary" onclick="claudia.disconnectWaha()">Desconectar</button>
+                
+                <!-- Logs Tab -->
+                <div class="tab-content" id="logs">
+                    <div class="logs-container">
+                        <div class="logs-section">
+                            <h2>📋 Logs do Sistema</h2>
+                            <div class="logs-controls">
+                                <button class="btn btn-secondary" onclick="claudia.refreshLogs()">
+                                    <i class="fas fa-sync"></i> Atualizar
+                                </button>
+                                <button class="btn btn-secondary" onclick="claudia.clearLogs()">
+                                    <i class="fas fa-trash"></i> Limpar
+                                </button>
+                            </div>
+                            <div id="logsContainer" class="logs-content"></div>
                         </div>
                     </div>
                 </div>
-                </div>
-            </div>
-
-                <!-- Messages Tab -->
-                <div class="tab-content" id="messages">
-                    <div class="messages-container">
-                        <div class="messages-header">
-                            <h2>💬 Mensagens</h2>
-                            <div class="messages-actions">
-                                <button class="btn-refresh" onclick="claudia.refreshMessages()">🔄</button>
-                                <button class="btn-clear" onclick="claudia.clearMessages()">🗑️</button>
-                    </div>
-                </div>
-                        
-                        <div class="messages-list" id="messagesList">
-                            <!-- Messages will be populated here -->
-                        </div>
-                        
-                        <div class="message-input">
-                            <div class="input-group">
-                                <input type="text" id="messageInput" placeholder="Digite uma mensagem...">
-                                <input type="text" id="phoneInput" placeholder="Número (opcional)">
-                                <button onclick="claudia.sendMessage()">📤</button>
-                    </div>
-                </div>
-                </div>
-            </div>
-
-                <!-- Webhooks Tab -->
-                <div class="tab-content" id="webhooks">
-                    <div class="webhooks-container">
-                        <div class="webhooks-header">
-                            <h2>🔗 Webhooks</h2>
-                            <div class="webhook-status">
-                                <span class="status-dot" id="webhookStatus"></span>
-                                <span id="webhookStatusText">Aguardando...</span>
-                        </div>
-                    </div>
-                    
-                        <div class="webhooks-list" id="webhooksList">
-                            <!-- Webhook events will be populated here -->
-                        </div>
-                        </div>
-                        </div>
             </main>
-
-            <!-- WAHA Modal -->
-            <div class="modal" id="wahaModal">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h3>📱 Conectar WAHA</h3>
-                        <button class="modal-close" onclick="claudia.hideWahaModal()">×</button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="modal-form">
-                            <div class="form-group">
-                                <label>Número do WhatsApp:</label>
-                                <input type="text" id="modalPhone" placeholder="5511999999999">
-                    </div>
-                            <div class="form-group">
-                                <label>Código de Verificação:</label>
-                                <input type="text" id="modalCode" placeholder="Digite o código recebido" maxlength="6">
-                                <small>Digite o código de 6 dígitos enviado via SMS</small>
-                </div>
-            </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button class="btn-secondary" onclick="claudia.hideWahaModal()">Cancelar</button>
-                        <button class="btn-primary" onclick="claudia.connectWahaFromModal()">Conectar</button>
-                </div>
-                </div>
-            </div>
-
-            <!-- Notifications -->
-            <div class="notifications" id="notifications"></div>
         `;
         
         document.body.appendChild(app);
-        this.applyStyles();
-    }
-    
-    applyStyles() {
-        const style = document.createElement('style');
-        style.textContent = `
-            * { margin: 0; padding: 0; box-sizing: border-box; }
-            
-            body {
-                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-                background: #f5f5f5;
-                color: #333;
-                line-height: 1.6;
-            }
-            
-            .app-header {
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                color: white;
-                padding: 1rem 0;
-                box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            }
-            
-            .header-content {
-                max-width: 1200px;
-                margin: 0 auto;
-                padding: 0 1rem;
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-            }
-            
-            .logo {
-                display: flex;
-                align-items: center;
-                gap: 0.5rem;
-            }
-            
-            .logo-icon { font-size: 2rem; }
-            .logo h1 { font-size: 1.5rem; font-weight: 600; }
-            .version { font-size: 0.8rem; opacity: 0.8; }
-            
-            .header-actions {
-                display: flex;
-                align-items: center;
-                gap: 1rem;
-            }
-            
-            .status-indicator {
-                display: flex;
-                align-items: center;
-                gap: 0.5rem;
-            }
-            
-            .status-dot {
-                width: 10px;
-                height: 10px;
-                border-radius: 50%;
-                background: #ff4444;
-            }
-            
-            .status-dot.online { background: #44ff44; }
-            
-            .btn-refresh {
-                background: rgba(255,255,255,0.2);
-                border: none;
-                color: white;
-                padding: 0.5rem;
-                border-radius: 50%;
-                cursor: pointer;
-                transition: all 0.3s;
-            }
-            
-            .btn-refresh:hover {
-                background: rgba(255,255,255,0.3);
-                transform: rotate(180deg);
-            }
-            
-            .main-nav {
-                background: white;
-                border-bottom: 1px solid #eee;
-                padding: 0.5rem 0;
-            }
-            
-            .nav-container {
-                max-width: 1200px;
-                margin: 0 auto;
-                padding: 0 1rem;
-                display: flex;
-                gap: 0.5rem;
-                overflow-x: auto;
-            }
-            
-            .nav-btn {
-                background: none;
-                border: none;
-                padding: 0.75rem 1rem;
-                border-radius: 8px;
-                cursor: pointer;
-                display: flex;
-                align-items: center;
-                gap: 0.5rem;
-                transition: all 0.3s;
-                white-space: nowrap;
-            }
-            
-            .nav-btn:hover { background: #f0f0f0; }
-            .nav-btn.active { background: #667eea; color: white; }
-            
-            .main-content {
-                max-width: 1200px;
-                margin: 0 auto;
-                padding: 2rem 1rem;
-            }
-            
-            .tab-content { display: none; }
-            .tab-content.active { display: block; }
-            
-            .dashboard-grid {
-                display: grid;
-                grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-                gap: 1.5rem;
-            }
-            
-            .status-card {
-                background: white;
-                border-radius: 12px;
-                box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-                overflow: hidden;
-                transition: all 0.3s;
-            }
-            
-            .status-card:hover {
-                transform: translateY(-2px);
-                box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-            }
-            
-            .card-header {
-                padding: 1rem;
-                border-bottom: 1px solid #eee;
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-            }
-            
-            .card-header h3 { font-size: 1.1rem; font-weight: 600; }
-            
-            .card-actions { display: flex; gap: 0.5rem; }
-            
-            .card-body { padding: 1rem; }
-            
-            .btn-primary, .btn-secondary, .btn-test, .btn-connect {
-                padding: 0.5rem 1rem;
-                border: none;
-                border-radius: 6px;
-                cursor: pointer;
-                font-size: 0.9rem;
-                transition: all 0.3s;
-            }
-            
-            .btn-primary { background: #667eea; color: white; }
-            .btn-primary:hover { background: #5a6fd8; }
-            .btn-secondary { background: #6c757d; color: white; }
-            .btn-test { background: #17a2b8; color: white; }
-            .btn-connect { background: #28a745; color: white; }
-            
-            .status-info {
-                display: flex;
-                flex-direction: column;
-                gap: 0.5rem;
-            }
-            
-            .status-item {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-            }
-            
-            .label { font-weight: 500; color: #666; }
-            .value { font-weight: 600; }
-            
-            .stats-grid {
-                display: grid;
-                grid-template-columns: repeat(2, 1fr);
-                gap: 1rem;
-            }
-            
-            .stat-item { text-align: center; }
-            
-            .stat-number {
-                display: block;
-                font-size: 2rem;
-                font-weight: 700;
-                color: #667eea;
-            }
-            
-            .stat-label {
-                font-size: 0.8rem;
-                color: #666;
-                text-transform: uppercase;
-                letter-spacing: 0.5px;
-            }
-            
-            .waha-container {
-                display: grid;
-                grid-template-columns: 1fr;
-                gap: 2rem;
-            }
-            
-            .waha-config {
-                background: white;
-                border-radius: 12px;
-                padding: 1.5rem;
-                box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            }
-            
-            .form-group {
-                margin-bottom: 1rem;
-            }
-            
-            .form-group label {
-                display: block;
-                margin-bottom: 0.5rem;
-                font-weight: 500;
-            }
-            
-            .form-group input {
-                width: 100%;
-                padding: 0.75rem;
-                border: 1px solid #ddd;
-                border-radius: 6px;
-                font-size: 1rem;
-            }
-            
-            .code-input-group {
-                display: flex;
-                gap: 0.5rem;
-            }
-            
-            .code-input-group input { flex: 1; }
-            
-            .btn-send-code {
-                padding: 0.75rem 1rem;
-                background: #17a2b8;
-                color: white;
-                border: none;
-                border-radius: 6px;
-                cursor: pointer;
-            }
-            
-            .code-info {
-                display: block;
-                margin-top: 0.25rem;
-                font-size: 0.8rem;
-                color: #28a745;
-            }
-            
-            .form-actions {
-                display: flex;
-                gap: 1rem;
-                margin-top: 1.5rem;
-            }
-            
-            .messages-container {
-                background: white;
-                border-radius: 12px;
-                box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-                overflow: hidden;
-            }
-            
-            .messages-header {
-                padding: 1rem;
-                border-bottom: 1px solid #eee;
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-            }
-            
-            .messages-list {
-                height: 400px;
-                overflow-y: auto;
-                padding: 1rem;
-            }
-            
-            .message-item {
-                margin-bottom: 1rem;
-                padding: 0.75rem;
-                border-radius: 8px;
-                background: #f8f9fa;
-            }
-            
-            .message-header {
-                display: flex;
-                justify-content: space-between;
-                margin-bottom: 0.5rem;
-                font-size: 0.8rem;
-                color: #666;
-            }
-            
-            .message-input {
-                padding: 1rem;
-                border-top: 1px solid #eee;
-            }
-            
-            .input-group {
-                display: flex;
-                gap: 0.5rem;
-            }
-            
-            .input-group input {
-                flex: 1;
-                padding: 0.75rem;
-                border: 1px solid #ddd;
-                border-radius: 6px;
-            }
-            
-            .input-group button {
-                padding: 0.75rem 1rem;
-                background: #667eea;
-                color: white;
-                border: none;
-                border-radius: 6px;
-                cursor: pointer;
-            }
-            
-            .webhooks-container {
-                background: white;
-                border-radius: 12px;
-                box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-                padding: 1.5rem;
-            }
-            
-            .webhooks-header {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                margin-bottom: 1rem;
-            }
-            
-            .webhook-status {
-                display: flex;
-                align-items: center;
-                gap: 0.5rem;
-            }
-            
-            .webhooks-list {
-                max-height: 300px;
-                overflow-y: auto;
-                margin-bottom: 1rem;
-            }
-            
-            .webhook-event {
-                padding: 0.75rem;
-                border: 1px solid #eee;
-                border-radius: 6px;
-                margin-bottom: 0.5rem;
-                background: #f8f9fa;
-            }
-            
-            .modal {
-                display: none;
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                background: rgba(0,0,0,0.5);
-                z-index: 1000;
-            }
-            
-            .modal.active {
-                display: flex;
-                align-items: center;
-                justify-content: center;
-            }
-            
-            .modal-content {
-                background: white;
-                border-radius: 12px;
-                max-width: 500px;
-                width: 90%;
-                max-height: 90%;
-                overflow-y: auto;
-            }
-            
-            .modal-header {
-                padding: 1rem;
-                border-bottom: 1px solid #eee;
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-            }
-            
-            .modal-close {
-                background: none;
-                border: none;
-                font-size: 1.5rem;
-                cursor: pointer;
-                color: #666;
-            }
-            
-            .modal-body { padding: 1rem; }
-            
-            .modal-footer {
-                padding: 1rem;
-                border-top: 1px solid #eee;
-                display: flex;
-                justify-content: flex-end;
-                gap: 1rem;
-            }
-            
-            .notifications {
-                position: fixed;
-                top: 20px;
-                right: 20px;
-                z-index: 1001;
-            }
-            
-            .notification {
-                background: white;
-                border-radius: 8px;
-                box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-                padding: 1rem;
-                margin-bottom: 0.5rem;
-                min-width: 300px;
-                animation: slideIn 0.3s ease;
-            }
-            
-            .notification.success { border-left: 4px solid #28a745; }
-            .notification.error { border-left: 4px solid #dc3545; }
-            .notification.info { border-left: 4px solid #17a2b8; }
-            
-            @keyframes slideIn {
-                from { transform: translateX(100%); opacity: 0; }
-                to { transform: translateX(0); opacity: 1; }
-            }
-            
-            @media (max-width: 768px) {
-                .dashboard-grid { grid-template-columns: 1fr; }
-                .nav-text { display: none; }
-                .header-content { flex-direction: column; gap: 1rem; }
-                .form-actions { flex-direction: column; }
-            }
-        `;
-        
-        document.head.appendChild(style);
     }
     
     setupEventListeners() {
+        // Navegação por tabs
         document.querySelectorAll('.nav-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
-                this.switchTab(e.target.dataset.tab);
+                const tab = e.target.dataset.tab;
+                this.switchTab(tab);
             });
         });
         
-        const messageInput = document.getElementById('messageInput');
-        if (messageInput) {
-            messageInput.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') {
-                    this.sendMessage();
-                }
+        // Drag and drop para upload
+        const fileInput = document.getElementById('excelFile');
+        if (fileInput) {
+            fileInput.addEventListener('change', (e) => {
+                this.handleFileSelect(e.target.files[0]);
             });
         }
     }
     
     switchTab(tabName) {
-        document.querySelectorAll('.tab-content').forEach(tab => {
-            tab.classList.remove('active');
-        });
+        // Remover active de todas as tabs
+        document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
         
-        document.getElementById(tabName).classList.add('active');
-        
-        document.querySelectorAll('.nav-btn').forEach(btn => {
-            btn.classList.remove('active');
-        });
-        
+        // Ativar tab selecionada
         document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+        document.getElementById(tabName).classList.add('active');
     }
     
     startStatusPolling() {
+        // Atualizar status a cada 30 segundos
         setInterval(() => {
-            this.updateStatus();
-        }, 5000);
+            this.refreshStatus();
+        }, 30000);
         
-        this.updateStatus();
+        // Primeira atualização
+        this.refreshStatus();
     }
     
-    async updateStatus() {
+    async refreshStatus() {
         try {
-            const response = await fetch('/api/waha/status');
-            const status = await response.json();
+            const response = await fetch('/api/stats');
+            const data = await response.json();
             
-            this.wahaStatus = status;
-            this.updateUI();
-            
-            } catch (error) {
-                console.error('Erro ao atualizar status:', error);
+            if (data.success) {
+                this.updateStats(data.stats);
+                this.updateSystemStatus(data.bot_active);
             }
+        } catch (error) {
+            console.error('Erro ao atualizar status:', error);
+            this.addLog('Erro ao atualizar status: ' + error.message, 'error');
+        }
     }
     
-    updateUI() {
-        const statusDot = document.querySelector('#connectionStatus .status-dot');
-        const statusText = document.querySelector('#connectionStatus .status-text');
+    updateStats(stats) {
+        document.getElementById('messagesProcessed').textContent = stats.messages_processed || 0;
+        document.getElementById('conversations').textContent = stats.conversations || 0;
+        document.getElementById('faturasDownloaded').textContent = stats.faturas_downloaded || 0;
+    }
+    
+    updateSystemStatus(botActive) {
+        const statusElement = document.getElementById('botStatus');
+        const statusDot = document.querySelector('#systemStatus .status-dot');
         
-        if (this.wahaStatus.connected) {
-            statusDot.classList.remove('offline');
-            statusDot.classList.add('online');
-            statusText.textContent = 'Online';
+        if (botActive) {
+            statusElement.textContent = 'Ativo';
+            statusDot.className = 'status-dot online';
         } else {
-            statusDot.classList.remove('online');
-            statusDot.classList.add('offline');
-            statusText.textContent = 'Offline';
-        }
-        
-        document.getElementById('wahaStatus').textContent = 
-            this.wahaStatus.connected ? 'Conectado' : 'Desconectado';
-        document.getElementById('wahaPhone').textContent = 
-            this.wahaStatus.phone || '-';
-    }
-    
-    async testWaha() {
-        try {
-            const response = await fetch('/waha-test');
-            const result = await response.json();
-            
-            if (result.waha === 'available') {
-                this.showNotification('✅ WAHA funcionando!', 'success');
-            } else {
-                this.showNotification(`❌ WAHA não disponível: ${result.error}`, 'error');
-            }
-        } catch (error) {
-            this.showNotification(`❌ Erro ao testar WAHA: ${error.message}`, 'error');
+            statusElement.textContent = 'Inativo';
+            statusDot.className = 'status-dot offline';
         }
     }
     
-    showWahaModal() {
-        document.getElementById('wahaModal').classList.add('active');
+    handleFileSelect(file) {
+        if (file) {
+            this.addLog(`Arquivo selecionado: ${file.name}`, 'info');
+        }
     }
     
-    hideWahaModal() {
-        document.getElementById('wahaModal').classList.remove('active');
-    }
-    
-    async sendCode() {
-        const phoneNumber = document.getElementById('phoneNumber').value;
+    async uploadFile() {
+        const fileInput = document.getElementById('excelFile');
+        const file = fileInput.files[0];
         
-        if (!phoneNumber) {
-            this.showNotification('❌ Digite o número do WhatsApp', 'error');
+        if (!file) {
+            this.showUploadResult('Por favor, selecione um arquivo.', 'error');
             return;
         }
         
-        try {
-            const response = await fetch('/api/waha/send-code', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ phone_number: phoneNumber })
-            });
-            
-            const result = await response.json();
-            
-                        if (result.success) {
-                this.showNotification('✅ Código enviado! Verifique seu WhatsApp', 'success');
-            } else {
-                this.showNotification(`❌ Erro: ${result.error}`, 'error');
-            }
-        } catch (error) {
-            this.showNotification(`❌ Erro: ${error.message}`, 'error');
-        }
-    }
-    
-    async connectWaha() {
-        const phoneNumber = document.getElementById('phoneNumber').value;
-        const code = document.getElementById('verificationCode').value;
-        
-        if (!phoneNumber || !code) {
-            this.showNotification('❌ Preencha todos os campos', 'error');
+        if (!file.name.match(/\.(xlsx|xls)$/)) {
+            this.showUploadResult('Por favor, selecione um arquivo Excel (.xlsx ou .xls).', 'error');
             return;
         }
         
+        const formData = new FormData();
+        formData.append('file', file);
+        
         try {
-            const response = await fetch('/api/waha/connect', {
+            this.showUploadResult('Enviando arquivo...', 'info');
+            
+            const response = await fetch('/api/upload', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    waha_url: 'http://localhost:8000/waha',
-                    phone_number: phoneNumber,
-                    code: code
-                })
+                body: formData
             });
             
             const result = await response.json();
             
             if (result.success) {
-                this.showNotification('✅ WhatsApp conectado!', 'success');
-                this.updateStatus();
+                this.showUploadResult('Arquivo processado com sucesso!', 'success');
+                this.addLog(`Arquivo ${file.name} processado com sucesso`, 'success');
             } else {
-                this.showNotification(`❌ Erro: ${result.error}`, 'error');
+                this.showUploadResult('Erro ao processar arquivo: ' + result.message, 'error');
+                this.addLog(`Erro ao processar ${file.name}: ${result.message}`, 'error');
             }
         } catch (error) {
-            this.showNotification(`❌ Erro: ${error.message}`, 'error');
+            this.showUploadResult('Erro ao enviar arquivo: ' + error.message, 'error');
+            this.addLog(`Erro no upload: ${error.message}`, 'error');
         }
     }
     
-    async connectWahaFromModal() {
-        const phoneNumber = document.getElementById('modalPhone').value;
-        const code = document.getElementById('modalCode').value;
-        
-        if (!phoneNumber || !code) {
-            this.showNotification('❌ Preencha todos os campos', 'error');
-            return;
-        }
-        
-        try {
-            const response = await fetch('/api/waha/connect', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    waha_url: 'http://localhost:8000/waha',
-                    phone_number: phoneNumber,
-                    code: code
-                })
-            });
-            
-            const result = await response.json();
-            
-            if (result.success) {
-                this.showNotification('✅ WhatsApp conectado!', 'success');
-                this.hideWahaModal();
-                this.updateStatus();
-            } else {
-                this.showNotification(`❌ Erro: ${result.error}`, 'error');
-            }
-        } catch (error) {
-            this.showNotification(`❌ Erro: ${error.message}`, 'error');
-        }
+    showUploadResult(message, type) {
+        const resultDiv = document.getElementById('uploadResult');
+        resultDiv.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
     }
     
-    async disconnectWaha() {
-        try {
-            const response = await fetch('/api/waha/disconnect', {
-                method: 'POST'
-                });
-                
-                const result = await response.json();
-            
-                if (result.success) {
-                this.showNotification('✅ WhatsApp desconectado', 'success');
-                this.updateStatus();
-                } else {
-                this.showNotification(`❌ Erro: ${result.error}`, 'error');
-            }
-        } catch (error) {
-            this.showNotification(`❌ Erro: ${error.message}`, 'error');
-        }
-    }
-    
-    async sendMessage() {
-        const messageInput = document.getElementById('messageInput');
-        const phoneInput = document.getElementById('phoneInput');
-        
-        const message = messageInput.value;
-        const phone = phoneInput.value;
+    async testConversation() {
+        const messageInput = document.getElementById('testMessage');
+        const message = messageInput.value.trim();
         
         if (!message) {
-            this.showNotification('❌ Digite uma mensagem', 'error');
+            this.showConversationResult('Por favor, digite uma mensagem.', 'error');
             return;
         }
         
         try {
-            const response = await fetch('/api/waha/send', {
+            this.showConversationResult('Processando...', 'info');
+            
+            const response = await fetch('/api/conversation/test', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    phone_number: phone || this.wahaStatus.phone,
-                    message: message
-                })
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ message: message })
             });
             
             const result = await response.json();
             
             if (result.success) {
-                this.showNotification('✅ Mensagem enviada!', 'success');
-                messageInput.value = '';
-                this.addMessage({
-                    from: 'Você',
-                    to: phone || this.wahaStatus.phone,
-                    message: message,
-                    timestamp: new Date().toISOString(),
-                    type: 'sent'
-                });
+                this.showConversationResult(`
+                    <div class="conversation-test">
+                        <div class="original-message">
+                            <strong>Mensagem:</strong> ${result.original_message}
+                        </div>
+                        <div class="bot-response">
+                            <strong>Resposta:</strong> ${result.response}
+                        </div>
+                    </div>
+                `, 'success');
+                this.addLog(`Teste de conversação: "${message}"`, 'info');
             } else {
-                this.showNotification(`❌ Erro: ${result.error}`, 'error');
+                this.showConversationResult('Erro ao processar mensagem: ' + result.message, 'error');
+                this.addLog(`Erro no teste: ${result.message}`, 'error');
             }
         } catch (error) {
-            this.showNotification(`❌ Erro: ${error.message}`, 'error');
+            this.showConversationResult('Erro ao testar conversação: ' + error.message, 'error');
+            this.addLog(`Erro no teste: ${error.message}`, 'error');
         }
     }
     
-    addMessage(message) {
-        this.messages.unshift(message);
-        this.updateMessagesList();
-        this.updateStats();
+    showConversationResult(content, type) {
+        const resultDiv = document.getElementById('conversationResult');
+        if (type === 'success') {
+            resultDiv.innerHTML = content;
+        } else {
+            resultDiv.innerHTML = `<div class="alert alert-${type}">${content}</div>`;
+        }
     }
     
-    updateMessagesList() {
-        const messagesList = document.getElementById('messagesList');
-        if (!messagesList) return;
-        
-        messagesList.innerHTML = this.messages.map(msg => `
-            <div class="message-item ${msg.type}">
-                <div class="message-header">
-                    <span>${msg.from} → ${msg.to}</span>
-                    <span>${new Date(msg.timestamp).toLocaleString()}</span>
-                </div>
-                <div class="message-content">${msg.message}</div>
-                        </div>
-        `).join('');
-    }
-    
-    updateStats() {
-        document.getElementById('messagesSent').textContent = this.messages.length;
-        document.getElementById('webhooksReceived').textContent = this.webhookEvents.length;
-    }
-    
-    showNotification(message, type = 'info') {
-        const notifications = document.getElementById('notifications');
-        const notification = document.createElement('div');
-        notification.className = `notification ${type}`;
-        notification.textContent = message;
-        
-        notifications.appendChild(notification);
-        
-        setTimeout(() => {
-            if (notification.parentNode) {
-                notification.parentNode.removeChild(notification);
+    async refreshLogs() {
+        try {
+            const response = await fetch('/api/logs');
+            const data = await response.json();
+            
+            if (data.success) {
+                this.displayLogs(data.logs);
             }
-        }, 5000);
+        } catch (error) {
+            this.addLog('Erro ao carregar logs: ' + error.message, 'error');
+        }
     }
     
-    refreshStatus() {
-        this.updateStatus();
-        this.showNotification('🔄 Status atualizado', 'info');
+    displayLogs(logs) {
+        const container = document.getElementById('logsContainer');
+        
+        if (!logs || logs.length === 0) {
+            container.innerHTML = '<p class="text-muted">Nenhum log disponível</p>';
+            return;
+        }
+        
+        const logsHtml = logs.map(log => `
+            <div class="log-entry log-${log.level.toLowerCase()}">
+                <span class="log-timestamp">${log.timestamp}</span>
+                <span class="log-level">${log.level}</span>
+                <span class="log-message">${log.message}</span>
+            </div>
+        `).join('');
+        
+        container.innerHTML = logsHtml;
     }
     
-    refreshMessages() {
-        this.showNotification('🔄 Mensagens atualizadas', 'info');
+    clearLogs() {
+        document.getElementById('logsContainer').innerHTML = '<p class="text-muted">Logs limpos</p>';
+        this.addLog('Logs limpos pelo usuário', 'info');
     }
     
-    clearMessages() {
-        this.messages = [];
-        this.updateMessagesList();
-        this.showNotification('🗑️ Mensagens limpas', 'info');
+    addLog(message, level = 'info') {
+        const timestamp = new Date().toISOString();
+        const log = { timestamp, level, message };
+        
+        this.logs.push(log);
+        
+        // Manter apenas últimos 100 logs
+        if (this.logs.length > 100) {
+            this.logs = this.logs.slice(-100);
+        }
+        
+        console.log(`[${level.toUpperCase()}] ${message}`);
     }
 }
 
-// Initialize when DOM is ready
+// Inicializar quando DOM estiver pronto
 document.addEventListener('DOMContentLoaded', () => {
     window.claudia = new ClaudiaCobrancas();
 });

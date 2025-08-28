@@ -50,11 +50,7 @@ auth_settings = {
 from core.excel_processor import ExcelProcessor
 from core.conversation import SuperConversationEngine
 from core.storage_manager import storage_manager
-from core.whatsapp_client import WAHAWhatsAppClient
 from config import Config, CLAUDIA_CONFIG
-
-# Importar servidor WAHA embutido
-from waha_real_server import waha_server
 
 # Inicializar FastAPI
 app = FastAPI(
@@ -62,19 +58,6 @@ app = FastAPI(
     description="Sistema oficial de cobrança da Desktop",
     version="2.2"
 )
-
-# Integrar servidor WAHA embutido
-waha_app = waha_server.app
-
-# Montar aplicação WAHA em subpath
-from fastapi import APIRouter
-waha_router = APIRouter()
-
-# Adicionar todas as rotas WAHA
-for route in waha_app.routes:
-    waha_router.routes.append(route)
-
-app.include_router(waha_router, prefix="/waha")
 
 # Adicionar CORS para WebSockets
 from fastapi.middleware.cors import CORSMiddleware
@@ -113,20 +96,25 @@ config = Config()
 excel_processor = ExcelProcessor()
 conversation_engine = SuperConversationEngine()
 
-# Instâncias essenciais
-whatsapp_client = WAHAWhatsAppClient()
-
 # Estado do sistema
 system_state = {
-    "whatsapp_connected": False,
-    "current_session": None,
     "bot_active": False,
     "stats": {
-        "messages_sent": 0,
-        "conversations": 0
+        "messages_processed": 0,
+        "conversations": 0,
+        "faturas_downloaded": 0
     }
 }
 
+@app.get("/health")
+async def health_check():
+    """Healthcheck para Railway"""
+    return {
+        "status": "healthy",
+        "timestamp": datetime.now().isoformat(),
+        "version": "2.2",
+        "bot_active": system_state["bot_active"]
+    }
 
 @app.get("/", response_class=HTMLResponse)
 async def dashboard(request: Request):
@@ -149,1183 +137,365 @@ async def dashboard(request: Request):
         <div id="loading" class="loading-overlay">
             <div class="spinner-border text-primary" role="status">
                 <span class="visually-hidden">Carregando...</span>
+            </div>
+        </div>
+
+        <div class="container-fluid">
+            <div class="row">
+                <!-- Sidebar -->
+                <nav class="col-md-3 col-lg-2 d-md-block bg-dark sidebar collapse">
+                    <div class="position-sticky pt-3">
+                        <div class="text-center mb-4">
+                            <h4 class="text-white">🤖 Claudia Cobranças</h4>
+                            <p class="text-muted">Sistema de Cobrança</p>
+                        </div>
+                        
+                        <ul class="nav flex-column">
+                            <li class="nav-item">
+                                <a class="nav-link active" href="#" onclick="showSection('dashboard')">
+                                    <i class="fas fa-tachometer-alt"></i> Dashboard
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="#" onclick="showSection('upload')">
+                                    <i class="fas fa-upload"></i> Upload Excel
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="#" onclick="showSection('conversation')">
+                                    <i class="fas fa-comments"></i> Conversação
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="#" onclick="showSection('logs')">
+                                    <i class="fas fa-list"></i> Logs
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </nav>
+
+                <!-- Main content -->
+                <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+                    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                        <h1 class="h2">Dashboard</h1>
+                        <div class="btn-toolbar mb-2 mb-md-0">
+                            <div class="btn-group me-2">
+                                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="refreshStats()">
+                                    <i class="fas fa-sync-alt"></i> Atualizar
+                                </button>
+                            </div>
                         </div>
                     </div>
-                    
+
+                    <!-- Dashboard Section -->
+                    <div id="dashboard-section" class="content-section">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="card text-white bg-primary mb-3">
+                                    <div class="card-body">
+                                        <h5 class="card-title">Status do Bot</h5>
+                                        <p class="card-text" id="botStatus">Carregando...</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card text-white bg-success mb-3">
+                                    <div class="card-body">
+                                        <h5 class="card-title">Mensagens Processadas</h5>
+                                        <p class="card-text" id="messagesCount">0</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card text-white bg-info mb-3">
+                                    <div class="card-body">
+                                        <h5 class="card-title">Conversações</h5>
+                                        <p class="card-text" id="conversationsCount">0</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Upload Section -->
+                    <div id="upload-section" class="content-section" style="display: none;">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5><i class="fas fa-upload"></i> Upload de Arquivo Excel</h5>
+                            </div>
+                            <div class="card-body">
+                                <form id="uploadForm" enctype="multipart/form-data">
+                                    <div class="mb-3">
+                                        <label for="excelFile" class="form-label">Selecione o arquivo Excel:</label>
+                                        <input type="file" class="form-control" id="excelFile" name="file" accept=".xlsx,.xls" required>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-upload"></i> Enviar Arquivo
+                                    </button>
+                                </form>
+                                <div id="uploadResult" class="mt-3"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Conversation Section -->
+                    <div id="conversation-section" class="content-section" style="display: none;">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5><i class="fas fa-comments"></i> Teste de Conversação</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <label for="testMessage" class="form-label">Digite uma mensagem para testar:</label>
+                                    <textarea class="form-control" id="testMessage" rows="3" placeholder="Ex: quanto eu devo?"></textarea>
+                                </div>
+                                <button type="button" class="btn btn-primary" onclick="testConversation()">
+                                    <i class="fas fa-paper-plane"></i> Testar Resposta
+                                </button>
+                                <div id="conversationResult" class="mt-3"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Logs Section -->
+                    <div id="logs-section" class="content-section" style="display: none;">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5><i class="fas fa-list"></i> Logs do Sistema</h5>
+                            </div>
+                            <div class="card-body">
+                                <div id="logsContainer" style="max-height: 400px; overflow-y: auto;">
+                                    <p class="text-muted">Nenhum log disponível</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </main>
+            </div>
+        </div>
+
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
         <script src="/static/app.js?v={timestamp}"></script>
-            <script>
-            // Inicializar o sistema quando a página carregar
-                document.addEventListener('DOMContentLoaded', function() {{
-                // Remover loading
-                document.getElementById('loading').style.display = 'none';
-                
-                // Inicializar Blacktemplar Bot
-                window.blacktemplarBot = new BlacktemplarBot();
-                }});
-            </script>
     </body>
     </html>
-        """)
+    """)
 
-@app.get("/health")
-async def health_check():
-    """Healthcheck ultra-simples para Railway"""
-    return {"status": "healthy"}
-
-@app.get("/waha-test")
-async def waha_test():
-    """Teste do WAHA embutido"""
+# 🔐 SISTEMA DE AUTENTICAÇÃO
+@app.post("/api/auth/request")
+async def request_auth(request: LoginRequest, req: Request):
+    """Solicitar autenticação - gera ID para aprovação manual"""
     try:
-        response = whatsapp_client.session.get(
-            f"{whatsapp_client.waha_url}/api/instances",
-            timeout=5
-        )
-        if response.status_code == 200:
-            return {"status": "healthy", "waha": "available"}
-        else:
-            return {"status": "healthy", "waha": "error", "code": response.status_code}
-    except Exception as e:
-        return {"status": "healthy", "waha": "unavailable", "error": str(e)}
-
-@app.get("/api/status")
-async def get_status():
-    """Status do sistema"""
-    try:
-        status = {
-            "status": "online",
-            "version": "2.2",
-            "whatsapp_connected": system_state["whatsapp_connected"],
-            "bot_active": system_state["bot_active"],
-            "stats": system_state["stats"],
-            "timestamp": datetime.now().isoformat(),
-            "railway": True,
-            "health": "ok"
-        }
-        logger.info("✅ Status verificado")
-        return status
-    except Exception as e:
-        logger.error(f"❌ Erro no status: {e}")
-        return {
-            "status": "error",
-            "error": str(e),
-            "timestamp": datetime.now().isoformat()
-        }
-
-# ================================
-# 📱 API WAHA
-# ================================
-
-@app.get("/api/waha/status")
-async def waha_status():
-    """Verificar status do WAHA embutido"""
-    try:
-        # Verificar se o WAHA embutido está funcionando
-        try:
-            response = whatsapp_client.session.get(
-                f"{whatsapp_client.waha_url}/api/instances",
-                timeout=5
-            )
-            waha_available = response.status_code == 200
-        except Exception:
-            waha_available = False
+        # Limpar requests antigos
+        current_time = time.time()
+        pending_auth_requests = {k: v for k, v in pending_auth_requests.items() 
+                               if current_time - v["timestamp"] < auth_settings["request_timeout"]}
         
-        if not waha_available:
-            return {
-                "connected": False,
-                "waha_available": False,
-                "error": "WAHA embutido não está disponível"
-            }
+        if len(pending_auth_requests) >= auth_settings["max_pending"]:
+            raise HTTPException(status_code=429, detail="Muitas solicitações pendentes")
         
-        # Se WAHA disponível, verificar conexão
-        connected = await whatsapp_client.check_connection()
-        return {
-            "connected": connected,
-            "waha_available": True,
-            "instance_id": whatsapp_client.instance_id,
-            "waha_url": whatsapp_client.waha_url
-        }
-    except Exception as e:
-        logger.error(f"❌ Erro ao verificar status WAHA: {e}")
-        return {"connected": False, "waha_available": False, "error": str(e)}
-
-@app.post("/api/waha/connect")
-async def waha_connect(request: Request):
-    """Conectar ao WAHA com código e número"""
-    try:
-        data = await request.json()
-        base_url = os.getenv('BASE_URL', 'http://localhost:8000')
-        waha_url = data.get("waha_url", f"{base_url}/waha")
-        phone_number = data.get("phone_number")
-        code = data.get("code")
+        # Gerar ID único
+        request_id = str(uuid.uuid4())
         
-        # Atualizar URL do WAHA
-        whatsapp_client.waha_url = waha_url
+        # Capturar IP real
+        client_ip = req.client.host
+        if "x-forwarded-for" in req.headers:
+            client_ip = req.headers["x-forwarded-for"].split(",")[0].strip()
         
-        # Inicializar conexão
-        result = await whatsapp_client.initialize(phone_number, code)
-        
-        if result == "CONNECTED":
-            system_state["whatsapp_connected"] = True
-            return {"success": True, "connected": True, "message": "WhatsApp conectado com sucesso"}
-        elif result == "WAITING_CONNECTION":
-            return {"success": True, "waiting": True, "message": "Aguardando conexão do WhatsApp"}
-        else:
-            return {"success": False, "error": "Falha ao inicializar WAHA"}
-            
-    except Exception as e:
-        logger.error(f"❌ Erro ao conectar WAHA: {e}")
-        return {"success": False, "error": str(e)}
-
-@app.post("/api/waha/send-code")
-async def waha_send_code(request: Request):
-    """Enviar código de verificação via WAHA"""
-    try:
-        data = await request.json()
-        phone_number = data.get("phone_number")
-        
-        if not phone_number:
-            return {"success": False, "error": "Número de telefone é obrigatório"}
-        
-        # Garantir que a instância existe
-        if not whatsapp_client.instance_id:
-            # Criar instância se não existir
-            result = await whatsapp_client.initialize()
-            if not result:
-                return {"success": False, "error": "Falha ao criar instância WAHA"}
-        
-        # Enviar código via SMS
-        code_data = {
-            "phoneNumber": phone_number
+        # Salvar request
+        pending_auth_requests[request_id] = {
+            "email": request.email,
+            "password": request.password,
+            "reason": request.reason,
+            "ip": client_ip,
+            "user_agent": request.user_agent or req.headers.get("user-agent", ""),
+            "timestamp": current_time
         }
         
-        response = whatsapp_client.session.post(
-            f"{whatsapp_client.waha_url}/api/instances/{whatsapp_client.instance_id}/auth/send-code",
-            json=code_data
-        )
-        
-        if response.status_code == 200:
-            return {"success": True, "message": "Código enviado com sucesso"}
-        else:
-            return {"success": False, "error": f"Falha ao enviar código: {response.text}"}
-            
-    except Exception as e:
-        logger.error(f"❌ Erro ao enviar código: {e}")
-        return {"success": False, "error": str(e)}
-
-@app.post("/api/waha/send")
-async def waha_send_message(request: Request):
-    """Enviar mensagem via WAHA"""
-    try:
-        data = await request.json()
-        phone = data.get("phone")
-        message = data.get("message")
-        
-        if not phone or not message:
-            return {"success": False, "error": "Telefone e mensagem são obrigatórios"}
-        
-        success = await whatsapp_client.send_message(phone, message)
-        
-        if success:
-            system_state["stats"]["messages_sent"] += 1
-            return {"success": True, "message": "Mensagem enviada"}
-        else:
-            return {"success": False, "error": "Falha ao enviar mensagem"}
-            
-    except Exception as e:
-        logger.error(f"❌ Erro ao enviar mensagem: {e}")
-        return {"success": False, "error": str(e)}
-
-@app.get("/api/fpd/data")
-async def get_fpd_data():
-    """Obter dados dos FPDs carregados"""
-    try:
-        if not system_state["fpd_loaded"] or excel_processor.df_fpd is None:
-            return {
-                "success": False,
-                "message": "FPD não carregado"
-            }
-        
-        # Obter dados dos FPDs
-        fpd_data = []
-        df = excel_processor.df_fpd
-        
-        # Limitar a 100 registros para exibição
-        sample_df = df.head(100)
-        
-        for index, row in sample_df.iterrows():
-            try:
-                # Extrair dados do cliente
-                cliente_nome = excel_processor._extract_client_name(row)
-                telefone = excel_processor._extract_phone(row)
-                documento = excel_processor._extract_document(row)
-                
-                # Obter protocolo
-                protocolo = str(row.get(excel_processor.protocolo_column, 'N/A'))
-                
-                # Obter valor (tentar diferentes colunas)
-                valor_cols = ['valor', 'vlr', 'valor_total', 'total']
-                valor = None
-                for col in valor_cols:
-                    if col in df.columns and pd.notna(row[col]):
-                        valor = row[col]
-                        break
-                
-                fpd_data.append({
-                    "id": index,
-                    "protocolo": protocolo,
-                    "cliente": {
-                        "nome": cliente_nome,
-                        "telefone": telefone,
-                        "documento": documento
-                    },
-                    "valor": float(valor) if valor else 0.0,
-                    "status": "ativo" if protocolo != 'N/A' else "sem_protocolo"
-                })
-                
-            except Exception as e:
-                logger.warning(f"⚠️ Erro ao processar linha {index}: {e}")
-                continue
+        # Log para aprovação manual
+        print(f"\n🔐 NOVA SOLICITAÇÃO DE LOGIN:")
+        print(f"   ID: {request_id}")
+        print(f"   Email: {request.email}")
+        print(f"   Motivo: {request.reason}")
+        print(f"   IP: {client_ip}")
+        print(f"   User-Agent: {request.user_agent or req.headers.get('user-agent', '')}")
+        print(f"   Timestamp: {datetime.fromtimestamp(current_time)}")
+        print(f"   Para aprovar, execute: python -c \"from app import approve_auth; approve_auth('{request_id}')\"")
+        print(f"   Para rejeitar, execute: python -c \"from app import reject_auth; reject_auth('{request_id}')\"")
+        print(f"   Ou acesse: http://localhost:8000/api/auth/approve/{request_id}")
+        print(f"   Ou acesse: http://localhost:8000/api/auth/reject/{request_id}")
+        print()
         
         return {
             "success": True,
-            "data": fpd_data,
-            "total_records": len(df),
-            "shown_records": len(fpd_data),
-            "protocol_column": excel_processor.protocolo_column
+            "request_id": request_id,
+            "message": "Solicitação enviada. Aguarde aprovação manual no terminal.",
+            "status": "pending"
         }
         
     except Exception as e:
-        logger.error(f"❌ Erro ao obter dados FPD: {e}")
-        return {
-            "success": False,
-            "message": f"Erro: {str(e)}"
+        logger.error(f"Erro na solicitação de auth: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/auth/status/{request_id}")
+async def check_auth_status(request_id: str):
+    """Verificar status da solicitação de autenticação"""
+    try:
+        if request_id in pending_auth_requests:
+            return {
+                "status": "pending",
+                "message": "Aguardando aprovação manual"
+            }
+        elif request_id in active_sessions:
+            return {
+                "status": "approved",
+                "message": "Acesso aprovado",
+                "token": request_id
+            }
+        else:
+            return {
+                "status": "rejected",
+                "message": "Acesso rejeitado ou expirado"
+            }
+    except Exception as e:
+        logger.error(f"Erro ao verificar status: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/auth/approve/{request_id}")
+async def approve_auth_web(request_id: str):
+    """Aprovar autenticação via web"""
+    return await approve_auth(request_id)
+
+@app.get("/api/auth/reject/{request_id}")
+async def reject_auth_web(request_id: str):
+    """Rejeitar autenticação via web"""
+    return await reject_auth(request_id)
+
+async def approve_auth(request_id: str):
+    """Aprovar autenticação"""
+    try:
+        if request_id not in pending_auth_requests:
+            raise HTTPException(status_code=404, detail="Solicitação não encontrada")
+        
+        # Mover para sessões ativas
+        request_data = pending_auth_requests.pop(request_id)
+        active_sessions[request_id] = {
+            "email": request_data["email"],
+            "timestamp": time.time(),
+            "request_id": request_id
+        }
+        
+        logger.info(f"✅ Acesso aprovado para {request_data['email']}")
+        return {"success": True, "message": "Acesso aprovado", "token": request_id}
+        
+    except Exception as e:
+        logger.error(f"Erro ao aprovar auth: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+async def reject_auth(request_id: str):
+    """Rejeitar autenticação"""
+    try:
+        if request_id in pending_auth_requests:
+            request_data = pending_auth_requests.pop(request_id)
+            logger.info(f"❌ Acesso rejeitado para {request_data['email']}")
+            return {"success": True, "message": "Acesso rejeitado"}
+        else:
+            return {"success": False, "message": "Solicitação não encontrada"}
+            
+    except Exception as e:
+        logger.error(f"Erro ao rejeitar auth: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+def validate_session(token: str) -> bool:
+    """Validar sessão ativa"""
+    if token not in active_sessions:
+        return False
+    
+    session = active_sessions[token]
+    if time.time() - session["timestamp"] > auth_settings["session_timeout"]:
+        del active_sessions[token]
+        return False
+    
+    return True
+
+# 📊 API ENDPOINTS
+@app.get("/api/stats")
+async def get_stats():
+    """Obter estatísticas do sistema"""
+    return {
+        "success": True,
+        "stats": system_state["stats"],
+        "bot_active": system_state["bot_active"]
     }
 
-@app.get("/api/storage/stats")
-async def get_storage_stats():
-    """📊 Estatísticas do gerenciamento de armazenamento"""
+@app.post("/api/upload")
+async def upload_excel(file: UploadFile = File(...)):
+    """Upload de arquivo Excel"""
     try:
-        stats = await storage_manager.get_storage_stats()
-        return {
-            "success": True,
-            "stats": stats
-        }
-    except Exception as e:
-        logger.error(f"❌ Erro ao obter estatísticas de armazenamento: {e}")
-        return {"success": False, "error": str(e)}
-
-@app.post("/api/storage/cleanup")
-async def force_storage_cleanup():
-    """🧹 Forçar limpeza de armazenamento"""
-    try:
-        cleanup_result = await storage_manager.cleanup_expired_files()
-        return {
-            "success": True,
-            "cleanup_result": cleanup_result
-        }
-    except Exception as e:
-        logger.error(f"❌ Erro na limpeza forçada: {e}")
-        return {"success": False, "error": str(e)}
-
-@app.post("/api/whatsapp/connect")
-async def connect_whatsapp():
-    """Conectar WhatsApp via QR Code"""
-    try:
-        logger.info("🔌 Iniciando conexão WhatsApp...")
+        if not file.filename.endswith(('.xlsx', '.xls')):
+            raise HTTPException(status_code=400, detail="Apenas arquivos Excel são aceitos")
         
-        # Verificar se já está conectado
-        if system_state["whatsapp_connected"]:
-            return {
-                "success": True,
-                "message": "WhatsApp já está conectado",
-                "connected": True
-            }
-        
-        # Inicializar cliente WhatsApp
-        logger.info("🚀 Inicializando cliente WhatsApp...")
-        qr_data = await whatsapp_client.initialize()
-        
-        if qr_data:
-            logger.info("✅ QR Code gerado com sucesso")
-            # Não alterar o estado aqui, apenas retornar o QR
-            return {
-                "success": True,
-                "qr_data": qr_data,
-                "message": "Escaneie o QR Code com WhatsApp",
-                "connected": system_state["whatsapp_connected"]
-            }
-        else:
-            logger.warning("⚠️ Não foi possível gerar QR Code")
-            return {
-                "success": False,
-                "message": "Erro ao gerar QR Code - tente novamente",
-                "connected": False
-            }
-            
-    except Exception as e:
-        logger.error(f"❌ Erro ao conectar WhatsApp: {e}")
-        import traceback
-        logger.error(f"Traceback: {traceback.format_exc()}")
-        return {
-            "success": False,
-            "message": f"Erro interno: {str(e)}",
-            "connected": False
-        }
-
-@app.get("/api/whatsapp/qr")
-async def get_qr_code():
-    """Obter QR Code atualizado"""
-    try:
-        qr_data = await whatsapp_client.get_qr_code()
-        return {
-            "success": True,
-            "qr_data": qr_data,
-            "connected": system_state["whatsapp_connected"]
-        }
-    except Exception as e:
-        return {
-            "success": False,
-            "message": str(e)
-        }
-
-@app.post("/api/upload/fpd")
-async def upload_fpd(file: UploadFile = File(...)):
-    """Upload planilha FPD"""
-    try:
-        # Salvar arquivo temporariamente
-        file_path = f"uploads/fpd_{file.filename}"
+        # Salvar arquivo
+        file_path = f"uploads/{file.filename}"
         os.makedirs("uploads", exist_ok=True)
-        
-        with open(file_path, "wb") as f:
+        with open(file_path, "wb") as buffer:
             content = await file.read()
-            f.write(content)
+            buffer.write(content)
         
-        # Processar planilha
-        result = excel_processor.load_fpd(file_path)
-        
-        if result["success"]:
-            system_state["fpd_loaded"] = True
-            return {
-                "success": True,
-                "message": f"FPD carregada: {result['total_records']} registros",
-                "stats": result["stats"]
-            }
-        else:
-            return {
-                "success": False,
-                "message": result["error"]
-            }
-            
-    except Exception as e:
-        logger.error(f"❌ Erro no upload FPD: {e}")
-        return {
-            "success": False,
-            "message": f"Erro: {str(e)}"
-        }
-
-# Removidos endpoints e lógicas de cruzamento de dados, upload de vendas e matching. O sistema agora só aceita upload de uma planilha de clientes.
-
-@app.post("/api/bot/start")
-async def start_bot(background_tasks: BackgroundTasks):
-    """Iniciar bot de cobrança"""
-    try:
-        if not system_state["whatsapp_connected"]:
-            return {
-                "success": False,
-                "message": "WhatsApp não conectado"
-            }
-        
-        if not excel_processor.has_matched_data():
-            return {
-                "success": False,
-                "message": "Execute o matching primeiro"
-            }
-        
-        # Iniciar bot em background
-        background_tasks.add_task(run_cobranca_bot)
-        
-        system_state["bot_active"] = True
+        # Processar Excel
+        result = excel_processor.process_file(file_path)
         
         return {
             "success": True,
-            "message": "Bot de cobrança iniciado"
+            "message": "Arquivo processado com sucesso",
+            "data": result
         }
         
     except Exception as e:
-        logger.error(f"❌ Erro ao iniciar bot: {e}")
-        return {
-            "success": False,
-            "message": f"Erro: {str(e)}"
-        }
+        logger.error(f"Erro no upload: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
-@app.post("/api/bot/stop")
-async def stop_bot():
-    """Parar bot"""
-    try:
-        # Parar bot de forma segura
-        system_state["bot_active"] = False
-        
-        return {
-            "success": True,
-            "message": "Bot parado"
-        }
-        
-    except Exception as e:
-        return {
-            "success": False,
-            "message": f"Erro: {str(e)}"
-        }
-
-@app.post("/api/webhook/whatsapp")
-async def whatsapp_webhook(request: Request):
-    """Webhook para mensagens do WhatsApp"""
+@app.post("/api/conversation/test")
+async def test_conversation(request: Request):
+    """Testar conversação"""
     try:
         data = await request.json()
+        message = data.get("message", "")
         
-        # Processar mensagem recebida
-        if data.get("type") == "message":
-            message = data.get("data", {})
-            phone = message.get("from")
-            text = message.get("body", "")
-            
-            # Engine de conversação
-            response = await conversation_engine.process_message(phone, text)
-            
-            if response:
-                # Enviar resposta
-                await whatsapp_client.send_message(phone, response["text"], response.get("attachment"))
-                
-                # Atualizar stats
-                system_state["stats"]["conversations"] += 1
+        if not message:
+            raise HTTPException(status_code=400, detail="Mensagem é obrigatória")
         
-        return {"success": True}
+        # Processar com engine de conversação
+        response = conversation_engine.process_message(message)
+        
+        return {
+            "success": True,
+            "response": response,
+            "original_message": message
+        }
         
     except Exception as e:
-        logger.error(f"❌ Erro no webhook: {e}")
-        return {"success": False}
-
-async def run_cobranca_bot():
-    """🚀 EXECUTAR BOT ULTRA-ROBUSTO - Resolve todos os problemas críticos"""
-    try:
-        logger.info("🤖 INICIANDO ULTRA STEALTH BOT...")
-        
-        # Obter dados para cobrança
-        cobranca_data = excel_processor.get_cobranca_data()
-        
-        # 🛑 VERIFICAÇÃO CRÍTICA - Lista vazia
-        if not cobranca_data:
-            logger.warning("⚠️ NENHUM DADO PARA COBRANÇA - PARANDO")
-            system_state["bot_active"] = False
-            return
-        
-        logger.info(f"📊 Dados carregados: {len(cobranca_data)} registros")
-        
-        # 🚀 USAR ULTRA STEALTH SENDER
-        from core.ultra_stealth_sender import UltraStealthSender
-        ultra_sender = UltraStealthSender()
-        
-        # 🔄 EXECUTAR ENVIOS ULTRA STEALTH
-        result = await ultra_sender.execute_mass_sending(
-            data=cobranca_data,
-            whatsapp_client=whatsapp_client,
-            stats_callback=update_stats
-        )
-        
-        # 📊 LOGS FINAIS
-        logger.info(f"✅ ULTRA STEALTH concluído: {result}")
-        
-        # 🛑 PARAR BOT QUANDO ACABAR
-        system_state["bot_active"] = False
-        logger.info("🛑 Bot parado automaticamente após conclusão")
-        
-    except Exception as e:
-        logger.error(f"❌ Erro no ULTRA STEALTH BOT: {e}")
-        system_state["bot_active"] = False
-
-def update_stats(stats):
-    """Atualizar estatísticas"""
-    system_state["stats"].update(stats)
-
-# WebSocket para updates em tempo real
-@app.websocket("/ws/status")
-async def websocket_status(websocket):
-    """WebSocket para atualizações em tempo real"""
-    try:
-        # Accept deve ser a primeira operação, antes de qualquer processamento
-        await websocket.accept()
-        
-        # Log de conexão bem-sucedida
-        logger.info("✅ WebSocket conectado")
-        
-        # Loop de envio de atualizações
-        while True:
-            # Enviar status atual
-            await websocket.send_json({
-                "type": "status_update",
-                "data": system_state
-            })
-            
-            # Aguardar 5 segundos
-            await asyncio.sleep(5)
-            
-    except WebSocketDisconnect:
-        logger.info("📱 WebSocket desconectado normalmente")
-    except ValueError as e:
-        # Este erro específico ocorre quando já está fechado/rejeitado
-        logger.info(f"ℹ️ WebSocket já fechado: {e}")
-    except Exception as e:
-        logger.error(f"❌ Erro no WebSocket: {e}")
-    finally:
-        try:
-            await websocket.close()
-        except Exception as e:
-            logger.debug(f"ℹ️ Erro ao fechar WebSocket: {e}")
-            pass
-
-# 🚀 NOVOS ENDPOINTS - FUNCIONALIDADES AVANÇADAS
-
-@app.post("/api/server/start")
-async def start_server():
-    """Iniciar serviços do servidor"""
-    try:
-        logger.info("🚀 Solicitação de inicialização do servidor")
-        return {"success": True, "message": "Servidor iniciado com sucesso"}
-    except Exception as e:
-        logger.error(f"❌ Erro ao iniciar servidor: {e}")
-        return {"success": False, "message": str(e)}
-
-@app.post("/api/server/stop")
-async def stop_server():
-    """Parar serviços do servidor"""
-    try:
-        logger.info("🛑 Solicitação de parada do servidor")
-        return {"success": True, "message": "Servidor parado com sucesso"}
-    except Exception as e:
-        logger.error(f"❌ Erro ao parar servidor: {e}")
-        return {"success": False, "message": str(e)}
+        logger.error(f"Erro no teste de conversação: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/api/logs")
-async def get_logs(type: str = "all", limit: int = 100):
+async def get_logs():
     """Obter logs do sistema"""
     try:
-        logs = []
-        import datetime
-        
-        # Mock data - em produção, ler de arquivo de log real
-        for i in range(min(limit, 20)):
-            logs.append({
-                "timestamp": datetime.datetime.now().isoformat(),
-                "level": "info" if i % 3 != 0 else "error",
-                "message": f"Log de exemplo #{i+1} - Sistema funcionando"
-            })
-        
-        return logs
-    except Exception as e:
-        logger.error(f"❌ Erro ao carregar logs: {e}")
-        return []
-
-@app.get("/api/metrics")
-async def get_metrics():
-    """Obter métricas do sistema"""
-    try:
-        metrics = {
-            "messages": {
-                "total": 150,
-                "sent": 142,
-                "failed": 8
-            },
-            "conversations": {
-                "active": 12,
-                "completed": 85
-            },
-            "invoices": {
-                "sent": 45,
-                "downloaded": 38
-            }
-        }
-        
-        return metrics
-    except Exception as e:
-        logger.error(f"❌ Erro ao carregar métricas: {e}")
-        return {}
-
-@app.get("/api/messages/history")
-async def get_message_history(phone: str = None, limit: int = 50):
-    """Obter histórico de mensagens"""
-    try:
-        history = []
-        
-        # Mock data - em produção, consultar banco de dados
-        for i in range(min(limit, 10)):
-            conversation = {
-                "phone": f"+5511999{i:06d}",
-                "lastMessage": "2024-01-15T10:30:00",
-                "messageCount": 5 + i,
-                "status": "completed" if i % 2 == 0 else "active"
-            }
-            
-            if phone is None or conversation["phone"] == phone:
-                history.append(conversation)
-        
-        return history
-    except Exception as e:
-        logger.error(f"❌ Erro ao carregar histórico: {e}")
-        return []
-
-@app.get("/api/messages/conversation/{phone}")
-async def get_conversation_messages(phone: str):
-    """Obter mensagens de uma conversa específica"""
-    try:
-        messages = [
-            {
-                "content": "Olá, preciso da minha segunda via da fatura",
-                "direction": "incoming",
-                "timestamp": "2024-01-15T10:30:00"
-            },
-            {
-                "content": "Olá! Vou buscar sua fatura. Qual é o CPF?",
-                "direction": "outgoing",
-                "timestamp": "2024-01-15T10:31:00"
-            },
-            {
-                "content": "123.456.789-00",
-                "direction": "incoming",
-                "timestamp": "2024-01-15T10:32:00"
-            },
-            {
-                "content": "Encontrei sua fatura! Enviando agora...",
-                "direction": "outgoing",
-                "timestamp": "2024-01-15T10:33:00"
-            }
+        # Implementar sistema de logs
+        logs = [
+            {"timestamp": datetime.now().isoformat(), "level": "INFO", "message": "Sistema iniciado"},
+            {"timestamp": datetime.now().isoformat(), "level": "INFO", "message": "Bot ativo"}
         ]
         
-        return messages
-    except Exception as e:
-        logger.error(f"❌ Erro ao carregar mensagens: {e}")
-        return []
-
-@app.get("/api/config")
-async def get_configuration():
-    """Obter configurações do sistema"""
-    try:
-        config = {
-            "bot": {
-                "autoStart": True,
-                "messageDelay": 1000
-            },
-            "whatsapp": {
-                "stealthMode": True,
-                "autoReconnect": True
-            },
-            "data": {
-                "autoBackup": False
-            }
-        }
-        
-        return config
-    except Exception as e:
-        logger.error(f"❌ Erro ao carregar configuração: {e}")
-        return {}
-
-@app.put("/api/config")
-async def update_configuration(data: dict):
-    """Atualizar configurações do sistema"""
-    try:
-        key = data.get('key')
-        value = data.get('value')
-        
-        logger.info(f"🔧 Atualizando configuração: {key} = {value}")
-        
-        # Aqui você salvaria a configuração em arquivo ou banco
-        
-        return {"success": True, "message": "Configuração atualizada"}
-    except Exception as e:
-        logger.error(f"❌ Erro ao atualizar configuração: {e}")
-        return {"success": False, "message": str(e)}
-
-# 🔐 NOVOS ENDPOINTS - SISTEMA ANTI-CAPTCHA E DOWNLOAD FATURAS
-
-@app.get("/api/captcha/info")
-async def get_captcha_info():
-    """Obter informações do sistema anti-captcha"""
-    return get_captcha_solver_info()
-
-@app.post("/api/fatura/download")
-async def download_fatura(request: Request):
-    """Baixar fatura individual do SAC Desktop"""
-    try:
-        data = await request.json()
-        documento = data.get("documento")
-        protocolo = data.get("protocolo")
-        
-        if not documento:
-            return {"success": False, "error": "Documento é obrigatório"}
-        
-        # Verificar se WhatsApp está conectado (precisamos da página)
-        if not whatsapp_client.page:
-            return {"success": False, "error": "WhatsApp não conectado"}
-        
-        # Inicializar downloader se necessário
-        global fatura_downloader
-        if not fatura_downloader:
-            fatura_downloader = FaturaDownloader(whatsapp_client.page)
-        
-        # Baixar fatura
-        arquivo_baixado = await fatura_downloader.baixar_fatura(documento, protocolo)
-        
-        if arquivo_baixado:
-            return {
-                "success": True,
-                "arquivo": arquivo_baixado,
-                "documento": documento,
-                "protocolo": protocolo
-            }
-        else:
-            return {
-                "success": False,
-                "error": "Fatura não encontrada ou erro no download"
-            }
-            
-    except Exception as e:
-        logger.error(f"❌ Erro no download de fatura: {e}")
-        return {"success": False, "error": str(e)}
-
-@app.post("/api/fatura/download/multiplas")
-async def download_multiplas_faturas(request: Request):
-    """Baixar múltiplas faturas do SAC Desktop"""
-    try:
-        data = await request.json()
-        documentos_protocolos = data.get("documentos", [])
-        intervalo = data.get("intervalo", 5.0)
-        
-        if not documentos_protocolos:
-            return {"success": False, "error": "Lista de documentos é obrigatória"}
-        
-        # Verificar se WhatsApp está conectado
-        if not whatsapp_client.page:
-            return {"success": False, "error": "WhatsApp não conectado"}
-        
-        # Inicializar downloader se necessário
-        global fatura_downloader
-        if not fatura_downloader:
-            fatura_downloader = FaturaDownloader(whatsapp_client.page)
-        
-        # Converter lista de documentos para tuplas (documento, protocolo)
-        docs_tuplas = []
-        for item in documentos_protocolos:
-            if isinstance(item, dict):
-                docs_tuplas.append((item.get("documento"), item.get("protocolo")))
-            elif isinstance(item, list) and len(item) >= 2:
-                docs_tuplas.append((item[0], item[1]))
-            else:
-                docs_tuplas.append((str(item), None))
-        
-        # Baixar faturas
-        resultados = await fatura_downloader.baixar_multiplas_faturas(docs_tuplas, intervalo)
-        
         return {
             "success": True,
-            "resultados": resultados
+            "logs": logs
         }
         
     except Exception as e:
-        logger.error(f"❌ Erro no download múltiplo: {e}")
-        return {"success": False, "error": str(e)}
+        logger.error(f"Erro ao obter logs: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
-@app.get("/api/fatura/listar")
-async def listar_faturas():
-    """Listar todas as faturas baixadas"""
-    try:
-        global fatura_downloader
-        
-        # Se downloader não existe, criar instância temporária só para listar
-        if not fatura_downloader:
-            # Criar downloader básico só para listar arquivos
-            import tempfile
-            from core.fatura_downloader import FaturaDownloader
-            from playwright.async_api import async_playwright
-            
-            playwright = await async_playwright().start()
-            browser = await playwright.chromium.launch(headless=True)
-            page = await browser.new_page()
-            temp_downloader = FaturaDownloader(page)
-            faturas = temp_downloader.listar_faturas_baixadas()
-            await browser.close()
-            await playwright.stop()
-            
-            return {
-                "success": True,
-                "faturas": faturas,
-                "total": len(faturas)
-            }
-        
-        faturas = fatura_downloader.listar_faturas_baixadas()
-        
-        return {
-            "success": True,
-            "faturas": faturas,
-            "total": len(faturas)
-        }
-        
-    except Exception as e:
-        logger.error(f"❌ Erro ao listar faturas: {e}")
-        return {"success": False, "error": str(e)}
-
-@app.get("/api/fatura/status")
-async def get_fatura_status():
-    """Obter status do sistema de download de faturas"""
-    try:
-        global fatura_downloader
-        
-        if fatura_downloader:
-            status = fatura_downloader.get_status()
-            return {"success": True, "status": status}
-        else:
-            return {
-                "success": True,
-                "status": {
-                    "fatura_downloader_initialized": False,
-                    "whatsapp_connected": system_state["whatsapp_connected"],
-                    "sac_url": "https://sac.desktop.com.br/Cliente_Documento.jsp"
-                }
-            }
-            
-    except Exception as e:
-        logger.error(f"❌ Erro ao obter status: {e}")
-        return {"success": False, "error": str(e)}
-
-# ================================
-# 🔐 SISTEMA DE AUTENTICAÇÃO COM APROVAÇÃO MANUAL
-# ================================
-
-def cleanup_expired_requests():
-    """Limpar solicitações expiradas"""
-    current_time = time.time()
-    expired_keys = []
-    
-    for request_id, request_data in pending_auth_requests.items():
-        if current_time - request_data["timestamp"] > auth_settings["request_timeout"]:
-            expired_keys.append(request_id)
-    
-    for key in expired_keys:
-        del pending_auth_requests[key]
-        logger.info(f"🧹 Solicitação expirada removida: {key}")
-
-def cleanup_expired_sessions():
-    """Limpar sessões expiradas"""
-    current_time = time.time()
-    expired_keys = []
-    
-    for token, session_data in active_sessions.items():
-        if current_time - session_data["timestamp"] > auth_settings["session_timeout"]:
-            expired_keys.append(token)
-    
-    for key in expired_keys:
-        del active_sessions[key]
-        logger.info(f"🧹 Sessão expirada removida: {key[:8]}...")
-
-@app.get("/api/auth/status")
-async def auth_status():
-    """Status do sistema de autenticação"""
-    cleanup_expired_requests()
-    cleanup_expired_sessions()
-    
-    return {
-        "success": True,
-        "pending_requests": len(pending_auth_requests),
-        "active_sessions": len(active_sessions),
-        "settings": auth_settings
-    }
-
-@app.post("/api/auth/request")
-async def auth_request(request: Request, login_data: LoginRequest):
-    """Solicitar aprovação de login"""
-    cleanup_expired_requests()
-    
-    # Verificar limite de solicitações pendentes
-    if len(pending_auth_requests) >= auth_settings["max_pending"]:
-        raise HTTPException(status_code=429, detail="Muitas solicitações pendentes")
-    
-    # Gerar ID único para a solicitação
-    request_id = str(uuid.uuid4())
-    
-    # Obter IP e User-Agent automaticamente
-    client_ip = request.client.host if request.client else login_data.ip
-    user_agent = request.headers.get("user-agent", login_data.user_agent or "Unknown")
-    
-    # Armazenar solicitação
-    request_data = {
-        "email": login_data.email,
-        "password": login_data.password,  # Em produção, nunca armazenar senhas!
-        "reason": login_data.reason,
-        "ip": client_ip,
-        "user_agent": user_agent,
-        "timestamp": time.time(),
-        "datetime": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    }
-    
-    pending_auth_requests[request_id] = request_data
-    
-    # 🖥️ EXIBIR NO TERMINAL RAILWAY
-    print("\n" + "=" * 80)
-    print("🔐 NOVA TENTATIVA DE LOGIN - AGUARDANDO APROVAÇÃO")
-    print("=" * 80)
-    print(f"📅 Data/Hora: {request_data['datetime']}")
-    print(f"🆔 Request ID: {request_id}")
-    print(f"👤 Email/Usuário: {login_data.email}")
-    print(f"📝 Motivo: {login_data.reason}")
-    print(f"🌐 IP: {client_ip}")
-    print(f"💻 User Agent: {user_agent[:100]}...")
-    print("-" * 80)
-    print("Para APROVAR este login, acesse:")
-    print(f"https://sua-app.railway.app/api/auth/approve/{request_id}")
-    print()
-    print("Para NEGAR este login, acesse:")
-    print(f"https://sua-app.railway.app/api/auth/deny/{request_id}")
-    print("=" * 80)
-    print()
-    
-    # Log estruturado
-    logger.info(f"🔐 Nova solicitação de login: {login_data.email} | ID: {request_id}")
-    
-    return {
-        "success": True,
-        "request_id": request_id,
-        "message": "Solicitação enviada. Aguarde aprovação do administrador.",
-        "status": "pending"
-    }
-
-@app.post("/api/auth/approve/{request_id}")
-async def auth_approve(request_id: str):
-    """Aprovar solicitação de login"""
-    cleanup_expired_requests()
-    
-    if request_id not in pending_auth_requests:
-        raise HTTPException(status_code=404, detail="Solicitação não encontrada ou expirada")
-    
-    # Obter dados da solicitação
-    request_data = pending_auth_requests[request_id]
-    
-    # Gerar token de sessão
-    session_token = str(uuid.uuid4())
-    
-    # Criar sessão ativa
-    active_sessions[session_token] = {
-        "email": request_data["email"],
-        "request_id": request_id,
-        "timestamp": time.time(),
-        "ip": request_data["ip"],
-        "approved_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    }
-    
-    # Remover da lista de pendentes
-    del pending_auth_requests[request_id]
-    
-    # 🖥️ FEEDBACK NO TERMINAL
-    print(f"\n✅ LOGIN APROVADO! ID: {request_id}")
-    print(f"👤 Usuário: {request_data['email']}")
-    print(f"🎫 Token: {session_token[:16]}...")
-    print(f"⏰ Válido até: {(datetime.now() + timedelta(seconds=auth_settings['session_timeout'])).strftime('%H:%M:%S')}")
-    print()
-    
-    logger.info(f"✅ Login aprovado: {request_data['email']} | Token: {session_token[:8]}...")
-    
-    return {
-        "success": True,
-        "message": "Login aprovado com sucesso",
-        "session_token": session_token,
-        "expires_in": auth_settings["session_timeout"]
-    }
-
-@app.post("/api/auth/deny/{request_id}")
-async def auth_deny(request_id: str):
-    """Negar solicitação de login"""
-    cleanup_expired_requests()
-    
-    if request_id not in pending_auth_requests:
-        raise HTTPException(status_code=404, detail="Solicitação não encontrada ou expirada")
-    
-    # Obter dados da solicitação
-    request_data = pending_auth_requests[request_id]
-    
-    # Remover da lista de pendentes
-    del pending_auth_requests[request_id]
-    
-    # 🖥️ FEEDBACK NO TERMINAL
-    print(f"\n❌ LOGIN NEGADO! ID: {request_id}")
-    print(f"👤 Usuário: {request_data['email']}")
-    print(f"🌐 IP: {request_data['ip']}")
-    print()
-    
-    logger.warning(f"❌ Login negado: {request_data['email']} | ID: {request_id}")
-    
-    return {
-        "success": True,
-        "message": "Login negado",
-        "status": "denied"
-    }
-
-@app.post("/api/auth/validate")
-async def auth_validate(session_data: SessionValidation):
-    """Validar token de sessão"""
-    cleanup_expired_sessions()
-    
-    if session_data.token not in active_sessions:
-        return {"valid": False, "message": "Token inválido ou expirado"}
-    
-    session_info = active_sessions[session_data.token]
-    
-    # Atualizar timestamp da sessão (renovar)
-    session_info["timestamp"] = time.time()
-    
-    return {
-        "valid": True,
-        "email": session_info["email"],
-        "expires_in": auth_settings["session_timeout"]
-    }
-
-@app.delete("/api/auth/logout")
-async def auth_logout(session_data: SessionValidation):
-    """Fazer logout (invalidar sessão)"""
-    if session_data.token in active_sessions:
-        session_info = active_sessions[session_data.token]
-        del active_sessions[session_data.token]
-        
-        logger.info(f"🚪 Logout: {session_info['email']} | Token: {session_data.token[:8]}...")
-        
-        return {"success": True, "message": "Logout realizado com sucesso"}
-    
-    return {"success": False, "message": "Sessão não encontrada"}
-
-@app.get("/api/auth/pending")
-async def auth_pending():
-    """Listar solicitações pendentes (para admin)"""
-    cleanup_expired_requests()
-    
-    pending_list = []
-    for request_id, data in pending_auth_requests.items():
-        pending_list.append({
-            "request_id": request_id,
-            "email": data["email"],
-            "reason": data["reason"],
-            "ip": data["ip"],
-            "datetime": data["datetime"],
-            "user_agent": data["user_agent"][:100] + "..." if len(data["user_agent"]) > 100 else data["user_agent"]
-        })
-    
-    return {
-        "success": True,
-        "pending_requests": pending_list,
-        "count": len(pending_list)
-    }
-
-# ================================
-# 📱 WEBHOOK WAHA (WHATSAPP HTTP API)
-# ================================
-
-@app.post("/webhook")
-async def waha_webhook(request: Request):
-    """Webhook para receber mensagens do WAHA"""
-    try:
-        data = await request.json()
-        logger.info(f"📱 Webhook WAHA recebido: {data}")
-        
-        # Processar mensagem recebida
-        if data.get("event") == "messages.upsert":
-            message = data.get("data", {}).get("messages", [{}])[0]
-            
-            if message.get("key", {}).get("fromMe") == False:  # Mensagem recebida
-                phone = message.get("key", {}).get("remoteJid", "").split("@")[0]
-                text = message.get("message", {}).get("conversation", "")
-                
-                if text:
-                    logger.info(f"📱 Mensagem recebida de {phone}: {text}")
-                    
-                    # Processar com engine de conversação
-                    conversation_engine = SuperConversationEngine()
-                    response = conversation_engine.process_message(text)
-                    
-                    if response.get("success"):
-                        # Enviar resposta via WAHA
-                        from core.whatsapp_client import WAHAWhatsAppClient
-                        whatsapp_client = WAHAWhatsAppClient()
-                        
-                        await whatsapp_client.send_message(phone, response["response"])
-                        logger.info(f"✅ Resposta enviada para {phone}")
-        
-        return {"success": True, "message": "Webhook processado"}
-        
-    except Exception as e:
-        logger.error(f"❌ Erro no webhook WAHA: {e}")
-        return {"success": False, "error": str(e)}
-
-# ================================
-# 🔒 MIDDLEWARE DE AUTENTICAÇÃO
-# ================================
-
-@app.middleware("http")
-async def auth_middleware(request: Request, call_next):
-    """Middleware para verificar autenticação em rotas protegidas"""
-    
-    # Rotas que não precisam de autenticação
-    public_paths = [
-        "/",
-        "/health",
-        "/webhook",
-        "/waha",
-        "/api/status",
-        "/api/auth/request",
-        "/api/auth/approve",
-        "/api/auth/deny", 
-        "/api/auth/status",
-        "/api/auth/pending",
-        "/api/waha",
-        "/static",
-        "/favicon.ico"
-    ]
-    
-    # Verificar se é rota pública
-    path = str(request.url.path)
-    
-    for public_path in public_paths:
-        if path.startswith(public_path):
-            return await call_next(request)
-    
-    # Para rotas protegidas, verificar autenticação
-    auth_header = request.headers.get("Authorization")
-    
-    if not auth_header or not auth_header.startswith("Bearer "):
-        # Retornar página de login ao invés de erro JSON
-        if path.startswith("/dashboard") or path.startswith("/admin"):
-            with open("web/login.html", "r", encoding="utf-8") as f:
-                content = f.read()
-            return HTMLResponse(content=content)
-        
-        return JSONResponse(
-            status_code=401,
-            content={"error": "Token de autenticação necessário"}
-        )
-    
-    token = auth_header.split(" ")[1]
-    
-    # Verificar se token é válido
-    cleanup_expired_sessions()
-    
-    if token not in active_sessions:
-        if path.startswith("/dashboard") or path.startswith("/admin"):
-            with open("web/login.html", "r", encoding="utf-8") as f:
-                content = f.read()
-            return HTMLResponse(content=content)
-        
-        return JSONResponse(
-            status_code=401,
-            content={"error": "Token inválido ou expirado"}
-        )
-    
-    # Renovar sessão
-    active_sessions[token]["timestamp"] = time.time()
-    
-    # Adicionar informações do usuário ao request
-    request.state.user = active_sessions[token]
-    
-    return await call_next(request) 
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=8000, reload=True) 

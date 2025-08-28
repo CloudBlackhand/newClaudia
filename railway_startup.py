@@ -22,22 +22,6 @@ health_app = FastAPI()
 async def health_check():
     return {"status": "healthy", "railway": True}
 
-def check_waha_connection():
-    """Verificar conexão com WAHA"""
-    try:
-        import requests
-        waha_url = os.getenv('WAHA_URL', 'http://localhost:3000')
-        response = requests.get(f"{waha_url}/api/instances", timeout=10)
-        if response.status_code == 200:
-            print("✅ WAHA disponível")
-            return True
-        else:
-            print("⚠️ WAHA não respondeu corretamente")
-            return False
-    except Exception as e:
-        print(f"⚠️ WAHA não disponível: {e}")
-        return False
-
 def create_directories():
     """Criar diretórios necessários"""
     dirs = ["uploads", "faturas", "web/static", "logs", "temp"]
@@ -58,10 +42,6 @@ def main():
     
     # Criar diretórios imediatamente
     create_directories()
-    
-    # Verificar conexão com WAHA
-    if railway_mode:
-        threading.Thread(target=check_waha_connection, daemon=True).start()
     
     # Configurações do servidor
     config = {

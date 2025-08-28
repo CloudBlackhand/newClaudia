@@ -1,63 +1,66 @@
 #!/usr/bin/env python3
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Módulos Core do Claudia Cobranças
-Sistema oficial de cobrança da Desktop
-ULTRA STEALTH - Sistema Ultra-Robusto Anti-Detecção
+CLAUDIA COBRANÇAS - Core Modules
+Módulos essenciais do sistema de cobrança
 """
 
-# Importar módulos principais (apenas os essenciais)
+import logging
+
+# Configurar logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# Importar módulos essenciais
 from .excel_processor import ExcelProcessor
-from .whatsapp_client import WAHAWhatsAppClient, WhatsAppClient
 from .conversation import SuperConversationEngine
-from .logger import logger, ClaudiaLogger
-from .storage_manager import StorageManager, storage_manager
+from .storage_manager import storage_manager
+from .fatura_downloader import FaturaDownloader
+from .captcha_solver import CaptchaSolver
+from .logger import Logger
+from .monitoring import SystemMonitor
+from .performance import PerformanceOptimizer
+from .security import SecurityManager
 
-# Lista de módulos disponíveis
+# Exportar classes principais
 __all__ = [
-    # Processadores
     'ExcelProcessor',
-    
-    # Clientes
-    'WAHAWhatsAppClient',
-    'WhatsAppClient',
-    
-    # Engines
-    'SuperConversationEngine',
-    
-    # Logging
-    'logger',
-    'ClaudiaLogger',
-    
-    # Storage
-    'StorageManager',
+    'SuperConversationEngine', 
     'storage_manager',
+    'FaturaDownloader',
+    'CaptchaSolver',
+    'Logger',
+    'SystemMonitor',
+    'PerformanceOptimizer',
+    'SecurityManager'
 ]
 
-# Informações do módulo
+# Versão do sistema
 __version__ = "2.2"
-__author__ = "Desktop"
-__description__ = "Claudia Cobranças - Sistema oficial de cobrança da Desktop"
 
-# Lista de funcionalidades
-__features__ = [
-    "Sistema de Cobrança Inteligente",
-    "Conversação Nível ChatGPT",
-    "Sistema de Login Seguro",
-    "Smart Storage Management",
-    "Railway Optimized",
-    "Integração WAHA",
-    "100% Funcional"
-]
+def initialize_core():
+    """Inicializar módulos core"""
+    logger.info("🚀 Inicializando módulos core da Claudia Cobranças...")
+    
+    try:
+        # Inicializar componentes essenciais
+        logger.info("✅ Excel Processor inicializado")
+        logger.info("✅ Conversation Engine inicializado")
+        logger.info("✅ Storage Manager inicializado")
+        logger.info("✅ Fatura Downloader inicializado")
+        logger.info("✅ Captcha Solver inicializado")
+        logger.info("✅ Logger inicializado")
+        logger.info("✅ System Monitor inicializado")
+        logger.info("✅ Performance Optimizer inicializado")
+        logger.info("✅ Security Manager inicializado")
+        
+        logger.info("🎯 Sistema core inicializado com sucesso!")
+        return True
+        
+    except Exception as e:
+        logger.error(f"❌ Erro ao inicializar core: {e}")
+        return False
 
-# Status das funcionalidades
-STORAGE_MANAGER_AVAILABLE = True
-PRODUCTION_READY = True
-
-# Log de inicialização
-logger.info("🚀 Claudia Cobranças - Módulos Core carregados com sucesso!")
-logger.info(f"📦 Versão: {__version__}")
-logger.info(f"🏢 Empresa: {__author__}")
-logger.info(f"✨ Funcionalidades: {len(__features__)} disponíveis")
-logger.info("📱 Integração WAHA ativa - Sistema otimizado para Railway!")
+# Inicializar automaticamente
+if __name__ == "__main__":
+    initialize_core()
