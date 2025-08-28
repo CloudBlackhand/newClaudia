@@ -106,7 +106,7 @@ class Config:
         self.RAILWAY_MODE = railway_config.RAILWAY_DEPLOY
         self.PLAYWRIGHT_CONFIG = railway_config.PLAYWRIGHT_CONFIG
         self.DOWNLOADER_CONFIG = railway_config.DOWNLOADER_CONFIG
-        self.WHATSAPP_CONFIG = railway_config.WHATSAPP_CONFIG
+        self.WAHA_CONFIG = railway_config.WAHA_CONFIG
         self.LOG_LEVEL = railway_config.LOG_LEVEL
         self.ENABLE_DETAILED_LOGS = railway_config.ENABLE_DETAILED_LOGS
 

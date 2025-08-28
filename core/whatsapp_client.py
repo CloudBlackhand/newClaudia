@@ -11,7 +11,6 @@ import time
 import json
 import os
 from typing import Optional, Dict, Any, List
-import aiohttp
 import requests
 from datetime import datetime
 
@@ -53,7 +52,7 @@ class WAHAWhatsAppClient:
                 logger.info(f"✅ Instância WAHA criada: {self.instance_id}")
             else:
                 logger.error(f"❌ Erro ao criar instância: {response.text}")
-                return None
+            return None
             
             # Iniciar instância
             start_response = self.session.post(
@@ -83,8 +82,8 @@ class WAHAWhatsAppClient:
                     return "CONNECTED"
             else:
                 logger.error(f"❌ Erro ao gerar QR Code: {qr_response.text}")
-                return None
-                
+            return None
+            
         except Exception as e:
             logger.error(f"❌ Erro ao inicializar WAHA: {e}")
             return None
@@ -137,7 +136,7 @@ class WAHAWhatsAppClient:
             else:
                 logger.error(f"❌ Erro ao enviar mensagem: {response.text}")
                 return False
-                
+            
         except Exception as e:
             logger.error(f"❌ Erro ao enviar mensagem: {e}")
             return False
@@ -170,7 +169,7 @@ class WAHAWhatsAppClient:
             else:
                 logger.error(f"❌ Erro ao enviar mídia: {response.text}")
                 return False
-                
+            
         except Exception as e:
             logger.error(f"❌ Erro ao enviar mídia: {e}")
             return False
@@ -191,7 +190,7 @@ class WAHAWhatsAppClient:
             else:
                 logger.error(f"❌ Erro ao obter mensagens: {response.text}")
                 return []
-                
+            
         except Exception as e:
             logger.error(f"❌ Erro ao obter mensagens: {e}")
             return []
