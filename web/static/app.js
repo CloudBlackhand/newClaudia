@@ -1,1095 +1,745 @@
-// Blacktemplar Bolter - JavaScript Avançado
-
-class BlacktemplarBot {
+// Claudia Cobranças - Frontend WAHA
+class ClaudiaCobrancas {
     constructor() {
-        this.ws = null;
-        this.reconnectAttempts = 0;
-        this.maxReconnectAttempts = 5;
-        this.isConnected = false;
-        this.stats = {
-            sent: 0,
-            failed: 0,
-            conversations: 0
-        };
-        
+        this.wahaStatus = { connected: false, instance: null, phone: null };
+        this.messages = [];
+        this.webhookEvents = [];
         this.init();
     }
     
     init() {
         this.createInterface();
-        this.initWebSocket();
         this.setupEventListeners();
-        this.setupNotifications();
-        this.startStatusUpdater();
-        this.initAdvancedFeatures();
-        
-        console.log('🤖 Blacktemplar Bolter iniciado com funcionalidades avançadas!');
+        this.startStatusPolling();
+        console.log('🚀 Claudia Cobranças - Frontend WAHA iniciado!');
     }
     
-    // Criar interface dinamicamente - Nova função
     createInterface() {
-        const appContainer = document.createElement('div');
-        appContainer.id = 'app';
-        appContainer.className = 'container-fluid';
-        
-        // Cabeçalho
-        const header = document.createElement('header');
-        header.className = 'p-3 mb-4 bg-dark text-white';
-        header.innerHTML = `
-            <div class="container">
-                <div class="d-flex align-items-center">
-                    <img src="/static/icon.png" alt="Logo" height="40" class="mr-3">
-                    <h1 class="m-0">Blacktemplar Bolter</h1>
-                    <small class="ml-2">v2.2 - 100% Gratuito</small>
-                    <div class="ml-auto" id="connectionIndicator" title="Status da conexão" class="status-offline"></div>
+        const app = document.createElement('div');
+        app.id = 'claudia-app';
+        app.innerHTML = `
+            <!-- Header -->
+            <header class="app-header">
+                <div class="header-content">
+                    <div class="logo">
+                        <span class="logo-icon">🧠</span>
+                        <h1>Claudia Cobranças</h1>
+                        <span class="version">v2.2 - WAHA Integration</span>
+                    </div>
+                    <div class="header-actions">
+                        <div class="status-indicator" id="connectionStatus">
+                            <span class="status-dot offline"></span>
+                            <span class="status-text">Offline</span>
+                        </div>
+                        <button class="btn-refresh" onclick="claudia.refreshStatus()">🔄</button>
+                    </div>
                 </div>
-            </div>
-        `;
-        
-        // Navegação
-        const nav = document.createElement('nav');
-        nav.className = 'nav-tabs';
-        nav.innerHTML = `
-            <button class="nav-tab active" data-tab="dashboard">📊 Dashboard</button>
-            <button class="nav-tab" data-tab="logs">📝 Logs</button>
-            <button class="nav-tab" data-tab="metricas">📈 Métricas</button>
-            <button class="nav-tab" data-tab="mensagens">💬 Mensagens</button>
-            <button class="nav-tab" data-tab="clientes-carregados">👥 Clientes Carregados</button>
-            <button class="nav-tab" data-tab="configuracoes">⚙️ Configurações</button>
-        `;
-        
-        // Conteúdo principal
-        const main = document.createElement('main');
-        main.className = 'container mt-4';
-        
-        // Dashboard tab
-        const dashboard = document.createElement('div');
-        dashboard.id = 'dashboard';
-        dashboard.className = 'tab-content active';
-        dashboard.innerHTML = `
-            <div class="row">
-                <div class="col-md-8">
-                    <div class="card mb-4">
-                        <div class="card-header">Status do Sistema</div>
-                        <div class="card-body">
-                            <div class="row">
-                                <div class="col-md-3 col-sm-6">
-                                    <div class="status-card" data-status="whatsapp">
-                                        <h5>WhatsApp</h5>
-                                        <div class="status-icon offline">
-                                            <i class="fas fa-mobile-alt"></i>
-                                        </div>
-                                        <div class="status-text">Desconectado</div>
-                                        <button onclick="connectWhatsApp()" class="btn btn-sm btn-primary">Conectar</button>
+            </header>
+
+            <!-- Navigation -->
+            <nav class="main-nav">
+                <div class="nav-container">
+                    <button class="nav-btn active" data-tab="dashboard">📊 Dashboard</button>
+                    <button class="nav-btn" data-tab="waha">📱 WAHA</button>
+                    <button class="nav-btn" data-tab="messages">💬 Mensagens</button>
+                    <button class="nav-btn" data-tab="webhooks">🔗 Webhooks</button>
+                </div>
+            </nav>
+
+            <!-- Main Content -->
+            <main class="main-content">
+                <!-- Dashboard -->
+                <div class="tab-content active" id="dashboard">
+                    <div class="dashboard-grid">
+                        <div class="status-card waha-card">
+                            <div class="card-header">
+                                <h3>📱 WhatsApp WAHA</h3>
+                                <div class="card-actions">
+                                    <button class="btn-test" onclick="claudia.testWaha()">Testar</button>
+                                    <button class="btn-connect" onclick="claudia.showWahaModal()">Conectar</button>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div class="status-info">
+                                    <div class="status-item">
+                                        <span class="label">Status:</span>
+                                        <span class="value" id="wahaStatus">Desconectado</span>
+                                    </div>
+                                    <div class="status-item">
+                                        <span class="label">Telefone:</span>
+                                        <span class="value" id="wahaPhone">-</span>
                                     </div>
                                 </div>
-                                <div class="col-md-3 col-sm-6">
-                                    <div class="status-card" data-status="client-data">
-                                        <h5>Planilha Clientes</h5>
-                                        <div class="status-icon offline">
-                                            <i class="fas fa-file-excel"></i>
-                                        </div>
-                                        <div class="status-text">Não carregado</div>
-                                        <div class="upload-area" id="clientDataUpload">
-                                            <label for="clientDataFile" class="btn btn-sm btn-primary">Carregar Planilha</label>
-                                            <input type="file" id="clientDataFile" style="display:none">
-                                        </div>
+                            </div>
+                        </div>
+
+                        <div class="status-card stats-card">
+                            <div class="card-header">
+                                <h3>📈 Estatísticas</h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="stats-grid">
+                                    <div class="stat-item">
+                                        <span class="stat-number" id="messagesSent">0</span>
+                                        <span class="stat-label">Mensagens</span>
                                     </div>
-                                </div>
-                                <div class="col-md-3 col-sm-6">
-                                    <div class="status-card" data-status="bot">
-                                        <h5>Bot</h5>
-                                        <div class="status-icon offline">
-                                            <i class="fas fa-robot"></i>
-                                        </div>
-                                        <div class="status-text">Inativo</div>
-                                        <button onclick="toggleBot()" class="btn btn-sm btn-success">Iniciar</button>
+                                    <div class="stat-item">
+                                        <span class="stat-number" id="webhooksReceived">0</span>
+                                        <span class="stat-label">Webhooks</span>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    
-                    <div class="card mb-4">
-                        <div class="card-header">Controle do Servidor</div>
-                        <div class="card-body">
-                            <div class="server-controls">
-                                <button id="startServerBtn" onclick="startServer()" class="btn-start">▶️ Iniciar Servidor</button>
-                                <button id="stopServerBtn" onclick="stopServer()" class="btn-stop" disabled>⏹️ Parar Servidor</button>
-                                <button id="restartServerBtn" onclick="restartServer()" class="btn-restart">🔄 Reiniciar Servidor</button>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="card mb-4">
-                        <div class="card-header">Log de Atividades</div>
-                        <div class="card-body p-0">
-                            <div id="logContainer" class="log-container p-2" style="height:200px; overflow-y:auto;"></div>
-                        </div>
-                    </div>
                 </div>
-                
-                <div class="col-md-4">
-                    <div class="card mb-4">
-                        <div class="card-header">QR Code WhatsApp</div>
-                        <div class="card-body text-center">
-                            <div id="qrContainer" class="qr-container" style="display:none">
-                                <div id="qrCode" class="qr-code"></div>
-                                <p class="mt-2">Escaneie com WhatsApp</p>
-                                <button onclick="refreshQRCode()" class="btn btn-sm btn-outline-primary mt-2">Atualizar QR Code</button>
-                            </div>
-                            <div id="noQrMessage">
-                                <p>Clique em "Conectar" para gerar QR Code</p>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="card mb-4">
-                        <div class="card-header">Estatísticas</div>
-                        <div class="card-body">
-                            <div class="stat-item">
-                                <span class="stat-label">Mensagens enviadas:</span>
-                                <span id="stat-messages_sent" class="stat-value">0</span>
-                            </div>
-                            <div class="stat-item">
-                                <span class="stat-label">Faturas enviadas:</span>
-                                <span id="stat-faturas_sent" class="stat-value">0</span>
-                            </div>
-                            <div class="stat-item">
-                                <span class="stat-label">Conversas ativas:</span>
-                                <span id="stat-conversations" class="stat-value">0</span>
+
+                <!-- WAHA Tab -->
+                <div class="tab-content" id="waha">
+                    <div class="waha-container">
+                        <div class="waha-config">
+                            <h2>⚙️ Configuração WAHA</h2>
+                            <div class="config-form">
+                                <div class="form-group">
+                                    <label>URL do WAHA:</label>
+                                    <input type="text" id="wahaUrl" value="http://localhost:8000/waha" readonly>
+                                    <small>WAHA embutido - URL automática</small>
+                                </div>
+                                <div class="form-group">
+                                    <label>Número do WhatsApp:</label>
+                                    <input type="text" id="phoneNumber" placeholder="5511999999999">
+                                </div>
+                                <div class="form-group">
+                                    <label>Código de Verificação:</label>
+                                    <div class="code-input-group">
+                                        <input type="text" id="verificationCode" value="123456" maxlength="6">
+                                        <button class="btn-send-code" onclick="claudia.sendCode()">Enviar</button>
+                                    </div>
+                                    <small class="code-info">Código fixo: <strong>123456</strong></small>
+                                </div>
+                                <div class="form-actions">
+                                    <button class="btn-primary" onclick="claudia.connectWaha()">Conectar WhatsApp</button>
+                                    <button class="btn-secondary" onclick="claudia.disconnectWaha()">Desconectar</button>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
-            
-            <div id="progressContainer" class="progress-container" style="display:none">
-                <div class="progress-overlay">
-                    <div class="progress-content">
-                        <div id="progressText">Processando...</div>
-                        <div class="progress mt-2">
-                            <div id="progressBar" class="progress-bar progress-bar-animated" style="width: 0%"></div>
+
+                <!-- Messages Tab -->
+                <div class="tab-content" id="messages">
+                    <div class="messages-container">
+                        <div class="messages-header">
+                            <h2>💬 Mensagens</h2>
+                            <div class="messages-actions">
+                                <button class="btn-refresh" onclick="claudia.refreshMessages()">🔄</button>
+                                <button class="btn-clear" onclick="claudia.clearMessages()">🗑️</button>
+                            </div>
+                        </div>
+                        
+                        <div class="messages-list" id="messagesList">
+                            <!-- Messages will be populated here -->
+                        </div>
+                        
+                        <div class="message-input">
+                            <div class="input-group">
+                                <input type="text" id="messageInput" placeholder="Digite uma mensagem...">
+                                <input type="text" id="phoneInput" placeholder="Número (opcional)">
+                                <button onclick="claudia.sendMessage()">📤</button>
+                            </div>
                         </div>
                     </div>
                 </div>
+
+                <!-- Webhooks Tab -->
+                <div class="tab-content" id="webhooks">
+                    <div class="webhooks-container">
+                        <div class="webhooks-header">
+                            <h2>🔗 Webhooks</h2>
+                            <div class="webhook-status">
+                                <span class="status-dot" id="webhookStatus"></span>
+                                <span id="webhookStatusText">Aguardando...</span>
+                            </div>
+                        </div>
+                        
+                        <div class="webhooks-list" id="webhooksList">
+                            <!-- Webhook events will be populated here -->
+                        </div>
+                    </div>
+                </div>
+            </main>
+
+            <!-- WAHA Modal -->
+            <div class="modal" id="wahaModal">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3>📱 Conectar WAHA</h3>
+                        <button class="modal-close" onclick="claudia.hideWahaModal()">×</button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="modal-form">
+                            <div class="form-group">
+                                <label>Número do WhatsApp:</label>
+                                <input type="text" id="modalPhone" placeholder="5511999999999">
+                            </div>
+                            <div class="form-group">
+                                <label>Código de Verificação:</label>
+                                <input type="text" id="modalCode" value="123456" maxlength="6">
+                                <small>Use o código: <strong>123456</strong></small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn-secondary" onclick="claudia.hideWahaModal()">Cancelar</button>
+                        <button class="btn-primary" onclick="claudia.connectWahaFromModal()">Conectar</button>
+                    </div>
+                </div>
             </div>
+
+            <!-- Notifications -->
+            <div class="notifications" id="notifications"></div>
         `;
         
-        // Logs tab
-        const logs = document.createElement('div');
-        logs.id = 'logs';
-        logs.className = 'tab-content';
-        logs.innerHTML = `
-            <div class="card">
-                <div class="card-header">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <h5 class="m-0">Logs do Sistema</h5>
-                        <div>
-                            <button onclick="loadLogs('all')" class="btn btn-sm btn-primary">Todos</button>
-                            <button onclick="loadLogs('error')" class="btn btn-sm btn-danger">Erros</button>
-                            <button onclick="loadLogs('info')" class="btn btn-sm btn-info">Info</button>
-                        </div>
-                    </div>
-                </div>
-                <div class="card-body p-0">
-                    <div id="logsContainer" class="logs-container"></div>
-                </div>
-            </div>
-        `;
-        
-        // Métricas tab
-        const metricas = document.createElement('div');
-        metricas.id = 'metricas';
-        metricas.className = 'tab-content';
-        metricas.innerHTML = `
-            <div class="card">
-                <div class="card-header">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <h5 class="m-0">Métricas de Desempenho</h5>
-                        <button onclick="loadMetrics()" class="btn btn-sm btn-primary">Atualizar</button>
-                    </div>
-                </div>
-                <div class="card-body">
-                    <div class="metrics-grid">
-                        <div class="metric-card">
-                            <div class="metric-label">Total de Mensagens</div>
-                            <div id="totalMessages" class="metric-value">0</div>
-                        </div>
-                        <div class="metric-card">
-                            <div class="metric-label">Mensagens Enviadas</div>
-                            <div id="sentMessages" class="metric-value">0</div>
-                        </div>
-                        <div class="metric-card">
-                            <div class="metric-label">Mensagens com Falha</div>
-                            <div id="failedMessages" class="metric-value">0</div>
-                        </div>
-                        <div class="metric-card">
-                            <div class="metric-label">Conversas Ativas</div>
-                            <div id="activeConversations" class="metric-value">0</div>
-                        </div>
-                        <div class="metric-card">
-                            <div class="metric-label">Conversas Concluídas</div>
-                            <div id="completedConversations" class="metric-value">0</div>
-                        </div>
-                        <div class="metric-card">
-                            <div class="metric-label">Faturas Enviadas</div>
-                            <div id="invoicesSent" class="metric-value">0</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `;
-        
-        // Mensagens tab
-        const mensagens = document.createElement('div');
-        mensagens.id = 'mensagens';
-        mensagens.className = 'tab-content';
-        mensagens.innerHTML = `
-            <div class="card">
-                <div class="card-header">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <h5 class="m-0">Histórico de Mensagens</h5>
-                        <button onclick="loadMessageHistory()" class="btn btn-sm btn-primary">Atualizar</button>
-                    </div>
-                </div>
-                <div class="card-body p-0">
-                    <div id="messageHistoryContainer" class="message-history-container"></div>
-                </div>
-            </div>
-        `;
-        
-        // Clientes Carregados tab (antigo FPDs Carregados)
-        const clientesCarregados = document.createElement('div');
-        clientesCarregados.id = 'clientes-carregados';
-        clientesCarregados.className = 'tab-content';
-        clientesCarregados.innerHTML = `
-            <div class="card">
-                <div class="card-header">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <h5 class="m-0">👥 Clientes Carregados</h5>
-                        <div>
-                            <button onclick="loadClientData()" class="btn btn-sm btn-primary">🔄 Atualizar</button>
-                            <button onclick="exportClientData()" class="btn btn-sm btn-success">📥 Exportar</button>
-                            <button onclick="filterClientData()" class="btn btn-sm btn-info">🔍 Filtrar</button>
-                        </div>
-                    </div>
-                </div>
-                <div class="card-body">
-                    <div class="client-data-summary">
-                        <div class="summary-card">
-                            <div class="summary-title">📊 Total de Registros</div>
-                            <div id="totalClientRecords" class="summary-value">0</div>
-                        </div>
-                        <div class="summary-card">
-                            <div class="summary-title">✅ Com Telefone</div>
-                            <div id="clientWithPhone" class="summary-value">0</div>
-                        </div>
-                        <div class="summary-card">
-                            <div class="summary-title">❌ Sem Telefone</div>
-                            <div id="clientWithoutPhone" class="summary-value">0</div>
-                        </div>
-                        <div class="summary-card">
-                            <div class="summary-title">💰 Valor Total Dívida</div>
-                            <div id="clientTotalDebtValue" class="summary-value">R$ 0,00</div>
-                        </div>
-                    </div>
-                    
-                    <div class="client-data-filters">
-                        <div class="filter-group">
-                            <label>Status:</label>
-                            <select id="clientStatusFilter" onchange="filterClientData()">
-                                <option value="all">Todos</option>
-                                <option value="ativo">Ativo</option>
-                                <option value="inativo">Inativo</option>
-                            </select>
-                        </div>
-                        <div class="filter-group">
-                            <label>Valor Dívida:</label>
-                            <select id="clientDebtValueFilter" onchange="filterClientData()">
-                                <option value="all">Todos</option>
-                                <option value="high">Alto (>R$ 1000)</option>
-                                <option value="medium">Médio (R$ 100-1000)</option>
-                                <option value="low">Baixo (<R$ 100)</option>
-                            </select>
-                        </div>
-                        <div class="filter-group">
-                            <label>Buscar:</label>
-                            <input type="text" id="clientSearchFilter" placeholder="Nome, telefone, documento..." onchange="filterClientData()">
-                        </div>
-                    </div>
-                    
-                    <div class="client-data-table-container">
-                        <table id="clientDataTable" class="client-data-table">
-                            <thead>
-                                <tr>
-                                    <th>👤 Cliente</th>
-                                    <th>📱 Telefone</th>
-                                    <th>📄 Documento</th>
-                                    <th>💰 Dívida</th>
-                                    <th>✅ Status</th>
-                                    <th>🔍 Ações</th>
-                                </tr>
-                            </thead>
-                            <tbody id="clientDataTableBody">
-                                <!-- Dados serão carregados aqui -->
-                            </tbody>
-                        </table>
-                    </div>
-                    
-                    <div class="client-data-pagination">
-                        <button onclick="previousClientPage()" class="btn btn-sm btn-outline-primary">← Anterior</button>
-                        <span id="clientPageInfo">Página 1 de 1</span>
-                        <button onclick="nextClientPage()" class="btn btn-sm btn-outline-primary">Próxima →</button>
-                    </div>
-                </div>
-            </div>
-        `;
-        
-        // Configurações tab
-        const configuracoes = document.createElement('div');
-        configuracoes.id = 'configuracoes';
-        configuracoes.className = 'tab-content';
-        configuracoes.innerHTML = `
-            <div class="card">
-                <div class="card-header">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <h5 class="m-0">Configurações do Sistema</h5>
-                        <button onclick="loadConfiguration()" class="btn btn-sm btn-primary">Recarregar</button>
-                    </div>
-                </div>
-                <div class="card-body">
-                    <div id="configContainer" class="config-container"></div>
-                </div>
-            </div>
-        `;
-        
-        // Adicionar elementos ao DOM
-        main.appendChild(dashboard);
-        main.appendChild(logs);
-        main.appendChild(metricas);
-        main.appendChild(mensagens);
-        main.appendChild(clientesCarregados);
-        main.appendChild(configuracoes);
-        
-        appContainer.appendChild(header);
-        appContainer.appendChild(nav);
-        appContainer.appendChild(main);
-        
-        // Adicionar à página
-        document.body.innerHTML = '';
-        document.body.appendChild(appContainer);
-        
-        // Adicionar CSS básico para garantir que a interface funcione
+        document.body.appendChild(app);
+        this.applyStyles();
+    }
+    
+    applyStyles() {
         const style = document.createElement('style');
         style.textContent = `
-            body, html { margin: 0; padding: 0; font-family: Arial, sans-serif; }
-            .container-fluid { width: 100%; padding: 15px; }
-            .container { width: 100%; max-width: 1200px; margin: 0 auto; padding: 0 15px; }
-            .row { display: flex; flex-wrap: wrap; margin: 0 -15px; }
-            .col-md-4 { width: 33.333%; padding: 0 15px; box-sizing: border-box; }
-            .col-md-8 { width: 66.666%; padding: 0 15px; box-sizing: border-box; }
-            .card { border: 1px solid #dee2e6; border-radius: 5px; margin-bottom: 20px; background: white; }
-            .card-header { padding: 10px 15px; background: #f8f9fa; border-bottom: 1px solid #dee2e6; }
-            .card-body { padding: 15px; }
-            .btn { display: inline-block; font-weight: 400; text-align: center; white-space: nowrap; vertical-align: middle; user-select: none; border: 1px solid transparent; padding: .375rem .75rem; font-size: 1rem; line-height: 1.5; border-radius: .25rem; cursor: pointer; }
-            .btn-sm { padding: .25rem .5rem; font-size: .875rem; line-height: 1.5; border-radius: .2rem; }
-            .btn-primary { color: #fff; background-color: #007bff; border-color: #007bff; }
-            .btn-success { color: #fff; background-color: #28a745; border-color: #28a745; }
-            .status-card { text-align: center; padding: 15px; border: 1px solid #dee2e6; border-radius: 5px; margin-bottom: 15px; }
-            .status-icon { font-size: 2em; margin: 10px 0; }
-            .online { color: #28a745; }
-            .offline { color: #dc3545; }
-            .nav-tabs { display: flex; border-bottom: 1px solid #dee2e6; }
-            .nav-tab { background: none; border: none; padding: 10px 20px; cursor: pointer; border-bottom: 3px solid transparent; }
-            .nav-tab.active { border-bottom-color: #007bff; color: #007bff; }
-            .tab-content { display: none; }
-            .tab-content.active { display: block; }
+            * { margin: 0; padding: 0; box-sizing: border-box; }
             
-            @media (max-width: 768px) {
-                .row { flex-direction: column; }
-                .col-md-4, .col-md-8 { width: 100%; }
+            body {
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                background: #f5f5f5;
+                color: #333;
+                line-height: 1.6;
             }
             
-            /* 📊 DADOS CRUZADOS - ESTILOS */
-            .cross-data-summary {
-                display: grid;
-                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-                gap: 15px;
-                margin-bottom: 20px;
-            }
-            
-            .summary-card {
-                background: #f8f9fa;
-                border: 1px solid #dee2e6;
-                border-radius: 8px;
-                padding: 15px;
-                text-align: center;
-            }
-            
-            .summary-title {
-                font-size: 0.9em;
-                color: #6c757d;
-                margin-bottom: 5px;
-            }
-            
-            .summary-value {
-                font-size: 1.5em;
-                font-weight: bold;
-                color: #007bff;
-            }
-            
-            .cross-data-filters {
-                display: flex;
-                gap: 15px;
-                margin-bottom: 20px;
-                flex-wrap: wrap;
-            }
-            
-            .filter-group {
-                display: flex;
-                flex-direction: column;
-                gap: 5px;
-            }
-            
-            .filter-group label {
-                font-size: 0.9em;
-                font-weight: bold;
-                color: #495057;
-            }
-            
-            .filter-group select,
-            .filter-group input {
-                padding: 5px 10px;
-                border: 1px solid #ced4da;
-                border-radius: 4px;
-                font-size: 0.9em;
-            }
-            
-            .cross-data-table-container {
-                overflow-x: auto;
-                margin-bottom: 20px;
-            }
-            
-            .cross-data-table {
-                width: 100%;
-                border-collapse: collapse;
-                font-size: 0.9em;
-            }
-            
-            .cross-data-table th,
-            .cross-data-table td {
-                padding: 10px;
-                border: 1px solid #dee2e6;
-                text-align: left;
-            }
-            
-            .cross-data-table th {
-                background: #f8f9fa;
-                font-weight: bold;
-            }
-            
-            .cross-data-row.matched {
-                background: #d4edda;
-            }
-            
-            .cross-data-row.unmatched {
-                background: #f8d7da;
-            }
-            
-            .cross-data-row.pending {
-                background: #fff3cd;
-            }
-            
-            .status-badge {
-                padding: 2px 8px;
-                border-radius: 12px;
-                font-size: 0.8em;
-                font-weight: bold;
-            }
-            
-            .status-badge.matched {
-                background: #28a745;
+            .app-header {
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
                 color: white;
+                padding: 1rem 0;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.1);
             }
             
-            .status-badge.unmatched {
-                background: #dc3545;
-                color: white;
-            }
-            
-            .status-badge.pending {
-                background: #ffc107;
-                color: #212529;
-            }
-            
-            .actions-info {
-                display: flex;
-                gap: 5px;
-            }
-            
-            .cross-data-charts {
-                display: grid;
-                grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-                gap: 20px;
-                margin-top: 20px;
-            }
-            
-            .chart-container {
-                background: #f8f9fa;
-                border: 1px solid #dee2e6;
-                border-radius: 8px;
-                padding: 15px;
-            }
-            
-            .chart-container h6 {
-                margin-bottom: 15px;
-                color: #495057;
-            }
-            
-            .chart-bars {
-                display: flex;
-                flex-direction: column;
-                gap: 8px;
-            }
-            
-            .chart-bar {
-                height: 30px;
-                border-radius: 4px;
-                display: flex;
-                align-items: center;
-                padding: 0 10px;
-                color: white;
-                font-size: 0.9em;
-                font-weight: bold;
-            }
-            
-            .chart-bar.matched {
-                background: #28a745;
-            }
-            
-            .chart-bar.unmatched {
-                background: #dc3545;
-            }
-            
-            .chart-bar.pending {
-                background: #ffc107;
-                color: #212529;
-            }
-            
-            .chart-bar.high {
-                background: #dc3545;
-            }
-            
-            .chart-bar.medium {
-                background: #ffc107;
-                color: #212529;
-            }
-            
-            .chart-bar.low {
-                background: #28a745;
-            }
-            
-            /* Modal styles */
-            .modal-overlay {
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                background: rgba(0, 0, 0, 0.5);
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                z-index: 1000;
-            }
-            
-            .modal-content {
-                background: white;
-                border-radius: 8px;
-                max-width: 600px;
-                width: 90%;
-                max-height: 80vh;
-                overflow-y: auto;
-            }
-            
-            .modal-header {
-                padding: 15px 20px;
-                border-bottom: 1px solid #dee2e6;
+            .header-content {
+                max-width: 1200px;
+                margin: 0 auto;
+                padding: 0 1rem;
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
             }
             
-            .modal-body {
-                padding: 20px;
-            }
-            
-            .modal-footer {
-                padding: 15px 20px;
-                border-top: 1px solid #dee2e6;
+            .logo {
                 display: flex;
-                gap: 10px;
-                justify-content: flex-end;
+                align-items: center;
+                gap: 0.5rem;
             }
             
-            .btn-close {
+            .logo-icon { font-size: 2rem; }
+            .logo h1 { font-size: 1.5rem; font-weight: 600; }
+            .version { font-size: 0.8rem; opacity: 0.8; }
+            
+            .header-actions {
+                display: flex;
+                align-items: center;
+                gap: 1rem;
+            }
+            
+            .status-indicator {
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+            }
+            
+            .status-dot {
+                width: 10px;
+                height: 10px;
+                border-radius: 50%;
+                background: #ff4444;
+            }
+            
+            .status-dot.online { background: #44ff44; }
+            
+            .btn-refresh {
+                background: rgba(255,255,255,0.2);
+                border: none;
+                color: white;
+                padding: 0.5rem;
+                border-radius: 50%;
+                cursor: pointer;
+                transition: all 0.3s;
+            }
+            
+            .btn-refresh:hover {
+                background: rgba(255,255,255,0.3);
+                transform: rotate(180deg);
+            }
+            
+            .main-nav {
+                background: white;
+                border-bottom: 1px solid #eee;
+                padding: 0.5rem 0;
+            }
+            
+            .nav-container {
+                max-width: 1200px;
+                margin: 0 auto;
+                padding: 0 1rem;
+                display: flex;
+                gap: 0.5rem;
+                overflow-x: auto;
+            }
+            
+            .nav-btn {
                 background: none;
                 border: none;
-                font-size: 1.5em;
-                cursor: pointer;
-                color: #6c757d;
-            }
-            
-            .details-grid {
-                display: grid;
-                grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-                gap: 20px;
-            }
-            
-            .detail-section {
-                background: #f8f9fa;
-                padding: 15px;
+                padding: 0.75rem 1rem;
                 border-radius: 8px;
-            }
-            
-            .detail-section h6 {
-                margin-bottom: 10px;
-                color: #495057;
-            }
-            
-            .detail-section p {
-                margin: 5px 0;
-                font-size: 0.9em;
-            }
-            
-            /* 📋 FPDs CARREGADOS - ESTILOS */
-            .fpd-summary {
-                display: grid;
-                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-                gap: 15px;
-                margin-bottom: 20px;
-            }
-            
-            .fpd-filters {
+                cursor: pointer;
                 display: flex;
-                gap: 15px;
-                margin-bottom: 20px;
-                flex-wrap: wrap;
-            }
-            
-            .fpd-table-container {
-                overflow-x: auto;
-                margin-bottom: 20px;
-            }
-            
-            .fpd-table {
-                width: 100%;
-                border-collapse: collapse;
-                font-size: 0.9em;
-            }
-            
-            .fpd-table th,
-            .fpd-table td {
-                padding: 10px;
-                border: 1px solid #dee2e6;
-                text-align: left;
-            }
-            
-            .fpd-table th {
-                background: #f8f9fa;
-                font-weight: bold;
-            }
-            
-            .fpd-row.ativo {
-                background: #d4edda;
-            }
-            
-            .fpd-row.sem_protocolo {
-                background: #f8d7da;
-            }
-            
-            .fpd-pagination {
-                display: flex;
-                justify-content: center;
                 align-items: center;
-                gap: 15px;
-                margin-top: 20px;
+                gap: 0.5rem;
+                transition: all 0.3s;
+                white-space: nowrap;
             }
             
-            .fpd-pagination span {
-                font-weight: bold;
-                color: #495057;
+            .nav-btn:hover { background: #f0f0f0; }
+            .nav-btn.active { background: #667eea; color: white; }
+            
+            .main-content {
+                max-width: 1200px;
+                margin: 0 auto;
+                padding: 2rem 1rem;
+            }
+            
+            .tab-content { display: none; }
+            .tab-content.active { display: block; }
+            
+            .dashboard-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+                gap: 1.5rem;
+            }
+            
+            .status-card {
+                background: white;
+                border-radius: 12px;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+                overflow: hidden;
+                transition: all 0.3s;
+            }
+            
+            .status-card:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            }
+            
+            .card-header {
+                padding: 1rem;
+                border-bottom: 1px solid #eee;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+            
+            .card-header h3 { font-size: 1.1rem; font-weight: 600; }
+            
+            .card-actions { display: flex; gap: 0.5rem; }
+            
+            .card-body { padding: 1rem; }
+            
+            .btn-primary, .btn-secondary, .btn-test, .btn-connect {
+                padding: 0.5rem 1rem;
+                border: none;
+                border-radius: 6px;
+                cursor: pointer;
+                font-size: 0.9rem;
+                transition: all 0.3s;
+            }
+            
+            .btn-primary { background: #667eea; color: white; }
+            .btn-primary:hover { background: #5a6fd8; }
+            .btn-secondary { background: #6c757d; color: white; }
+            .btn-test { background: #17a2b8; color: white; }
+            .btn-connect { background: #28a745; color: white; }
+            
+            .status-info {
+                display: flex;
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            
+            .status-item {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+            
+            .label { font-weight: 500; color: #666; }
+            .value { font-weight: 600; }
+            
+            .stats-grid {
+                display: grid;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 1rem;
+            }
+            
+            .stat-item { text-align: center; }
+            
+            .stat-number {
+                display: block;
+                font-size: 2rem;
+                font-weight: 700;
+                color: #667eea;
+            }
+            
+            .stat-label {
+                font-size: 0.8rem;
+                color: #666;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+            }
+            
+            .waha-container {
+                display: grid;
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+            
+            .waha-config {
+                background: white;
+                border-radius: 12px;
+                padding: 1.5rem;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            }
+            
+            .form-group {
+                margin-bottom: 1rem;
+            }
+            
+            .form-group label {
+                display: block;
+                margin-bottom: 0.5rem;
+                font-weight: 500;
+            }
+            
+            .form-group input {
+                width: 100%;
+                padding: 0.75rem;
+                border: 1px solid #ddd;
+                border-radius: 6px;
+                font-size: 1rem;
+            }
+            
+            .code-input-group {
+                display: flex;
+                gap: 0.5rem;
+            }
+            
+            .code-input-group input { flex: 1; }
+            
+            .btn-send-code {
+                padding: 0.75rem 1rem;
+                background: #17a2b8;
+                color: white;
+                border: none;
+                border-radius: 6px;
+                cursor: pointer;
+            }
+            
+            .code-info {
+                display: block;
+                margin-top: 0.25rem;
+                font-size: 0.8rem;
+                color: #28a745;
+            }
+            
+            .form-actions {
+                display: flex;
+                gap: 1rem;
+                margin-top: 1.5rem;
+            }
+            
+            .messages-container {
+                background: white;
+                border-radius: 12px;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+                overflow: hidden;
+            }
+            
+            .messages-header {
+                padding: 1rem;
+                border-bottom: 1px solid #eee;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+            
+            .messages-list {
+                height: 400px;
+                overflow-y: auto;
+                padding: 1rem;
+            }
+            
+            .message-item {
+                margin-bottom: 1rem;
+                padding: 0.75rem;
+                border-radius: 8px;
+                background: #f8f9fa;
+            }
+            
+            .message-header {
+                display: flex;
+                justify-content: space-between;
+                margin-bottom: 0.5rem;
+                font-size: 0.8rem;
+                color: #666;
+            }
+            
+            .message-input {
+                padding: 1rem;
+                border-top: 1px solid #eee;
+            }
+            
+            .input-group {
+                display: flex;
+                gap: 0.5rem;
+            }
+            
+            .input-group input {
+                flex: 1;
+                padding: 0.75rem;
+                border: 1px solid #ddd;
+                border-radius: 6px;
+            }
+            
+            .input-group button {
+                padding: 0.75rem 1rem;
+                background: #667eea;
+                color: white;
+                border: none;
+                border-radius: 6px;
+                cursor: pointer;
+            }
+            
+            .webhooks-container {
+                background: white;
+                border-radius: 12px;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+                padding: 1.5rem;
+            }
+            
+            .webhooks-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 1rem;
+            }
+            
+            .webhook-status {
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+            }
+            
+            .webhooks-list {
+                max-height: 300px;
+                overflow-y: auto;
+                margin-bottom: 1rem;
+            }
+            
+            .webhook-event {
+                padding: 0.75rem;
+                border: 1px solid #eee;
+                border-radius: 6px;
+                margin-bottom: 0.5rem;
+                background: #f8f9fa;
+            }
+            
+            .modal {
+                display: none;
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0,0,0,0.5);
+                z-index: 1000;
+            }
+            
+            .modal.active {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            
+            .modal-content {
+                background: white;
+                border-radius: 12px;
+                max-width: 500px;
+                width: 90%;
+                max-height: 90%;
+                overflow-y: auto;
+            }
+            
+            .modal-header {
+                padding: 1rem;
+                border-bottom: 1px solid #eee;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+            
+            .modal-close {
+                background: none;
+                border: none;
+                font-size: 1.5rem;
+                cursor: pointer;
+                color: #666;
+            }
+            
+            .modal-body { padding: 1rem; }
+            
+            .modal-footer {
+                padding: 1rem;
+                border-top: 1px solid #eee;
+                display: flex;
+                justify-content: flex-end;
+                gap: 1rem;
+            }
+            
+            .notifications {
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                z-index: 1001;
+            }
+            
+            .notification {
+                background: white;
+                border-radius: 8px;
+                box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+                padding: 1rem;
+                margin-bottom: 0.5rem;
+                min-width: 300px;
+                animation: slideIn 0.3s ease;
+            }
+            
+            .notification.success { border-left: 4px solid #28a745; }
+            .notification.error { border-left: 4px solid #dc3545; }
+            .notification.info { border-left: 4px solid #17a2b8; }
+            
+            @keyframes slideIn {
+                from { transform: translateX(100%); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+            
+            @media (max-width: 768px) {
+                .dashboard-grid { grid-template-columns: 1fr; }
+                .nav-text { display: none; }
+                .header-content { flex-direction: column; gap: 1rem; }
+                .form-actions { flex-direction: column; }
             }
         `;
+        
         document.head.appendChild(style);
-        
-        // Setup tab navigation
-        const tabs = document.querySelectorAll('.nav-tab');
-        tabs.forEach(tab => {
-            tab.addEventListener('click', () => {
-                // Remove active class from all tabs
-                document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-                
-                // Add active class to clicked tab
-                tab.classList.add('active');
-                const tabId = tab.getAttribute('data-tab');
-                document.getElementById(tabId).classList.add('active');
-            });
-        });
-    }
-    
-    initWebSocket() {
-        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-        const wsUrl = `${protocol}//${window.location.host}/ws/status`;
-        
-        try {
-            this.ws = new WebSocket(wsUrl);
-            
-            this.ws.onopen = () => {
-                this.isConnected = true;
-                this.reconnectAttempts = 0;
-                this.showNotification('WebSocket conectado', 'success');
-                this.updateConnectionStatus(true);
-            };
-            
-            this.ws.onmessage = (event) => {
-                const data = JSON.parse(event.data);
-                this.handleWebSocketMessage(data);
-            };
-            
-            this.ws.onclose = () => {
-                this.isConnected = false;
-                this.updateConnectionStatus(false);
-                this.scheduleReconnect();
-            };
-            
-            this.ws.onerror = (error) => {
-                console.error('WebSocket error:', error);
-                this.showNotification('Erro de conexão WebSocket', 'error');
-            };
-            
-        } catch (error) {
-            console.error('Erro ao inicializar WebSocket:', error);
-            this.scheduleReconnect();
-        }
-    }
-    
-    scheduleReconnect() {
-        if (this.reconnectAttempts < this.maxReconnectAttempts) {
-            this.reconnectAttempts++;
-            const delay = Math.min(1000 * Math.pow(2, this.reconnectAttempts), 30000);
-            
-            setTimeout(() => {
-                this.initWebSocket();
-            }, delay);
-            
-            this.showNotification(`Tentando reconectar (${this.reconnectAttempts}/${this.maxReconnectAttempts})...`, 'info');
-        }
-    }
-    
-    handleWebSocketMessage(data) {
-        switch (data.type) {
-            case 'status_update':
-                this.updateSystemStatus(data.data);
-                break;
-            case 'stats_update':
-                this.updateStats(data.data);
-                break;
-            case 'log_message':
-                this.addLog(data.message, data.level);
-                break;
-            case 'qr_code':
-                this.showQRCode(data.qr_data);
-                break;
-            default:
-                console.log('Mensagem WebSocket não reconhecida:', data);
-        }
     }
     
     setupEventListeners() {
-        // File upload listeners
-        document.getElementById('fpdFile')?.addEventListener('change', (e) => {
-            this.handleFileUpload(e.target, '/api/upload/fpd', 'FPD');
+        document.querySelectorAll('.nav-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                this.switchTab(e.target.dataset.tab);
+            });
         });
         
-        document.getElementById('vendasFile')?.addEventListener('change', (e) => {
-            this.handleFileUpload(e.target, '/api/upload/vendas', 'VENDAS');
-        });
-        
-        // Drag and drop
-        this.setupDragAndDrop();
-        
-        // Keyboard shortcuts
-        document.addEventListener('keydown', (e) => {
-            if (e.ctrlKey && e.key === 'Enter') {
-                this.toggleBot();
-            }
-        });
-        
-        // Auto-refresh QR code
-        setInterval(() => {
-            if (!this.isWhatsAppConnected()) {
-                this.refreshQRCode();
-            }
-        }, 30000); // Refresh every 30 seconds
-    }
-    
-    setupDragAndDrop() {
-        const uploadAreas = ['fpdUpload', 'vendasUpload'];
-        
-        uploadAreas.forEach(areaId => {
-            const area = document.getElementById(areaId);
-            if (!area) return;
-            
-            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-                area.addEventListener(eventName, this.preventDefaults, false);
-            });
-            
-            ['dragenter', 'dragover'].forEach(eventName => {
-                area.addEventListener(eventName, () => area.classList.add('dragover'), false);
-            });
-            
-            ['dragleave', 'drop'].forEach(eventName => {
-                area.addEventListener(eventName, () => area.classList.remove('dragover'), false);
-            });
-            
-            area.addEventListener('drop', (e) => {
-                const files = e.dataTransfer.files;
-                if (files.length > 0) {
-                    const endpoint = areaId === 'fpdUpload' ? '/api/upload/fpd' : '/api/upload/vendas';
-                    const type = areaId === 'fpdUpload' ? 'FPD' : 'VENDAS';
-                    this.uploadFile(files[0], endpoint, type);
+        const messageInput = document.getElementById('messageInput');
+        if (messageInput) {
+            messageInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    this.sendMessage();
                 }
-            }, false);
+            });
+        }
+    }
+    
+    switchTab(tabName) {
+        document.querySelectorAll('.tab-content').forEach(tab => {
+            tab.classList.remove('active');
         });
+        
+        document.getElementById(tabName).classList.add('active');
+        
+        document.querySelectorAll('.nav-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        
+        document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
     }
     
-    preventDefaults(e) {
-        e.preventDefault();
-        e.stopPropagation();
+    startStatusPolling() {
+        setInterval(() => {
+            this.updateStatus();
+        }, 5000);
+        
+        this.updateStatus();
     }
     
-    setupNotifications() {
-        if ('Notification' in window) {
-            Notification.requestPermission();
-        }
-    }
-    
-    showNotification(message, type = 'info', duration = 5000) {
-        // Browser notification
-        if (Notification.permission === 'granted') {
-            new Notification('Blacktemplar Bolter', {
-                body: message,
-                icon: '/static/icon.png'
-            });
-        }
-        
-        // In-app notification
-        this.addLog(message, type);
-        
-        // Toast notification
-        this.showToast(message, type, duration);
-    }
-    
-    showToast(message, type = 'info', duration = 5000) {
-        const toast = document.createElement('div');
-        toast.className = `toast toast-${type}`;
-        toast.innerHTML = `
-            <div class="toast-content">
-                <i class="fas fa-${this.getIconForType(type)}"></i>
-                <span>${message}</span>
-            </div>
-        `;
-        
-        document.body.appendChild(toast);
-        
-        // Animate in
-        setTimeout(() => toast.classList.add('show'), 100);
-        
-        // Remove after duration
-        setTimeout(() => {
-            toast.classList.remove('show');
-            setTimeout(() => document.body.removeChild(toast), 300);
-        }, duration);
-    }
-    
-    getIconForType(type) {
-        const icons = {
-            success: 'check-circle',
-            error: 'times-circle',
-            warning: 'exclamation-triangle',
-            info: 'info-circle'
-        };
-        return icons[type] || 'info-circle';
-    }
-    
-    async handleFileUpload(input, endpoint, type) {
-        const file = input.files[0];
-        if (!file) return;
-        
-        this.showProgress(`Carregando ${type}...`, 0);
-        
-        const formData = new FormData();
-        formData.append('file', file);
-        
+    async updateStatus() {
         try {
-            const response = await fetch(endpoint, {
-                method: 'POST',
-                body: formData
-            });
+            const response = await fetch('/api/waha/status');
+            const status = await response.json();
             
-            this.updateProgress(50);
-            
-            const result = await response.json();
-            
-            this.updateProgress(100);
-            
-            if (result.success) {
-                this.showNotification(`✅ ${type} carregado: ${result.message}`, 'success');
-                this.updateSystemStatus();
-            } else {
-                this.showNotification(`❌ Erro ao carregar ${type}: ${result.message}`, 'error');
-            }
+            this.wahaStatus = status;
+            this.updateUI();
             
         } catch (error) {
-            this.showNotification(`❌ Erro no upload: ${error.message}`, 'error');
-        } finally {
-            this.hideProgress();
+            console.error('Erro ao atualizar status:', error);
         }
     }
     
-    async uploadFile(file, endpoint, type) {
-        const formData = new FormData();
-        formData.append('file', file);
+    updateUI() {
+        const statusDot = document.querySelector('#connectionStatus .status-dot');
+        const statusText = document.querySelector('#connectionStatus .status-text');
         
-        this.showProgress(`Processando ${file.name}...`, 0);
+        if (this.wahaStatus.connected) {
+            statusDot.classList.remove('offline');
+            statusDot.classList.add('online');
+            statusText.textContent = 'Online';
+        } else {
+            statusDot.classList.remove('online');
+            statusDot.classList.add('offline');
+            statusText.textContent = 'Offline';
+        }
         
+        document.getElementById('wahaStatus').textContent = 
+            this.wahaStatus.connected ? 'Conectado' : 'Desconectado';
+        document.getElementById('wahaPhone').textContent = 
+            this.wahaStatus.phone || '-';
+    }
+    
+    async testWaha() {
         try {
-            const response = await fetch(endpoint, {
-                method: 'POST',
-                body: formData
-            });
-            
+            const response = await fetch('/waha-test');
             const result = await response.json();
             
-            if (result.success) {
-                this.showNotification(`✅ ${file.name} processado com sucesso!`, 'success');
+            if (result.waha === 'available') {
+                this.showNotification('✅ WAHA funcionando!', 'success');
             } else {
-                this.showNotification(`❌ Erro: ${result.message}`, 'error');
+                this.showNotification(`❌ WAHA não disponível: ${result.error}`, 'error');
             }
-            
         } catch (error) {
-            this.showNotification(`❌ Erro no upload: ${error.message}`, 'error');
-        } finally {
-            this.hideProgress();
+            this.showNotification(`❌ Erro ao testar WAHA: ${error.message}`, 'error');
         }
     }
     
-    async connectWhatsApp() {
-        // Mostrar modal de configuração WAHA
-        this.showWAHAModal();
+    showWahaModal() {
+        document.getElementById('wahaModal').classList.add('active');
     }
     
-    showWAHAModal() {
-        const modal = document.createElement('div');
-        modal.className = 'modal fade';
-        modal.id = 'wahaModal';
-        modal.innerHTML = `
-            <div class="modal-dialog modal-lg">
-                <div class="modal-content">
-                    <div class="modal-header bg-primary text-white">
-                        <h5 class="modal-title">📱 Configurar WAHA - Claudia Cobranças</h5>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <!-- Status do WAHA -->
-                        <div class="alert alert-info mb-3">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div>
-                                    <i class="fas fa-info-circle"></i>
-                                    <strong>WAHA Embutido:</strong> O servidor WAHA está integrado nesta aplicação.
-                                </div>
-                                <button class="btn btn-sm btn-outline-info" onclick="window.blacktemplarBot.testWahaConnection()">
-                                    <i class="fas fa-wifi"></i> Testar Conexão
-                                </button>
-                            </div>
-                        </div>
-                        
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label class="form-label"><i class="fas fa-link"></i> URL do WAHA:</label>
-                                    <input type="text" id="wahaUrl" class="form-control" 
-                                           placeholder="http://localhost:8000/waha" 
-                                           value="http://localhost:8000/waha" readonly>
-                                    <small class="text-muted">URL automática do WAHA embutido</small>
-                                </div>
-                                
-                                <div class="mb-3">
-                                    <label class="form-label"><i class="fas fa-mobile-alt"></i> Número do WhatsApp:</label>
-                                    <input type="text" id="phoneNumber" class="form-control" 
-                                           placeholder="5511999999999">
-                                    <small class="text-muted">Digite seu número com código do país</small>
-                                </div>
-                            </div>
-                            
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label class="form-label"><i class="fas fa-key"></i> Código de Verificação:</label>
-                                    <div class="input-group">
-                                        <input type="text" id="verificationCode" class="form-control" 
-                                               placeholder="123456" maxlength="6" value="123456">
-                                        <button class="btn btn-outline-primary" onclick="window.blacktemplarBot.sendCode()">
-                                            <i class="fas fa-paper-plane"></i> Enviar
-                                        </button>
-                                    </div>
-                                    <small class="text-success"><i class="fas fa-check-circle"></i> Código fixo: <strong>123456</strong></small>
-                                </div>
-                                
-                                <div class="alert alert-warning">
-                                    <i class="fas fa-exclamation-triangle"></i>
-                                    <strong>Importante:</strong> Use o código <strong>123456</strong> para conectar.
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Instruções -->
-                        <div class="card bg-light">
-                            <div class="card-body">
-                                <h6><i class="fas fa-list-ol"></i> Como conectar:</h6>
-                                <ol class="mb-0">
-                                    <li>Digite seu número do WhatsApp</li>
-                                    <li>Clique em "Enviar Código"</li>
-                                    <li>Use o código <strong>123456</strong></li>
-                                    <li>Clique em "Conectar"</li>
-                                </ol>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                            <i class="fas fa-times"></i> Cancelar
-                        </button>
-                        <button type="button" class="btn btn-success" onclick="window.blacktemplarBot.connectWAHA()">
-                            <i class="fas fa-plug"></i> Conectar WhatsApp
-                        </button>
-                    </div>
-                </div>
-            </div>
-        `;
-        
-        document.body.appendChild(modal);
-        
-        // Inicializar modal Bootstrap
-        const modalInstance = new bootstrap.Modal(modal);
-        modalInstance.show();
-        
-        // Remover modal do DOM quando fechado
-        modal.addEventListener('hidden.bs.modal', () => {
-            document.body.removeChild(modal);
-        });
+    hideWahaModal() {
+        document.getElementById('wahaModal').classList.remove('active');
     }
     
     async sendCode() {
@@ -1099,14 +749,6 @@ class BlacktemplarBot {
             this.showNotification('❌ Digite o número do WhatsApp', 'error');
             return;
         }
-        
-        // Validar formato do número
-        if (!phoneNumber.match(/^\d{10,15}$/)) {
-            this.showNotification('❌ Número inválido. Use apenas números (ex: 5511999999999)', 'error');
-            return;
-        }
-        
-        this.showProgress('Enviando código...');
         
         try {
             const response = await fetch('/api/waha/send-code', {
@@ -1118,49 +760,30 @@ class BlacktemplarBot {
             const result = await response.json();
             
             if (result.success) {
-                this.showNotification('✅ Código enviado! Use o código 123456 para conectar', 'success');
-                
-                // Destacar o campo de código
-                const codeField = document.getElementById('verificationCode');
-                if (codeField) {
-                    codeField.focus();
-                    codeField.select();
-                }
+                this.showNotification('✅ Código enviado! Use 123456', 'success');
             } else {
                 this.showNotification(`❌ Erro: ${result.error}`, 'error');
             }
-            
         } catch (error) {
             this.showNotification(`❌ Erro: ${error.message}`, 'error');
-        } finally {
-            this.hideProgress();
         }
     }
     
-    async connectWAHA() {
-        const wahaUrl = document.getElementById('wahaUrl').value;
+    async connectWaha() {
         const phoneNumber = document.getElementById('phoneNumber').value;
         const code = document.getElementById('verificationCode').value;
         
-        if (!wahaUrl || !phoneNumber || !code) {
+        if (!phoneNumber || !code) {
             this.showNotification('❌ Preencha todos os campos', 'error');
             return;
         }
-        
-        // Validar código
-        if (code !== '123456') {
-            this.showNotification('❌ Código inválido. Use 123456', 'error');
-            return;
-        }
-        
-        this.showProgress('Conectando ao WhatsApp...');
         
         try {
             const response = await fetch('/api/waha/connect', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    waha_url: wahaUrl,
+                    waha_url: 'http://localhost:8000/waha',
                     phone_number: phoneNumber,
                     code: code
                 })
@@ -1169,1366 +792,169 @@ class BlacktemplarBot {
             const result = await response.json();
             
             if (result.success) {
-                if (result.connected) {
-                    this.showNotification('✅ WhatsApp conectado com sucesso!', 'success');
-                    this.updateSystemStatus();
-                    
-                    // Fechar modal
-                    const modal = bootstrap.Modal.getInstance(document.getElementById('wahaModal'));
-                    if (modal) {
-                        modal.hide();
-                    }
-                    
-                    // Atualizar status do card WhatsApp
-                    setTimeout(() => {
-                        this.updateSystemStatus();
-                    }, 1000);
-                    
-                } else if (result.waiting) {
-                    this.showNotification('📱 Aguardando conexão...', 'info');
-                } else {
-                    this.showNotification('❌ Falha na conexão', 'error');
-                }
+                this.showNotification('✅ WhatsApp conectado!', 'success');
+                this.updateStatus();
             } else {
                 this.showNotification(`❌ Erro: ${result.error}`, 'error');
             }
-            
-        } catch (error) {
-            this.showNotification(`❌ Erro: ${error.message}`, 'error');
-        } finally {
-            this.hideProgress();
-        }
-    }
-    
-    async toggleBot() {
-        const isActive = this.isBotActive();
-        const action = isActive ? 'stop' : 'start';
-        
-        this.showProgress(`${isActive ? 'Parando' : 'Iniciando'} bot...`);
-        
-        try {
-            const response = await fetch(`/api/bot/${action}`, {
-                method: 'POST'
-            });
-            
-            const result = await response.json();
-            
-            if (result.success) {
-                this.showNotification(`✅ Bot ${isActive ? 'parado' : 'iniciado'}!`, 'success');
-                this.updateSystemStatus();
-            } else {
-                this.showNotification(`❌ Erro: ${result.message}`, 'error');
-            }
-            
-        } catch (error) {
-            this.showNotification(`❌ Erro: ${error.message}`, 'error');
-        } finally {
-            this.hideProgress();
-        }
-    }
-    
-    showQRCode(qrData) {
-        const container = document.getElementById('qrContainer');
-        const qrElement = document.getElementById('qrCode');
-        
-        if (container && qrElement) {
-            qrElement.innerHTML = `<img src="${qrData}" class="img-fluid" alt="QR Code WhatsApp">`;
-            container.style.display = 'block';
-            
-            // Auto-hide after 2 minutes
-            setTimeout(() => {
-                if (!this.isWhatsAppConnected()) {
-                    this.refreshQRCode();
-                }
-            }, 120000);
-        }
-    }
-    
-    async refreshQRCode() {
-        try {
-            const response = await fetch('/api/whatsapp/qr');
-            const result = await response.json();
-            
-            if (result.success && result.qr_data) {
-                this.showQRCode(result.qr_data);
-            }
-        } catch (error) {
-            console.error('Erro ao atualizar QR Code:', error);
-        }
-    }
-    
-    showProgress(text, progress = null) {
-        const container = document.getElementById('progressContainer');
-        const textElement = document.getElementById('progressText');
-        const barElement = document.getElementById('progressBar');
-        
-        if (container && textElement) {
-            textElement.textContent = text;
-            container.style.display = 'block';
-            
-            if (progress !== null && barElement) {
-                barElement.style.width = `${progress}%`;
-            }
-        }
-    }
-    
-    updateProgress(progress) {
-        const barElement = document.getElementById('progressBar');
-        if (barElement) {
-            barElement.style.width = `${progress}%`;
-        }
-    }
-    
-    hideProgress() {
-        const container = document.getElementById('progressContainer');
-        if (container) {
-            container.style.display = 'none';
-        }
-    }
-    
-    addLog(message, type = 'info') {
-        const container = document.getElementById('logContainer');
-        if (!container) return;
-        
-        const timestamp = new Date().toLocaleTimeString();
-        const colorClass = this.getLogColorClass(type);
-        
-        const logEntry = document.createElement('div');
-        logEntry.className = colorClass;
-        logEntry.innerHTML = `[${timestamp}] ${message}`;
-        
-        container.appendChild(logEntry);
-        container.scrollTop = container.scrollHeight;
-        
-        // Keep only last 100 entries
-        while (container.children.length > 100) {
-            container.removeChild(container.firstChild);
-        }
-    }
-    
-    getLogColorClass(type) {
-        const classes = {
-            error: 'text-danger',
-            success: 'text-success',
-            warning: 'text-warning',
-            info: 'text-info'
-        };
-        return classes[type] || 'text-info';
-    }
-    
-    async updateSystemStatus(status = null) {
-        if (status) {
-            // Update status cards based on received data
-            this.updateStatusCard('whatsapp', status.whatsapp_connected);
-            this.updateStatusCard('bot', status.bot_active);
-            
-            // Update stats
-            if (status.stats) {
-                this.updateStats(status.stats);
-            }
-        } else {
-            // Verificar status do WAHA
-            try {
-                const response = await fetch('/api/waha/status');
-                const wahaStatus = await response.json();
-                
-                if (wahaStatus.waha_available) {
-                    this.updateStatusCard('whatsapp', wahaStatus.connected);
-                } else {
-                    this.updateStatusCard('whatsapp', false);
-                    console.warn('WAHA não disponível:', wahaStatus.error);
-                }
-            } catch (error) {
-                console.error('Erro ao verificar status WAHA:', error);
-                this.updateStatusCard('whatsapp', false);
-            }
-        }
-    }
-    
-    async testWahaConnection() {
-        // Testar conexão com WAHA embutido
-        try {
-            const response = await fetch('/waha-test');
-            const result = await response.json();
-            
-            if (result.waha === 'available') {
-                this.showNotification('✅ WAHA embutido funcionando!', 'success');
-                return true;
-            } else {
-                this.showNotification(`❌ WAHA não disponível: ${result.error}`, 'error');
-                return false;
-            }
-        } catch (error) {
-            this.showNotification(`❌ Erro ao testar WAHA: ${error.message}`, 'error');
-            return false;
-        }
-    }
-    
-    updateStatusCard(type, isOnline) {
-        const card = document.querySelector(`[data-status="${type}"]`);
-        if (card) {
-            card.className = card.className.replace(/online|offline/g, '');
-            card.classList.add(isOnline ? 'online' : 'offline');
-        }
-    }
-    
-    updateStats(stats) {
-        Object.keys(stats).forEach(key => {
-            const element = document.getElementById(`stat-${key}`);
-            if (element) {
-                element.textContent = stats[key];
-            }
-        });
-        
-        this.stats = { ...this.stats, ...stats };
-    }
-    
-    updateConnectionStatus(connected) {
-        const indicator = document.getElementById('connectionIndicator');
-        if (indicator) {
-            indicator.className = connected ? 'status-online' : 'status-offline';
-            indicator.title = connected ? 'WebSocket conectado' : 'WebSocket desconectado';
-        }
-    }
-    
-    startStatusUpdater() {
-        // Update status every 30 seconds
-        setInterval(async () => {
-            try {
-                const response = await fetch('/api/status');
-                const status = await response.json();
-                this.updateSystemStatus(status);
-            } catch (error) {
-                console.error('Erro ao atualizar status:', error);
-            }
-        }, 30000);
-    }
-    
-    // Helper methods
-    isWhatsAppConnected() {
-        const card = document.querySelector('[data-status="whatsapp"]');
-        return card && card.classList.contains('online');
-    }
-    
-    isBotActive() {
-        const card = document.querySelector('[data-status="bot"]');
-        return card && card.classList.contains('online');
-    }
-    
-    // 🚀 NOVAS FUNCIONALIDADES - CONTROLE AVANÇADO
-    
-    // Gerenciamento do Servidor
-    async startServer() {
-        try {
-            this.showNotification('🚀 Iniciando servidor...', 'info');
-            
-            const response = await fetch('/api/server/start', {
-                method: 'POST'
-            });
-            const result = await response.json();
-            
-            if (result.success) {
-                this.showNotification('✅ Servidor iniciado!', 'success');
-                this.updateServerControls(true);
-            } else {
-                this.showNotification(`❌ Erro: ${result.message}`, 'error');
-            }
         } catch (error) {
             this.showNotification(`❌ Erro: ${error.message}`, 'error');
         }
     }
     
-    async stopServer() {
+    async connectWahaFromModal() {
+        const phoneNumber = document.getElementById('modalPhone').value;
+        const code = document.getElementById('modalCode').value;
+        
+        if (!phoneNumber || !code) {
+            this.showNotification('❌ Preencha todos os campos', 'error');
+            return;
+        }
+        
         try {
-            this.showNotification('🛑 Parando servidor...', 'info');
-            
-            const response = await fetch('/api/server/stop', {
-                method: 'POST'
-            });
-            const result = await response.json();
-            
-            if (result.success) {
-                this.showNotification('✅ Servidor parado!', 'success');
-                this.updateServerControls(false);
-            } else {
-                this.showNotification(`❌ Erro: ${result.message}`, 'error');
-            }
-        } catch (error) {
-            this.showNotification(`❌ Erro: ${error.message}`, 'error');
-        }
-    }
-    
-    async restartServer() {
-        await this.stopServer();
-        setTimeout(() => this.startServer(), 2000);
-    }
-    
-    updateServerControls(isRunning) {
-        const startBtn = document.getElementById('startServerBtn');
-        const stopBtn = document.getElementById('stopServerBtn');
-        const restartBtn = document.getElementById('restartServerBtn');
-        
-        if (startBtn) startBtn.disabled = isRunning;
-        if (stopBtn) stopBtn.disabled = !isRunning;
-        if (restartBtn) restartBtn.disabled = false;
-    }
-    
-    // Sistema de Logs Avançado
-    async loadLogs(type = 'all', limit = 100) {
-        try {
-            const response = await fetch(`/api/logs?type=${type}&limit=${limit}`);
-            const logs = await response.json();
-            
-            this.displayLogs(logs);
-        } catch (error) {
-            this.showNotification(`❌ Erro ao carregar logs: ${error.message}`, 'error');
-        }
-    }
-    
-    displayLogs(logs) {
-        const container = document.getElementById('logsContainer');
-        if (!container) return;
-        
-        container.innerHTML = '';
-        
-        logs.forEach(log => {
-            const logElement = document.createElement('div');
-            logElement.className = `log-entry log-${log.level}`;
-            logElement.innerHTML = `
-                <span class="log-time">${new Date(log.timestamp).toLocaleString()}</span>
-                <span class="log-level">[${log.level.toUpperCase()}]</span>
-                <span class="log-message">${log.message}</span>
-            `;
-            container.appendChild(logElement);
-        });
-        
-        // Auto-scroll to bottom
-        container.scrollTop = container.scrollHeight;
-    }
-    
-    // Métricas e Estatísticas Avançadas
-    async loadMetrics() {
-        try {
-            const response = await fetch('/api/metrics');
-            const metrics = await response.json();
-            
-            this.displayMetrics(metrics);
-        } catch (error) {
-            this.showNotification(`❌ Erro ao carregar métricas: ${error.message}`, 'error');
-        }
-    }
-    
-    displayMetrics(metrics) {
-        // Atualizar cards de métricas
-        this.updateMetricCard('totalMessages', metrics.messages.total);
-        this.updateMetricCard('sentMessages', metrics.messages.sent);
-        this.updateMetricCard('failedMessages', metrics.messages.failed);
-        this.updateMetricCard('activeConversations', metrics.conversations.active);
-        this.updateMetricCard('completedConversations', metrics.conversations.completed);
-        this.updateMetricCard('invoicesSent', metrics.invoices.sent);
-        this.updateMetricCard('invoicesDownloaded', metrics.invoices.downloaded);
-        
-        // Gráficos se existirem
-        this.updateCharts(metrics);
-    }
-    
-    updateMetricCard(id, value) {
-        const element = document.getElementById(id);
-        if (element) {
-            element.textContent = this.formatNumber(value);
-        }
-    }
-    
-    formatNumber(num) {
-        return new Intl.NumberFormat('pt-BR').format(num);
-    }
-    
-    updateCharts(metrics) {
-        // Implementar gráficos se necessário
-        if (window.Chart && metrics.charts) {
-            // Código para gráficos aqui
-        }
-    }
-    
-    // Histórico de Mensagens
-    async loadMessageHistory(phone = null, limit = 50) {
-        try {
-            const url = phone ? 
-                `/api/messages/history?phone=${phone}&limit=${limit}` : 
-                `/api/messages/history?limit=${limit}`;
-                
-            const response = await fetch(url);
-            const history = await response.json();
-            
-            this.displayMessageHistory(history);
-        } catch (error) {
-            this.showNotification(`❌ Erro ao carregar histórico: ${error.message}`, 'error');
-        }
-    }
-    
-    displayMessageHistory(history) {
-        const container = document.getElementById('messageHistoryContainer');
-        if (!container) return;
-        
-        container.innerHTML = '';
-        
-        history.forEach(conversation => {
-            const convElement = document.createElement('div');
-            convElement.className = 'conversation-item';
-            convElement.innerHTML = `
-                <div class="conversation-header">
-                    <strong>${conversation.phone}</strong>
-                    <span class="conversation-time">${new Date(conversation.lastMessage).toLocaleString()}</span>
-                </div>
-                <div class="conversation-stats">
-                    <span class="badge">📨 ${conversation.messageCount} mensagens</span>
-                    <span class="badge ${conversation.status === 'completed' ? 'badge-success' : 'badge-warning'}">
-                        ${conversation.status === 'completed' ? '✅ Resolvido' : '⏳ Em andamento'}
-                    </span>
-                </div>
-                <div class="conversation-messages" id="messages-${conversation.phone}">
-                    <!-- Mensagens serão carregadas aqui -->
-                </div>
-            `;
-            
-            convElement.addEventListener('click', () => {
-                this.toggleConversationDetails(conversation.phone);
-            });
-            
-            container.appendChild(convElement);
-        });
-    }
-    
-    async toggleConversationDetails(phone) {
-        const messagesContainer = document.getElementById(`messages-${phone}`);
-        if (!messagesContainer) return;
-        
-        if (messagesContainer.innerHTML === '') {
-            // Carregar mensagens
-            try {
-                const response = await fetch(`/api/messages/conversation/${phone}`);
-                const messages = await response.json();
-                
-                messagesContainer.innerHTML = messages.map(msg => `
-                    <div class="message ${msg.direction}">
-                        <div class="message-content">${msg.content}</div>
-                        <div class="message-time">${new Date(msg.timestamp).toLocaleTimeString()}</div>
-                    </div>
-                `).join('');
-                
-                messagesContainer.style.display = 'block';
-            } catch (error) {
-                this.showNotification(`❌ Erro ao carregar mensagens: ${error.message}`, 'error');
-            }
-        } else {
-            // Toggle visibilidade
-            messagesContainer.style.display = 
-                messagesContainer.style.display === 'none' ? 'block' : 'none';
-        }
-    }
-    
-    // Configurações Avançadas
-    async loadConfiguration() {
-        try {
-            const response = await fetch('/api/config');
-            const config = await response.json();
-            
-            this.displayConfiguration(config);
-        } catch (error) {
-            this.showNotification(`❌ Erro ao carregar configurações: ${error.message}`, 'error');
-        }
-    }
-    
-    displayConfiguration(config) {
-        const container = document.getElementById('configContainer');
-        if (!container) return;
-        
-        container.innerHTML = `
-            <div class="config-section">
-                <h4>🤖 Configurações do Bot</h4>
-                <div class="config-grid">
-                    <div class="config-item">
-                        <label>
-                            <input type="checkbox" ${config.bot?.autoStart ? 'checked' : ''} 
-                                   onchange="BlacktemplarBot.updateConfig('bot.autoStart', this.checked)">
-                            Auto-iniciar bot
-                        </label>
-                    </div>
-                    <div class="config-item">
-                        <label>
-                            <input type="number" value="${config.bot?.messageDelay || 2000}" 
-                                   onchange="BlacktemplarBot.updateConfig('bot.messageDelay', this.value)">
-                            Delay entre mensagens (ms)
-                        </label>
-                    </div>
-                    <div class="config-item">
-                        <label>
-                            <input type="number" value="${config.bot?.maxMessagesPerHour || 50}" 
-                                   onchange="BlacktemplarBot.updateConfig('bot.maxMessagesPerHour', this.value)">
-                            Máximo de mensagens/hora
-                        </label>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="config-section">
-                <h4>⏰ Horário de Funcionamento</h4>
-                <div class="config-grid">
-                    <div class="config-item">
-                        <label>
-                            <input type="checkbox" ${config.schedule?.enabled ? 'checked' : ''} 
-                                   onchange="BlacktemplarBot.updateConfig('schedule.enabled', this.checked)">
-                            Ativar horário de funcionamento
-                        </label>
-                    </div>
-                    <div class="config-item">
-                        <label>Início do expediente:</label>
-                        <input type="time" value="${config.schedule?.startTime || '08:00'}" 
-                               onchange="BlacktemplarBot.updateConfig('schedule.startTime', this.value)">
-                    </div>
-                    <div class="config-item">
-                        <label>Fim do expediente:</label>
-                        <input type="time" value="${config.schedule?.endTime || '18:00'}" 
-                               onchange="BlacktemplarBot.updateConfig('schedule.endTime', this.value)">
-                    </div>
-                    <div class="config-item">
-                        <label>Dias de funcionamento:</label>
-                        <select onchange="BlacktemplarBot.updateConfig('schedule.workDays', this.value)">
-                            <option value="1-5" ${config.schedule?.workDays === '1-5' ? 'selected' : ''}>Segunda a Sexta</option>
-                            <option value="1-6" ${config.schedule?.workDays === '1-6' ? 'selected' : ''}>Segunda a Sábado</option>
-                            <option value="0-6" ${config.schedule?.workDays === '0-6' ? 'selected' : ''}>Todos os dias</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="config-section">
-                <h4>📱 WhatsApp</h4>
-                <div class="config-grid">
-                    <div class="config-item">
-                        <label>
-                            <input type="checkbox" ${config.whatsapp?.stealthMode ? 'checked' : ''} 
-                                   onchange="BlacktemplarBot.updateConfig('whatsapp.stealthMode', this.checked)">
-                            Modo Stealth (anti-detecção)
-                        </label>
-                    </div>
-                    <div class="config-item">
-                        <label>
-                            <input type="checkbox" ${config.whatsapp?.autoReconnect ? 'checked' : ''} 
-                                   onchange="BlacktemplarBot.updateConfig('whatsapp.autoReconnect', this.checked)">
-                            Auto-reconexão
-                        </label>
-                    </div>
-                    <div class="config-item">
-                        <label>
-                            <input type="number" value="${config.whatsapp?.reconnectDelay || 30000}" 
-                                   onchange="BlacktemplarBot.updateConfig('whatsapp.reconnectDelay', this.value)">
-                            Delay para reconexão (ms)
-                        </label>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="config-section">
-                <h4>📊 Logs e Monitoramento</h4>
-                <div class="config-grid">
-                    <div class="config-item">
-                        <label>
-                            <input type="checkbox" ${config.logs?.enabled ? 'checked' : ''} 
-                                   onchange="BlacktemplarBot.updateConfig('logs.enabled', this.checked)">
-                            Ativar logs detalhados
-                        </label>
-                    </div>
-                    <div class="config-item">
-                        <label>
-                            <input type="number" value="${config.logs?.retentionDays || 30}" 
-                                   onchange="BlacktemplarBot.updateConfig('logs.retentionDays', this.value)">
-                            Retenção de logs (dias)
-                        </label>
-                    </div>
-                    <div class="config-item">
-                        <label>
-                            <input type="checkbox" ${config.logs?.saveToDatabase ? 'checked' : ''} 
-                                   onchange="BlacktemplarBot.updateConfig('logs.saveToDatabase', this.checked)">
-                            Salvar logs no banco (futuro)
-                        </label>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="config-section">
-                <h4>🗃️ Dados e Backup</h4>
-                <div class="config-grid">
-                    <div class="config-item">
-                        <label>
-                            <input type="checkbox" ${config.data?.autoBackup ? 'checked' : ''} 
-                                   onchange="BlacktemplarBot.updateConfig('data.autoBackup', this.checked)">
-                            Backup automático
-                        </label>
-                    </div>
-                    <div class="config-item">
-                        <label>
-                            <input type="number" value="${config.data?.backupInterval || 24}" 
-                                   onchange="BlacktemplarBot.updateConfig('data.backupInterval', this.value)">
-                            Intervalo de backup (horas)
-                        </label>
-                    </div>
-                    <div class="config-item">
-                        <label>
-                            <input type="number" value="${config.data?.maxStorageMB || 50}" 
-                                   onchange="BlacktemplarBot.updateConfig('data.maxStorageMB', this.value)">
-                            Limite de armazenamento (MB)
-                        </label>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="config-section">
-                <h4>🔧 Configurações Avançadas</h4>
-                <div class="config-grid">
-                    <div class="config-item">
-                        <label>
-                            <input type="checkbox" ${config.advanced?.debugMode ? 'checked' : ''} 
-                                   onchange="BlacktemplarBot.updateConfig('advanced.debugMode', this.checked)">
-                            Modo debug
-                        </label>
-                    </div>
-                    <div class="config-item">
-                        <label>
-                            <input type="number" value="${config.advanced?.maxRetries || 3}" 
-                                   onchange="BlacktemplarBot.updateConfig('advanced.maxRetries', this.value)">
-                            Máximo de tentativas
-                        </label>
-                    </div>
-                    <div class="config-item">
-                        <label>
-                            <input type="number" value="${config.advanced?.timeout || 30000}" 
-                                   onchange="BlacktemplarBot.updateConfig('advanced.timeout', this.value)">
-                            Timeout padrão (ms)
-                        </label>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="config-actions">
-                <button onclick="BlacktemplarBot.saveAllConfig()" class="btn btn-primary">
-                    💾 Salvar Todas as Configurações
-                </button>
-                <button onclick="BlacktemplarBot.resetConfig()" class="btn btn-secondary">
-                    🔄 Restaurar Padrões
-                </button>
-            </div>
-        `;
-    }
-    
-    async updateConfig(key, value) {
-        try {
-            const response = await fetch('/api/config', {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ key, value })
-            });
-            
-            const result = await response.json();
-            if (result.success) {
-                this.showNotification('✅ Configuração atualizada!', 'success');
-            } else {
-                this.showNotification(`❌ Erro: ${result.message}`, 'error');
-            }
-        } catch (error) {
-            this.showNotification(`❌ Erro: ${error.message}`, 'error');
-        }
-    }
-    
-    async saveAllConfig() {
-        try {
-            this.showNotification('💾 Salvando todas as configurações...', 'info');
-            
-            // Coletar todas as configurações do formulário
-            const configs = {};
-            const inputs = document.querySelectorAll('#configContainer input, #configContainer select');
-            
-            inputs.forEach(input => {
-                if (input.name) {
-                    configs[input.name] = input.type === 'checkbox' ? input.checked : input.value;
-                }
-            });
-            
-            const response = await fetch('/api/config/save-all', {
+            const response = await fetch('/api/waha/connect', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(configs)
+                body: JSON.stringify({
+                    waha_url: 'http://localhost:8000/waha',
+                    phone_number: phoneNumber,
+                    code: code
+                })
             });
             
             const result = await response.json();
+            
             if (result.success) {
-                this.showNotification('✅ Todas as configurações salvas com sucesso!', 'success');
+                this.showNotification('✅ WhatsApp conectado!', 'success');
+                this.hideWahaModal();
+                this.updateStatus();
             } else {
-                this.showNotification(`❌ Erro ao salvar: ${result.message}`, 'error');
+                this.showNotification(`❌ Erro: ${result.error}`, 'error');
             }
         } catch (error) {
             this.showNotification(`❌ Erro: ${error.message}`, 'error');
         }
     }
     
-    async resetConfig() {
+    async disconnectWaha() {
         try {
-            if (confirm('⚠️ Tem certeza que deseja restaurar todas as configurações para os valores padrão?')) {
-                this.showNotification('🔄 Restaurando configurações padrão...', 'info');
-                
-                const response = await fetch('/api/config/reset', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' }
+            const response = await fetch('/api/waha/disconnect', {
+                method: 'POST'
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                this.showNotification('✅ WhatsApp desconectado', 'success');
+                this.updateStatus();
+            } else {
+                this.showNotification(`❌ Erro: ${result.error}`, 'error');
+            }
+        } catch (error) {
+            this.showNotification(`❌ Erro: ${error.message}`, 'error');
+        }
+    }
+    
+    async sendMessage() {
+        const messageInput = document.getElementById('messageInput');
+        const phoneInput = document.getElementById('phoneInput');
+        
+        const message = messageInput.value;
+        const phone = phoneInput.value;
+        
+        if (!message) {
+            this.showNotification('❌ Digite uma mensagem', 'error');
+            return;
+        }
+        
+        try {
+            const response = await fetch('/api/waha/send', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    phone_number: phone || this.wahaStatus.phone,
+                    message: message
+                })
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                this.showNotification('✅ Mensagem enviada!', 'success');
+                messageInput.value = '';
+                this.addMessage({
+                    from: 'Você',
+                    to: phone || this.wahaStatus.phone,
+                    message: message,
+                    timestamp: new Date().toISOString(),
+                    type: 'sent'
                 });
-                
-                const result = await response.json();
-                if (result.success) {
-                    this.showNotification('✅ Configurações restauradas para os padrões!', 'success');
-                    this.loadConfiguration(); // Recarregar interface
-                } else {
-                    this.showNotification(`❌ Erro ao restaurar: ${result.message}`, 'error');
-                }
+            } else {
+                this.showNotification(`❌ Erro: ${result.error}`, 'error');
             }
         } catch (error) {
             this.showNotification(`❌ Erro: ${error.message}`, 'error');
         }
     }
     
-    // 📊 DADOS CRUZADOS - NOVAS FUNCIONALIDADES
-    
-    // 📋 FPDs CARREGADOS - NOVAS FUNCIONALIDADES
-    
-    async loadFpdData() {
-        try {
-            this.showNotification('📋 Carregando dados dos FPDs...', 'info');
-            
-            const response = await fetch('/api/fpd/data');
-            const data = await response.json();
-            
-            if (data.success) {
-                this.displayFpdData(data.data);
-                this.updateFpdSummary(data);
-                this.showNotification('✅ Dados dos FPDs carregados!', 'success');
-            } else {
-                this.showNotification(`❌ Erro: ${data.message}`, 'error');
-            }
-        } catch (error) {
-            this.showNotification(`❌ Erro ao carregar dados dos FPDs: ${error.message}`, 'error');
-        }
+    addMessage(message) {
+        this.messages.unshift(message);
+        this.updateMessagesList();
+        this.updateStats();
     }
     
-    displayFpdData(data) {
-        const tbody = document.getElementById('fpdTableBody');
-        if (!tbody) return;
+    updateMessagesList() {
+        const messagesList = document.getElementById('messagesList');
+        if (!messagesList) return;
         
-        tbody.innerHTML = '';
-        
-        data.forEach(item => {
-            const row = document.createElement('tr');
-            row.className = `fpd-row ${item.status}`;
-            row.innerHTML = `
-                <td>
-                    <div class="protocolo-info">
-                        <strong>${item.protocolo}</strong>
-                        <small>ID: ${item.id}</small>
-                    </div>
-                </td>
-                <td>
-                    <div class="cliente-info">
-                        <strong>${item.cliente?.nome || 'N/A'}</strong>
-                    </div>
-                </td>
-                <td>
-                    <div class="telefone-info">
-                        <strong>${item.cliente?.telefone || 'N/A'}</strong>
-                    </div>
-                </td>
-                <td>
-                    <div class="documento-info">
-                        <strong>${item.cliente?.documento || 'N/A'}</strong>
-                    </div>
-                </td>
-                <td>
-                    <div class="valor-info">
-                        <strong>R$ ${this.formatCurrency(item.valor)}</strong>
-                    </div>
-                </td>
-                <td>
-                    <div class="status-info">
-                        <span class="status-badge ${item.status}">
-                            ${this.getFpdStatusText(item.status)}
-                        </span>
-                    </div>
-                </td>
-                <td>
-                    <div class="actions-info">
-                        <button onclick="BlacktemplarBot.viewFpdDetails('${item.id}')" 
-                                class="btn btn-sm btn-outline-primary" title="Ver detalhes">
-                            👁️
-                        </button>
-                        <button onclick="BlacktemplarBot.editFpdItem('${item.id}')" 
-                                class="btn btn-sm btn-outline-secondary" title="Editar">
-                            ✏️
-                        </button>
-                        <button onclick="BlacktemplarBot.sendFpdMessage('${item.id}')" 
-                                class="btn btn-sm btn-outline-success" title="Enviar mensagem">
-                            📱
-                        </button>
-                    </div>
-                </td>
-            `;
-            
-            tbody.appendChild(row);
-        });
-    }
-    
-    updateFpdSummary(data) {
-        const totalRecords = data.total_records || 0;
-        const shownRecords = data.shown_records || 0;
-        
-        // Calcular estatísticas
-        let withProtocol = 0;
-        let withoutProtocol = 0;
-        let totalValue = 0;
-        
-        data.data.forEach(item => {
-            if (item.status === 'ativo') {
-                withProtocol++;
-            } else {
-                withoutProtocol++;
-            }
-            totalValue += item.valor || 0;
-        });
-        
-        document.getElementById('totalFpdRecords').textContent = totalRecords;
-        document.getElementById('fpdWithProtocol').textContent = withProtocol;
-        document.getElementById('fpdWithoutProtocol').textContent = withoutProtocol;
-        document.getElementById('fpdTotalValue').textContent = `R$ ${this.formatCurrency(totalValue)}`;
-    }
-    
-    async filterFpdData() {
-        const statusFilter = document.getElementById('fpdStatusFilter').value;
-        const valueFilter = document.getElementById('fpdValueFilter').value;
-        const searchFilter = document.getElementById('fpdSearchFilter').value;
-        
-        try {
-            const params = new URLSearchParams({
-                status: statusFilter,
-                value: valueFilter,
-                search: searchFilter
-            });
-            
-            const response = await fetch(`/api/fpd/data/filter?${params}`);
-            const data = await response.json();
-            
-            if (data.success) {
-                this.displayFpdData(data.data);
-                this.showNotification('✅ Filtros aplicados!', 'success');
-            } else {
-                this.showNotification(`❌ Erro: ${data.message}`, 'error');
-            }
-        } catch (error) {
-            this.showNotification(`❌ Erro ao filtrar: ${error.message}`, 'error');
-        }
-    }
-    
-    async exportFpdData() {
-        try {
-            this.showNotification('📥 Exportando dados dos FPDs...', 'info');
-            
-            const response = await fetch('/api/fpd/data/export', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' }
-            });
-            
-            const blob = await response.blob();
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `fpds-carregados-${new Date().toISOString().split('T')[0]}.xlsx`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            window.URL.revokeObjectURL(url);
-            
-            this.showNotification('✅ Dados exportados com sucesso!', 'success');
-        } catch (error) {
-            this.showNotification(`❌ Erro ao exportar: ${error.message}`, 'error');
-        }
-    }
-    
-    async viewFpdDetails(id) {
-        try {
-            const response = await fetch(`/api/fpd/data/details/${id}`);
-            const data = await response.json();
-            
-            if (data.success) {
-                this.showFpdDetailsModal(data.data);
-            } else {
-                this.showNotification(`❌ Erro: ${data.message}`, 'error');
-            }
-        } catch (error) {
-            this.showNotification(`❌ Erro ao carregar detalhes: ${error.message}`, 'error');
-        }
-    }
-    
-    showFpdDetailsModal(data) {
-        const modal = document.createElement('div');
-        modal.className = 'modal-overlay';
-        modal.innerHTML = `
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5>📋 Detalhes do FPD</h5>
-                    <button onclick="this.closest('.modal-overlay').remove()" class="btn-close">&times;</button>
+        messagesList.innerHTML = this.messages.map(msg => `
+            <div class="message-item ${msg.type}">
+                <div class="message-header">
+                    <span>${msg.from} → ${msg.to}</span>
+                    <span>${new Date(msg.timestamp).toLocaleString()}</span>
                 </div>
-                <div class="modal-body">
-                    <div class="details-grid">
-                        <div class="detail-section">
-                            <h6>📋 Informações do Protocolo</h6>
-                            <p><strong>Protocolo:</strong> ${data.protocolo}</p>
-                            <p><strong>ID:</strong> ${data.id}</p>
-                            <p><strong>Status:</strong> ${this.getFpdStatusText(data.status)}</p>
-                        </div>
-                        <div class="detail-section">
-                            <h6>👤 Informações do Cliente</h6>
-                            <p><strong>Nome:</strong> ${data.cliente?.nome || 'N/A'}</p>
-                            <p><strong>Telefone:</strong> ${data.cliente?.telefone || 'N/A'}</p>
-                            <p><strong>Documento:</strong> ${data.cliente?.documento || 'N/A'}</p>
-                        </div>
-                        <div class="detail-section">
-                            <h6>💰 Informações Financeiras</h6>
-                            <p><strong>Valor:</strong> R$ ${this.formatCurrency(data.valor)}</p>
-                            <p><strong>Status:</strong> ${this.getFpdStatusText(data.status)}</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button onclick="BlacktemplarBot.sendFpdMessage('${data.id}')" class="btn btn-primary">
-                        📱 Enviar Mensagem
-                    </button>
-                    <button onclick="this.closest('.modal-overlay').remove()" class="btn btn-secondary">
-                        Fechar
-                    </button>
-                </div>
+                <div class="message-content">${msg.message}</div>
             </div>
-        `;
+        `).join('');
+    }
+    
+    updateStats() {
+        document.getElementById('messagesSent').textContent = this.messages.length;
+        document.getElementById('webhooksReceived').textContent = this.webhookEvents.length;
+    }
+    
+    showNotification(message, type = 'info') {
+        const notifications = document.getElementById('notifications');
+        const notification = document.createElement('div');
+        notification.className = `notification ${type}`;
+        notification.textContent = message;
         
-        document.body.appendChild(modal);
-    }
-    
-    async editFpdItem(id) {
-        // Implementar edição de item
-        this.showNotification('✏️ Funcionalidade de edição em desenvolvimento...', 'info');
-    }
-    
-    async sendFpdMessage(id) {
-        try {
-            this.showNotification('📱 Preparando mensagem...', 'info');
-            
-            const response = await fetch(`/api/fpd/data/send-message/${id}`, {
-                method: 'POST'
-            });
-            
-            const result = await response.json();
-            
-            if (result.success) {
-                this.showNotification('✅ Mensagem enviada com sucesso!', 'success');
-            } else {
-                this.showNotification(`❌ Erro: ${result.message}`, 'error');
-            }
-        } catch (error) {
-            this.showNotification(`❌ Erro ao enviar mensagem: ${error.message}`, 'error');
-        }
-    }
-    
-    getFpdStatusText(status) {
-        const statusMap = {
-            'ativo': '✅ Com Protocolo',
-            'sem_protocolo': '❌ Sem Protocolo',
-            'processando': '🔄 Processando'
-        };
-        return statusMap[status] || '❓ Desconhecido';
-    }
-    
-    // 📊 DADOS CRUZADOS - NOVAS FUNCIONALIDADES
-    
-    async loadCrossData() {
-        try {
-            this.showNotification('📊 Carregando dados cruzados...', 'info');
-            
-            const response = await fetch('/api/cross-data');
-            const data = await response.json();
-            
-            if (data.success) {
-                this.displayCrossData(data.data);
-                this.updateCrossDataSummary(data.summary);
-                this.updateCrossDataCharts(data.charts);
-                this.showNotification('✅ Dados cruzados carregados!', 'success');
-            } else {
-                this.showNotification(`❌ Erro: ${data.message}`, 'error');
-            }
-        } catch (error) {
-            this.showNotification(`❌ Erro ao carregar dados cruzados: ${error.message}`, 'error');
-        }
-    }
-    
-    displayCrossData(data) {
-        const tbody = document.getElementById('crossDataTableBody');
-        if (!tbody) return;
+        notifications.appendChild(notification);
         
-        tbody.innerHTML = '';
-        
-        data.forEach(item => {
-            const row = document.createElement('tr');
-            row.className = `cross-data-row ${item.status}`;
-            row.innerHTML = `
-                <td>
-                    <div class="fpd-info">
-                        <strong>${item.fpd?.numero || 'N/A'}</strong>
-                        <small>${item.fpd?.cliente || 'Cliente não encontrado'}</small>
-                    </div>
-                </td>
-                <td>
-                    <div class="venda-info">
-                        <strong>${item.venda?.numero || 'N/A'}</strong>
-                        <small>${item.venda?.produto || 'Produto não encontrado'}</small>
-                    </div>
-                </td>
-                <td>
-                    <div class="valor-info">
-                        <strong>R$ ${this.formatCurrency(item.valor)}</strong>
-                        <small>${item.valor_original ? `Original: R$ ${this.formatCurrency(item.valor_original)}` : ''}</small>
-                    </div>
-                </td>
-                <td>
-                    <div class="data-info">
-                        <strong>${this.formatDate(item.data)}</strong>
-                        <small>${item.dias_vencimento ? `${item.dias_vencimento} dias` : ''}</small>
-                    </div>
-                </td>
-                <td>
-                    <div class="cliente-info">
-                        <strong>${item.cliente?.nome || 'N/A'}</strong>
-                        <small>${item.cliente?.telefone || 'Telefone não encontrado'}</small>
-                    </div>
-                </td>
-                <td>
-                    <div class="status-info">
-                        <span class="status-badge ${item.status}">
-                            ${this.getStatusText(item.status)}
-                        </span>
-                        <small>${item.status_details || ''}</small>
-                    </div>
-                </td>
-                <td>
-                    <div class="actions-info">
-                        <button onclick="BlacktemplarBot.viewCrossDataDetails('${item.id}')" 
-                                class="btn btn-sm btn-outline-primary" title="Ver detalhes">
-                            👁️
-                        </button>
-                        <button onclick="BlacktemplarBot.editCrossDataItem('${item.id}')" 
-                                class="btn btn-sm btn-outline-secondary" title="Editar">
-                            ✏️
-                        </button>
-                        <button onclick="BlacktemplarBot.sendCrossDataMessage('${item.id}')" 
-                                class="btn btn-sm btn-outline-success" title="Enviar mensagem">
-                            📱
-                        </button>
-                    </div>
-                </td>
-            `;
-            
-            tbody.appendChild(row);
-        });
-    }
-    
-    updateCrossDataSummary(summary) {
-        document.getElementById('totalFpds').textContent = summary.total_fpds || 0;
-        document.getElementById('totalVendas').textContent = summary.total_vendas || 0;
-        document.getElementById('correspondencias').textContent = summary.correspondencias || 0;
-        document.getElementById('semCorrespondencia').textContent = summary.sem_correspondencia || 0;
-    }
-    
-    updateCrossDataCharts(charts) {
-        // Implementar gráficos se necessário
-        if (charts.status) {
-            this.updateStatusChart(charts.status);
-        }
-        if (charts.valor) {
-            this.updateValorChart(charts.valor);
-        }
-    }
-    
-    updateStatusChart(data) {
-        const chartContainer = document.getElementById('statusChart');
-        if (!chartContainer) return;
-        
-        // Implementar gráfico de status
-        chartContainer.innerHTML = `
-            <div class="chart-bars">
-                <div class="chart-bar matched" style="width: ${data.matched}%">
-                    <span>Com Correspondência (${data.matched}%)</span>
-                </div>
-                <div class="chart-bar unmatched" style="width: ${data.unmatched}%">
-                    <span>Sem Correspondência (${data.unmatched}%)</span>
-                </div>
-                <div class="chart-bar pending" style="width: ${data.pending}%">
-                    <span>Pendente (${data.pending}%)</span>
-                </div>
-            </div>
-        `;
-    }
-    
-    updateValorChart(data) {
-        const chartContainer = document.getElementById('valorChart');
-        if (!chartContainer) return;
-        
-        // Implementar gráfico de valores
-        chartContainer.innerHTML = `
-            <div class="chart-bars">
-                <div class="chart-bar high" style="width: ${data.high}%">
-                    <span>Alto (${data.high}%)</span>
-                </div>
-                <div class="chart-bar medium" style="width: ${data.medium}%">
-                    <span>Médio (${data.medium}%)</span>
-                </div>
-                <div class="chart-bar low" style="width: ${data.low}%">
-                    <span>Baixo (${data.low}%)</span>
-                </div>
-            </div>
-        `;
-    }
-    
-    async filterCrossData() {
-        const statusFilter = document.getElementById('statusFilter').value;
-        const valorFilter = document.getElementById('valorFilter').value;
-        const dataFilter = document.getElementById('dataFilter').value;
-        
-        try {
-            const params = new URLSearchParams({
-                status: statusFilter,
-                valor: valorFilter,
-                data: dataFilter
-            });
-            
-            const response = await fetch(`/api/cross-data/filter?${params}`);
-            const data = await response.json();
-            
-            if (data.success) {
-                this.displayCrossData(data.data);
-                this.showNotification('✅ Filtros aplicados!', 'success');
-            } else {
-                this.showNotification(`❌ Erro: ${data.message}`, 'error');
-            }
-        } catch (error) {
-            this.showNotification(`❌ Erro ao filtrar: ${error.message}`, 'error');
-        }
-    }
-    
-    async exportCrossData() {
-        try {
-            this.showNotification('📥 Exportando dados...', 'info');
-            
-            const response = await fetch('/api/cross-data/export', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' }
-            });
-            
-            const blob = await response.blob();
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `dados-cruzados-${new Date().toISOString().split('T')[0]}.xlsx`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            window.URL.revokeObjectURL(url);
-            
-            this.showNotification('✅ Dados exportados com sucesso!', 'success');
-        } catch (error) {
-            this.showNotification(`❌ Erro ao exportar: ${error.message}`, 'error');
-        }
-    }
-    
-    async viewCrossDataDetails(id) {
-        try {
-            const response = await fetch(`/api/cross-data/details/${id}`);
-            const data = await response.json();
-            
-            if (data.success) {
-                this.showCrossDataDetailsModal(data.data);
-            } else {
-                this.showNotification(`❌ Erro: ${data.message}`, 'error');
-            }
-        } catch (error) {
-            this.showNotification(`❌ Erro ao carregar detalhes: ${error.message}`, 'error');
-        }
-    }
-    
-    showCrossDataDetailsModal(data) {
-        const modal = document.createElement('div');
-        modal.className = 'modal-overlay';
-        modal.innerHTML = `
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5>📊 Detalhes dos Dados Cruzados</h5>
-                    <button onclick="this.closest('.modal-overlay').remove()" class="btn-close">&times;</button>
-                </div>
-                <div class="modal-body">
-                    <div class="details-grid">
-                        <div class="detail-section">
-                            <h6>📋 Informações do FPD</h6>
-                            <p><strong>Número:</strong> ${data.fpd?.numero || 'N/A'}</p>
-                            <p><strong>Cliente:</strong> ${data.fpd?.cliente || 'N/A'}</p>
-                            <p><strong>Valor:</strong> R$ ${this.formatCurrency(data.fpd?.valor)}</p>
-                            <p><strong>Data:</strong> ${this.formatDate(data.fpd?.data)}</p>
-                        </div>
-                        <div class="detail-section">
-                            <h6>📈 Informações da Venda</h6>
-                            <p><strong>Número:</strong> ${data.venda?.numero || 'N/A'}</p>
-                            <p><strong>Produto:</strong> ${data.venda?.produto || 'N/A'}</p>
-                            <p><strong>Valor:</strong> R$ ${this.formatCurrency(data.venda?.valor)}</p>
-                            <p><strong>Data:</strong> ${this.formatDate(data.venda?.data)}</p>
-                        </div>
-                        <div class="detail-section">
-                            <h6>📱 Informações do Cliente</h6>
-                            <p><strong>Nome:</strong> ${data.cliente?.nome || 'N/A'}</p>
-                            <p><strong>Telefone:</strong> ${data.cliente?.telefone || 'N/A'}</p>
-                            <p><strong>Email:</strong> ${data.cliente?.email || 'N/A'}</p>
-                            <p><strong>Status:</strong> ${this.getStatusText(data.status)}</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button onclick="BlacktemplarBot.sendCrossDataMessage('${data.id}')" class="btn btn-primary">
-                        📱 Enviar Mensagem
-                    </button>
-                    <button onclick="this.closest('.modal-overlay').remove()" class="btn btn-secondary">
-                        Fechar
-                    </button>
-                </div>
-            </div>
-        `;
-        
-        document.body.appendChild(modal);
-    }
-    
-    async editCrossDataItem(id) {
-        // Implementar edição de item
-        this.showNotification('✏️ Funcionalidade de edição em desenvolvimento...', 'info');
-    }
-    
-    async sendCrossDataMessage(id) {
-        try {
-            this.showNotification('📱 Preparando mensagem...', 'info');
-            
-            const response = await fetch(`/api/cross-data/send-message/${id}`, {
-                method: 'POST'
-            });
-            
-            const result = await response.json();
-            
-            if (result.success) {
-                this.showNotification('✅ Mensagem enviada com sucesso!', 'success');
-            } else {
-                this.showNotification(`❌ Erro: ${result.message}`, 'error');
-            }
-        } catch (error) {
-            this.showNotification(`❌ Erro ao enviar mensagem: ${error.message}`, 'error');
-        }
-    }
-    
-    // Métodos auxiliares para formatação
-    formatCurrency(value) {
-        if (!value) return '0,00';
-        return new Intl.NumberFormat('pt-BR', {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2
-        }).format(value);
-    }
-    
-    formatDate(dateString) {
-        if (!dateString) return 'N/A';
-        const date = new Date(dateString);
-        return date.toLocaleDateString('pt-BR');
-    }
-    
-    getStatusText(status) {
-        const statusMap = {
-            'matched': '✅ Com Correspondência',
-            'unmatched': '❌ Sem Correspondência',
-            'pending': '⏳ Pendente',
-            'processing': '🔄 Processando'
-        };
-        return statusMap[status] || '❓ Desconhecido';
-    }
-    
-    // Inicializar funcionalidades avançadas
-    initAdvancedFeatures() {
-        // Auto-refresh de métricas
-        setInterval(() => this.loadMetrics(), 60000); // A cada minuto
-        
-        // Auto-refresh de logs
-        setInterval(() => this.loadLogs('error', 10), 30000); // Erros a cada 30s
-        
-        // Carregar dados iniciais
         setTimeout(() => {
-            this.loadMetrics();
-            this.loadConfiguration();
-            this.loadMessageHistory();
-            this.loadCrossData();
-            this.loadFpdData();
-        }, 1000);
+            if (notification.parentNode) {
+                notification.parentNode.removeChild(notification);
+            }
+        }, 5000);
     }
     
-    // Public methods for external use
-    getStats() {
-        return this.stats;
+    refreshStatus() {
+        this.updateStatus();
+        this.showNotification('🔄 Status atualizado', 'info');
     }
     
-    isWebSocketConnected() {
-        return this.isConnected;
+    refreshMessages() {
+        this.showNotification('🔄 Mensagens atualizadas', 'info');
+    }
+    
+    clearMessages() {
+        this.messages = [];
+        this.updateMessagesList();
+        this.showNotification('🗑️ Mensagens limpas', 'info');
     }
 }
 
-// Initialize when DOM is loaded
+// Initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
-    window.BlacktemplarBot = new BlacktemplarBot();
-    
-    // Global functions for HTML onclick events
-    window.connectWhatsApp = () => window.BlacktemplarBot.connectWhatsApp();
-    window.toggleBot = () => window.BlacktemplarBot.toggleBot();
-    window.refreshQRCode = () => window.BlacktemplarBot.refreshQRCode();
-    
-    // 🚀 NOVAS FUNÇÕES GLOBAIS - CONTROLE AVANÇADO
-    window.startServer = () => window.BlacktemplarBot.startServer();
-    window.stopServer = () => window.BlacktemplarBot.stopServer();
-    window.restartServer = () => window.BlacktemplarBot.restartServer();
-    window.loadLogs = (type = 'all', limit = 100) => window.BlacktemplarBot.loadLogs(type, limit);
-    window.loadMetrics = () => window.BlacktemplarBot.loadMetrics();
-    window.loadMessageHistory = (phone = null) => window.BlacktemplarBot.loadMessageHistory(phone);
-    window.loadConfiguration = () => window.BlacktemplarBot.loadConfiguration();
-    window.updateConfig = (key, value) => window.BlacktemplarBot.updateConfig(key, value);
-    
-    // 📊 FUNÇÕES GLOBAIS - DADOS CRUZADOS
-    window.loadCrossData = () => window.BlacktemplarBot.loadCrossData();
-    window.filterCrossData = () => window.BlacktemplarBot.filterCrossData();
-    window.exportCrossData = () => window.BlacktemplarBot.exportCrossData();
-    
-    // 📋 FUNÇÕES GLOBAIS - FPDs CARREGADOS
-    window.loadFpdData = () => window.BlacktemplarBot.loadFpdData();
-    window.filterFpdData = () => window.BlacktemplarBot.filterFpdData();
-    window.exportFpdData = () => window.BlacktemplarBot.exportFpdData();
+    window.claudia = new ClaudiaCobrancas();
 });
-
-// Service Worker for offline support
-if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/static/sw.js')
-        .then(registration => {
-            console.log('Service Worker registrado:', registration);
-        })
-        .catch(error => {
-            console.log('Erro ao registrar Service Worker:', error);
-        });
-} 
- 
