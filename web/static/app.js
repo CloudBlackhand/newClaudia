@@ -1007,8 +1007,8 @@ class BlacktemplarBot {
                         <div class="mb-3">
                             <label class="form-label">URL do WAHA:</label>
                             <input type="text" id="wahaUrl" class="form-control" 
-                                   placeholder="https://seu-waha.railway.app" 
-                                   value="https://waha-claudia.up.railway.app">
+                                   placeholder="http://localhost:8000/waha" 
+                                   value="http://localhost:8000/waha">
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Número do WhatsApp:</label>

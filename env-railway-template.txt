@@ -45,7 +45,7 @@ PLAYWRIGHT_WAIT_FOR_DOWNLOAD=5
 # ================================
 # 📱 CONFIGURAÇÕES DO WAHA (WHATSAPP HTTP API)
 # ================================
-WAHA_URL=https://waha-claudia.up.railway.app
+WAHA_URL=https://seu-waha-app.railway.app
 WEBHOOK_URL=https://seu-claudia-app.railway.app/webhook
 WAHA_INSTANCE_NAME=claudia-cobrancas
 WAHA_TIMEOUT=30000

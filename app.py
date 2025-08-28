@@ -53,12 +53,28 @@ from core.storage_manager import storage_manager
 from core.whatsapp_client import WAHAWhatsAppClient
 from config import Config, CLAUDIA_CONFIG
 
+# Importar servidor WAHA embutido
+from waha_server import waha_server
+
 # Inicializar FastAPI
 app = FastAPI(
     title="Claudia Cobranças",
     description="Sistema oficial de cobrança da Desktop",
     version="2.2"
 )
+
+# Integrar servidor WAHA embutido
+waha_app = waha_server.get_app()
+
+# Montar aplicação WAHA em subpath
+from fastapi import APIRouter
+waha_router = APIRouter()
+
+# Adicionar todas as rotas WAHA
+for route in waha_app.routes:
+    waha_router.routes.append(route)
+
+app.include_router(waha_router, prefix="/waha")
 
 # Adicionar CORS para WebSockets
 from fastapi.middleware.cors import CORSMiddleware
@@ -156,6 +172,21 @@ async def health_check():
     """Healthcheck ultra-simples para Railway"""
     return {"status": "healthy"}
 
+@app.get("/waha-test")
+async def waha_test():
+    """Teste do WAHA embutido"""
+    try:
+        response = whatsapp_client.session.get(
+            f"{whatsapp_client.waha_url}/api/instances",
+            timeout=5
+        )
+        if response.status_code == 200:
+            return {"status": "healthy", "waha": "available"}
+        else:
+            return {"status": "healthy", "waha": "error", "code": response.status_code}
+    except Exception as e:
+        return {"status": "healthy", "waha": "unavailable", "error": str(e)}
+
 @app.get("/api/status")
 async def get_status():
     """Status do sistema"""
@@ -186,13 +217,13 @@ async def get_status():
 
 @app.get("/api/waha/status")
 async def waha_status():
-    """Verificar status do WAHA"""
+    """Verificar status do WAHA embutido"""
     try:
-        # Primeiro verificar se o WAHA está disponível
+        # Verificar se o WAHA embutido está funcionando
         try:
             response = whatsapp_client.session.get(
                 f"{whatsapp_client.waha_url}/api/instances",
-                timeout=10
+                timeout=5
             )
             waha_available = response.status_code == 200
         except Exception:
@@ -202,7 +233,7 @@ async def waha_status():
             return {
                 "connected": False,
                 "waha_available": False,
-                "error": "WAHA não está disponível"
+                "error": "WAHA embutido não está disponível"
             }
         
         # Se WAHA disponível, verificar conexão
@@ -222,7 +253,7 @@ async def waha_connect(request: Request):
     """Conectar ao WAHA com código e número"""
     try:
         data = await request.json()
-        waha_url = data.get("waha_url", "https://waha-claudia.up.railway.app")
+        waha_url = data.get("waha_url", "http://localhost:8000/waha")
         phone_number = data.get("phone_number")
         code = data.get("code")
         
@@ -1233,12 +1264,14 @@ async def auth_middleware(request: Request, call_next):
         "/",
         "/health",
         "/webhook",
+        "/waha",
         "/api/status",
         "/api/auth/request",
         "/api/auth/approve",
         "/api/auth/deny", 
         "/api/auth/status",
         "/api/auth/pending",
+        "/api/waha",
         "/static",
         "/favicon.ico"
     ]

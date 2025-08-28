@@ -20,9 +20,8 @@ class WAHAWhatsAppClient:
     """Cliente WhatsApp via WAHA (WhatsApp HTTP API)"""
     
     def __init__(self, waha_url: str = None):
-        # URL padrão para Railway - deve ser configurada via variável de ambiente
-        default_url = os.getenv('WAHA_URL', 'https://waha-claudia.up.railway.app')
-        self.waha_url = waha_url or default_url
+        # Usar servidor WAHA embutido
+        self.waha_url = waha_url or os.getenv('WAHA_URL', 'http://localhost:8000/waha')
         self.session = requests.Session()
         self.is_connected = False
         self.instance_id = None
