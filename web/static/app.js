@@ -25,15 +25,15 @@ class ClaudiaCobrancas {
                         <span class="logo-icon">🧠</span>
                         <h1>Claudia Cobranças</h1>
                         <span class="version">v2.2 - WAHA Integration</span>
-                    </div>
+                </div>
                     <div class="header-actions">
                         <div class="status-indicator" id="connectionStatus">
                             <span class="status-dot offline"></span>
                             <span class="status-text">Offline</span>
-                        </div>
+            </div>
                         <button class="btn-refresh" onclick="claudia.refreshStatus()">🔄</button>
-                    </div>
-                </div>
+                                        </div>
+                                    </div>
             </header>
 
             <!-- Navigation -->
@@ -43,7 +43,7 @@ class ClaudiaCobrancas {
                     <button class="nav-btn" data-tab="waha">📱 WAHA</button>
                     <button class="nav-btn" data-tab="messages">💬 Mensagens</button>
                     <button class="nav-btn" data-tab="webhooks">🔗 Webhooks</button>
-                </div>
+                            </div>
             </nav>
 
             <!-- Main Content -->
@@ -57,42 +57,42 @@ class ClaudiaCobrancas {
                                 <div class="card-actions">
                                     <button class="btn-test" onclick="claudia.testWaha()">Testar</button>
                                     <button class="btn-connect" onclick="claudia.showWahaModal()">Conectar</button>
-                                </div>
-                            </div>
+                        </div>
+                    </div>
                             <div class="card-body">
                                 <div class="status-info">
                                     <div class="status-item">
                                         <span class="label">Status:</span>
                                         <span class="value" id="wahaStatus">Desconectado</span>
-                                    </div>
+                </div>
                                     <div class="status-item">
                                         <span class="label">Telefone:</span>
                                         <span class="value" id="wahaPhone">-</span>
-                                    </div>
-                                </div>
+                            </div>
                             </div>
                         </div>
-
+                    </div>
+                    
                         <div class="status-card stats-card">
                             <div class="card-header">
                                 <h3>📈 Estatísticas</h3>
                             </div>
-                            <div class="card-body">
+                        <div class="card-body">
                                 <div class="stats-grid">
-                                    <div class="stat-item">
+                            <div class="stat-item">
                                         <span class="stat-number" id="messagesSent">0</span>
                                         <span class="stat-label">Mensagens</span>
-                                    </div>
-                                    <div class="stat-item">
+                            </div>
+                            <div class="stat-item">
                                         <span class="stat-number" id="webhooksReceived">0</span>
                                         <span class="stat-label">Webhooks</span>
-                                    </div>
-                                </div>
+                            </div>
                             </div>
                         </div>
                     </div>
                 </div>
-
+            </div>
+            
                 <!-- WAHA Tab -->
                 <div class="tab-content" id="waha">
                     <div class="waha-container">
@@ -103,27 +103,27 @@ class ClaudiaCobrancas {
                                     <label>URL do WAHA:</label>
                                     <input type="text" id="wahaUrl" value="http://localhost:8000/waha" readonly>
                                     <small>WAHA embutido - URL automática</small>
-                                </div>
+                        </div>
                                 <div class="form-group">
                                     <label>Número do WhatsApp:</label>
                                     <input type="text" id="phoneNumber" placeholder="5511999999999">
-                                </div>
+                    </div>
                                 <div class="form-group">
                                     <label>Código de Verificação:</label>
                                     <div class="code-input-group">
-                                        <input type="text" id="verificationCode" value="123456" maxlength="6">
+                                        <input type="text" id="verificationCode" placeholder="Digite o código recebido" maxlength="6">
                                         <button class="btn-send-code" onclick="claudia.sendCode()">Enviar</button>
-                                    </div>
-                                    <small class="code-info">Código fixo: <strong>123456</strong></small>
-                                </div>
+                </div>
+                                    <small class="code-info">Digite o código de 6 dígitos enviado via SMS</small>
+            </div>
                                 <div class="form-actions">
                                     <button class="btn-primary" onclick="claudia.connectWaha()">Conectar WhatsApp</button>
                                     <button class="btn-secondary" onclick="claudia.disconnectWaha()">Desconectar</button>
-                                </div>
-                            </div>
                         </div>
                     </div>
                 </div>
+                </div>
+            </div>
 
                 <!-- Messages Tab -->
                 <div class="tab-content" id="messages">
@@ -133,8 +133,8 @@ class ClaudiaCobrancas {
                             <div class="messages-actions">
                                 <button class="btn-refresh" onclick="claudia.refreshMessages()">🔄</button>
                                 <button class="btn-clear" onclick="claudia.clearMessages()">🗑️</button>
-                            </div>
-                        </div>
+                    </div>
+                </div>
                         
                         <div class="messages-list" id="messagesList">
                             <!-- Messages will be populated here -->
@@ -145,10 +145,10 @@ class ClaudiaCobrancas {
                                 <input type="text" id="messageInput" placeholder="Digite uma mensagem...">
                                 <input type="text" id="phoneInput" placeholder="Número (opcional)">
                                 <button onclick="claudia.sendMessage()">📤</button>
-                            </div>
-                        </div>
                     </div>
                 </div>
+                </div>
+            </div>
 
                 <!-- Webhooks Tab -->
                 <div class="tab-content" id="webhooks">
@@ -158,14 +158,14 @@ class ClaudiaCobrancas {
                             <div class="webhook-status">
                                 <span class="status-dot" id="webhookStatus"></span>
                                 <span id="webhookStatusText">Aguardando...</span>
-                            </div>
                         </div>
-                        
+                    </div>
+                    
                         <div class="webhooks-list" id="webhooksList">
                             <!-- Webhook events will be populated here -->
                         </div>
-                    </div>
-                </div>
+                        </div>
+                        </div>
             </main>
 
             <!-- WAHA Modal -->
@@ -180,18 +180,18 @@ class ClaudiaCobrancas {
                             <div class="form-group">
                                 <label>Número do WhatsApp:</label>
                                 <input type="text" id="modalPhone" placeholder="5511999999999">
-                            </div>
+                    </div>
                             <div class="form-group">
                                 <label>Código de Verificação:</label>
-                                <input type="text" id="modalCode" value="123456" maxlength="6">
-                                <small>Use o código: <strong>123456</strong></small>
-                            </div>
-                        </div>
+                                <input type="text" id="modalCode" placeholder="Digite o código recebido" maxlength="6">
+                                <small>Digite o código de 6 dígitos enviado via SMS</small>
+                </div>
+            </div>
                     </div>
                     <div class="modal-footer">
                         <button class="btn-secondary" onclick="claudia.hideWahaModal()">Cancelar</button>
                         <button class="btn-primary" onclick="claudia.connectWahaFromModal()">Conectar</button>
-                    </div>
+                </div>
                 </div>
             </div>
 
@@ -694,9 +694,9 @@ class ClaudiaCobrancas {
             this.wahaStatus = status;
             this.updateUI();
             
-        } catch (error) {
-            console.error('Erro ao atualizar status:', error);
-        }
+            } catch (error) {
+                console.error('Erro ao atualizar status:', error);
+            }
     }
     
     updateUI() {
@@ -759,8 +759,8 @@ class ClaudiaCobrancas {
             
             const result = await response.json();
             
-            if (result.success) {
-                this.showNotification('✅ Código enviado! Use 123456', 'success');
+                        if (result.success) {
+                this.showNotification('✅ Código enviado! Verifique seu WhatsApp', 'success');
             } else {
                 this.showNotification(`❌ Erro: ${result.error}`, 'error');
             }
@@ -840,14 +840,14 @@ class ClaudiaCobrancas {
         try {
             const response = await fetch('/api/waha/disconnect', {
                 method: 'POST'
-            });
+                });
+                
+                const result = await response.json();
             
-            const result = await response.json();
-            
-            if (result.success) {
+                if (result.success) {
                 this.showNotification('✅ WhatsApp desconectado', 'success');
                 this.updateStatus();
-            } else {
+                } else {
                 this.showNotification(`❌ Erro: ${result.error}`, 'error');
             }
         } catch (error) {
@@ -914,7 +914,7 @@ class ClaudiaCobrancas {
                     <span>${new Date(msg.timestamp).toLocaleString()}</span>
                 </div>
                 <div class="message-content">${msg.message}</div>
-            </div>
+                        </div>
         `).join('');
     }
     
@@ -958,3 +958,4 @@ class ClaudiaCobrancas {
 document.addEventListener('DOMContentLoaded', () => {
     window.claudia = new ClaudiaCobrancas();
 });
+ 

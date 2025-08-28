@@ -54,7 +54,7 @@ from core.whatsapp_client import WAHAWhatsAppClient
 from config import Config, CLAUDIA_CONFIG
 
 # Importar servidor WAHA embutido
-from waha_server import waha_server
+from waha_real_server import waha_server
 
 # Inicializar FastAPI
 app = FastAPI(
@@ -64,7 +64,7 @@ app = FastAPI(
 )
 
 # Integrar servidor WAHA embutido
-waha_app = waha_server.get_app()
+waha_app = waha_server.app
 
 # Montar aplicação WAHA em subpath
 from fastapi import APIRouter

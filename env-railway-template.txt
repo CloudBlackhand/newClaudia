@@ -53,6 +53,19 @@ WAHA_MAX_RETRIES=3
 WAHA_AUTO_RECONNECT=True
 
 # ================================
+# 📱 CONFIGURAÇÕES DE SMS
+# ================================
+SMS_PROVIDER=console
+# Para Twilio:
+# TWILIO_ACCOUNT_SID=your_account_sid
+# TWILIO_AUTH_TOKEN=your_auth_token
+# TWILIO_PHONE_NUMBER=+1234567890
+# Para AWS SNS:
+# AWS_ACCESS_KEY_ID=your_access_key
+# AWS_SECRET_ACCESS_KEY=your_secret_key
+# AWS_SNS_PHONE_NUMBER=+1234567890
+
+# ================================
 # 💾 CONFIGURAÇÕES DE ARMAZENAMENTO
 # ================================
 MAX_STORAGE_SIZE=52428800
