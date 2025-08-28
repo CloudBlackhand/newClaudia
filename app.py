@@ -253,7 +253,8 @@ async def waha_connect(request: Request):
     """Conectar ao WAHA com código e número"""
     try:
         data = await request.json()
-        waha_url = data.get("waha_url", "http://localhost:8000/waha")
+        base_url = os.getenv('BASE_URL', 'http://localhost:8000')
+        waha_url = data.get("waha_url", f"{base_url}/waha")
         phone_number = data.get("phone_number")
         code = data.get("code")
         

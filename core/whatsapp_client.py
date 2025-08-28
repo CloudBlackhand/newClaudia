@@ -21,7 +21,8 @@ class WAHAWhatsAppClient:
     
     def __init__(self, waha_url: str = None):
         # Usar servidor WAHA embutido
-        self.waha_url = waha_url or os.getenv('WAHA_URL', 'http://localhost:8000/waha')
+        base_url = os.getenv('BASE_URL', 'http://localhost:8000')
+        self.waha_url = waha_url or f"{base_url}/waha"
         self.session = requests.Session()
         self.is_connected = False
         self.instance_id = None

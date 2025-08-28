@@ -75,6 +75,7 @@ ENABLE_REQUEST_LIMITING=True
 # ================================
 # 🌐 URLs DO SISTEMA
 # ================================
+BASE_URL=https://bot-cobranca-production.up.railway.app
 SAC_URL=https://sac.desktop.com.br/Cliente_Documento.jsp
 SUPPORT_EMAIL=cobranca@desktop.com.br
 WEBSITE_URL=https://sac.desktop.com.br
