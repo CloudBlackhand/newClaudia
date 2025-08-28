@@ -108,8 +108,8 @@ async def health_check():
     return {
         "status": "healthy",
         "timestamp": datetime.now().isoformat(),
-        "version": "2.2",
-        "bot_active": system_state["bot_active"],
+            "version": "2.2",
+            "bot_active": system_state["bot_active"],
         "waha_url": os.getenv("WAHA_URL", "Não configurado")
     }
 
@@ -133,7 +133,8 @@ async def waha_webhook(request: Request):
             logger.info(f"💬 Mensagem do WhatsApp: {phone} -> {message}")
             
             # Processar com engine de conversação
-            response = conversation_engine.process_message(message)
+            result = conversation_engine.process_message(message, {})
+            response = result.get("response", "Desculpe, não entendi.")
             
             # Atualizar estatísticas
             system_state["stats"]["messages_processed"] += 1
@@ -144,7 +145,7 @@ async def waha_webhook(request: Request):
             logger.info(f"✅ Resposta enviada para {phone}: {response}")
             
         return {"success": True}
-        
+            
     except Exception as e:
         logger.error(f"❌ Erro no webhook: {e}")
         return {"success": False, "error": str(e)}
@@ -173,11 +174,11 @@ async def send_waha_response(phone: str, message: str):
                 json=response_data,
                 headers=headers,
                 timeout=30.0
-            )
-            
-            if response.status_code == 200:
+        )
+        
+        if response.status_code == 200:
                 logger.info(f"✅ Resposta enviada com sucesso para {phone}")
-            else:
+        else:
                 logger.error(f"❌ Erro ao enviar resposta: {response.status_code} - {response.text}")
             
     except Exception as e:
@@ -472,7 +473,7 @@ async def reject_auth(request_id: str):
             return {"success": True, "message": "Acesso rejeitado"}
         else:
             return {"success": False, "message": "Solicitação não encontrada"}
-            
+        
     except Exception as e:
         logger.error(f"Erro ao rejeitar auth: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -493,8 +494,8 @@ def validate_session(token: str) -> bool:
 @app.get("/api/stats")
 async def get_stats():
     """Obter estatísticas do sistema"""
-    return {
-        "success": True,
+            return {
+                "success": True,
         "stats": system_state["stats"],
         "bot_active": system_state["bot_active"],
         "waha_url": os.getenv("WAHA_URL", "Não configurado"),
@@ -512,7 +513,8 @@ async def test_conversation(request: Request):
             raise HTTPException(status_code=400, detail="Mensagem é obrigatória")
         
         # Processar com engine de conversação
-        response = conversation_engine.process_message(message)
+        result = conversation_engine.process_message(message, {})
+        response = result.get("response", "Desculpe, não entendi.")
         
         # Atualizar estatísticas
         system_state["stats"]["messages_processed"] += 1
@@ -537,9 +539,9 @@ async def get_logs():
             {"timestamp": datetime.now().isoformat(), "level": "INFO", "message": "Bot ativo"},
             {"timestamp": datetime.now().isoformat(), "level": "INFO", "message": f"WAHA URL: {os.getenv('WAHA_URL', 'Não configurado')}"}
         ]
-        
-        return {
-            "success": True,
+            
+            return {
+                "success": True,
             "logs": logs
         }
         
