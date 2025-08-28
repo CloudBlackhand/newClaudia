@@ -1,161 +1,192 @@
-# 🤖 Claudia Cobranças - Sistema de Cobrança da Desktop
+# 🤖 Claudia Cobranças - Bot de Conversação Inteligente
 
-Sistema oficial de cobrança da Desktop, otimizado para Railway e totalmente funcional.
+Bot inteligente de conversação da Desktop, focado em entender e responder às pessoas de forma natural e eficiente.
 
-## 🚀 Características Principais
+## 🚀 **CARACTERÍSTICAS PRINCIPAIS**
 
-### 🧠 **ENGINE DE CONVERSAÇÃO ULTRA INTELIGENTE**
-- **Entendimento Natural:** Compreende QUALQUER cliente, mesmo com erros graves
-- **Correção Automática:** Corrige português mal escrito automaticamente
-- **Detecção de Intenções:** Identifica pedidos de fatura, valor, vencimento, etc.
-- **Respostas Contextuais:** Adapta respostas ao estado emocional do cliente
+### 🧠 **BOT DE CONVERSAÇÃO INTELIGENTE**
+- **Detecção de Intenções:** Identifica pedidos, dúvidas, solicitações
+- **Respostas Contextuais:** Mantém contexto da conversa
+- **Processamento Natural:** Entende linguagem coloquial
+- **Múltiplas Intenções:** Detecta intenções combinadas
 
-### 📊 **PROCESSAMENTO DE EXCEL**
-- **Upload de Arquivos:** Suporte para .xlsx e .xls
-- **Extração Inteligente:** Detecta automaticamente colunas relevantes
-- **Validação de Dados:** Verifica CPF, telefones, valores
-- **Processamento em Lote:** Otimizado para grandes volumes
+### 🔐 **SISTEMA DE AUTENTICAÇÃO**
+- **Login Seguro:** Sistema de autenticação manual
+- **Sessões Ativas:** Controle de acesso por token
+- **Timeout Configurável:** Sessões com expiração automática
 
-### 🔐 **SISTEMA DE LOGIN ULTRA SEGURO**
-- **Aprovação Manual:** Zero possibilidade de ataques de força bruta
-- **Controle Total:** Cada tentativa precisa de aprovação humana
-- **Logs Detalhados:** Registro completo de todas as tentativas
-- **Interface Web:** Dashboard moderno e responsivo
+### 🌐 **INTERFACE WEB**
+- **Dashboard Moderno:** Interface responsiva e intuitiva
+- **Teste de Conversação:** Teste direto do bot
+- **Logs em Tempo Real:** Monitoramento de atividades
+- **Status do Sistema:** Informações em tempo real
 
-### 🚂 **OTIMIZADO PARA RAILWAY**
-- **Performance Máxima:** Configurado para plano $5/mês
-- **Healthcheck Robusto:** Endpoint `/health` para monitoramento
-- **Startup Rápido:** Inicialização otimizada
-- **Recursos Controlados:** Sistema econômico de recursos
-
-## 📋 Funcionalidades Completas
-
-### 🤖 **BOT DE COBRANÇA**
-- Entende QUALQUER cliente (mesmo os mais burros)
-- Respostas personalizadas por contexto
-- Detecção emocional avançada
-- Sistema de conversação contextual
-
-### 📄 **DOWNLOAD DE FATURAS**
-- Integração com SAC Desktop (sac.desktop.com.br)
-- Anti-captcha funcional
-- Download automático
-- Sistema Playwright
-
-### 🔒 **SEGURANÇA MÁXIMA**
-- Sistema de login com aprovação manual
-- Middleware de autenticação
-- Proteção contra ataques
-- Logs detalhados
-
-## 🛠️ Arquivos Principais
+## 📁 **ESTRUTURA DO PROJETO**
 
 ```
-├── app.py                      # Aplicação FastAPI completa
-├── config.py                   # Configurações
-├── requirements.txt            # Dependências otimizadas
-├── Procfile                   # Comando Railway
-├── railway.toml               # Config Railway
-├── runtime.txt                # Python 3.11.7
-├── railway_startup.py         # Startup otimizado
-├── web/
-│   ├── static/
-│   │   ├── app.js            # Frontend JavaScript
-│   │   ├── style.css         # Estilos CSS
-│   │   └── login.js          # Sistema de login
-└── core/
-    ├── conversation.py       # 🧠 ENGINE ULTRA INTELIGENTE
-    ├── excel_processor.py    # Processamento Excel
-    ├── fatura_downloader.py  # Download faturas Desktop
-    ├── captcha_solver.py     # Anti-captcha
-    ├── storage_manager.py    # Gerenciamento de arquivos
-    ├── monitoring.py         # Monitoramento do sistema
-    ├── performance.py        # Otimizações
-    ├── security.py           # Segurança
-    └── logger.py             # Sistema de logs
+claudia-cobrancas/
+├── app.py                 # Aplicação principal FastAPI
+├── config.py              # Configurações do sistema
+├── railway_startup.py     # Script de inicialização Railway
+├── install_railway.py     # Instalação de dependências
+├── requirements.txt       # Dependências completas
+├── requirements_minimal.txt # Dependências essenciais
+├── Dockerfile            # Container Docker
+├── Procfile              # Configuração Railway
+├── railway.toml          # Configuração Railway
+├── core/
+│   ├── __init__.py       # Inicialização dos módulos
+│   └── conversation.py   # Engine de conversação
+└── web/
+    └── static/
+        ├── app.js        # Interface JavaScript
+        ├── style.css     # Estilos CSS
+        └── icon.png      # Ícone do sistema
 ```
 
-## 🚀 Deploy Railway
+## 🚂 **DEPLOY NO RAILWAY**
 
-### 🔧 **Configuração Rápida:**
-
-1. **Fork/Clone o repositório**
-2. **Deploy no Railway:**
-   ```bash
-   # Railway detectará automaticamente:
-   # - Python 3.11.7
-   # - Comando: python railway_startup.py
-   # - Porta: $PORT
-   ```
-
-3. **Configure variáveis de ambiente:**
-   ```bash
-   RAILWAY_DEPLOY=True
-   SECRET_KEY=sua-chave-secreta-aqui
-   DEBUG=False
-   ```
-
-4. **Acesse o sistema:**
-   ```
-   https://seu-app.railway.app
-   ```
-
-### 📊 **Monitoramento:**
-- **Healthcheck:** `https://seu-app.railway.app/health`
-- **Dashboard:** `https://seu-app.railway.app/`
-- **Logs:** Via Railway Dashboard
-
-## 🎯 **Resultado Final**
-
-### ✅ **CLAUDIA COBRANÇAS - BOT PERFEITO PARA CLIENTES BURROS**
-
-* Entende QUALQUER texto mal escrito
-* Corrige português automaticamente
-* Detecta intenções mesmo com erros graves
-* Respostas ultra inteligentes e contextuais
-
-### 🔐 **SEGURANÇA IMPOSSÍVEL DE QUEBRAR**
-
-* Login com aprovação manual
-* Zero possibilidade de força bruta
-* Controle total do administrador
-
-### 💻 **SISTEMA COMPLETO E OTIMIZADO**
-
-* Pronto para Railway
-* Performance máxima
-* Custos controlados
-* Zero dependências desnecessárias
-* **HEALTHCHECK FUNCIONANDO PERFEITAMENTE!**
-
-## 🔧 Desenvolvimento Local
-
-### **Instalação:**
+### **1. Preparação**
 ```bash
 # Clone o repositório
-git clone https://github.com/CloudBlackhand/Bot-cobranca.git
-cd Bot-cobranca
+git clone https://github.com/seu-usuario/claudia-cobrancas.git
+cd claudia-cobrancas
 
-# Instale dependências
-pip install -r requirements.txt
-
-# Execute localmente
+# Verifique se está tudo pronto
 python railway_startup.py
 ```
 
-### **Acesso:**
-- **Sistema:** http://localhost:8000
-- **Healthcheck:** http://localhost:8000/health
+### **2. Deploy no Railway**
+1. **Conecte ao Railway:**
+   ```bash
+   railway login
+   railway init
+   ```
 
-## 📝 Licença
+2. **Configure as variáveis de ambiente:**
+   ```bash
+   railway variables set RAILWAY_DEPLOY=True
+   railway variables set DEBUG=False
+   ```
 
-Sistema proprietário da Desktop - Todos os direitos reservados.
+3. **Faça o deploy:**
+   ```bash
+   railway up
+   ```
+
+### **3. Configuração Pós-Deploy**
+1. **Acesse o dashboard:** `https://seu-app.railway.app`
+2. **Teste o bot:** Use a seção de conversação
+3. **Monitore logs:** Verifique a seção de logs
+
+## 🔧 **DESENVOLVIMENTO LOCAL**
+
+### **Instalação**
+```bash
+# Criar ambiente virtual
+python -m venv venv
+source venv/bin/activate  # Linux/Mac
+# ou
+venv\Scripts\activate     # Windows
+
+# Instalar dependências
+pip install -r requirements.txt
+
+# Executar
+python app.py
+```
+
+### **Testes**
+```bash
+# Testar conversação
+curl -X POST http://localhost:8000/api/conversation/test \
+  -H "Content-Type: application/json" \
+  -d '{"message": "quanto eu devo?"}'
+
+# Verificar status
+curl http://localhost:8000/health
+```
+
+## 📊 **API ENDPOINTS**
+
+### **Conversação**
+- `POST /api/conversation/test` - Testar conversação
+
+### **Sistema**
+- `GET /health` - Healthcheck
+- `GET /api/stats` - Estatísticas
+- `GET /api/logs` - Logs do sistema
+
+### **Autenticação**
+- `POST /api/auth/request` - Solicitar login
+- `GET /api/auth/status/{id}` - Status da solicitação
+- `GET /api/auth/approve/{id}` - Aprovar acesso
+- `GET /api/auth/reject/{id}` - Rejeitar acesso
+
+## 🎯 **CONFIGURAÇÕES**
+
+### **Variáveis de Ambiente**
+```bash
+RAILWAY_DEPLOY=True      # Modo Railway
+DEBUG=False             # Modo debug
+PORT=8000              # Porta do servidor
+SECRET_KEY=chave-secreta # Chave de segurança
+```
+
+### **Configurações de Performance**
+- **Workers:** 1 (Railway) / 4 (Desenvolvimento)
+- **Timeout:** 30s (Railway) / 60s (Desenvolvimento)
+- **Cache:** Habilitado no Railway
+- **Compressão:** Ativa no Railway
+
+## 🔍 **MONITORAMENTO**
+
+### **Logs**
+- Logs em tempo real via interface web
+- Níveis: INFO, WARNING, ERROR
+- Rotação automática
+
+### **Métricas**
+- Mensagens processadas
+- Conversações ativas
+- Status do bot
+- Performance do sistema
+
+## 🛠️ **TECNOLOGIAS**
+
+- **Backend:** FastAPI + Python 3.11
+- **Frontend:** JavaScript + Bootstrap 5
+- **Deploy:** Railway
+- **Container:** Docker
+- **Processamento:** Engine de conversação customizada
+
+## 📈 **ROADMAP**
+
+- [ ] Integração com WhatsApp (WAHA)
+- [ ] Machine Learning para melhorar respostas
+- [ ] Sistema de notificações
+- [ ] Analytics avançado
+- [ ] Multi-idioma
+
+## 🤝 **CONTRIBUIÇÃO**
+
+1. Fork o projeto
+2. Crie uma branch para sua feature
+3. Commit suas mudanças
+4. Push para a branch
+5. Abra um Pull Request
+
+## 📄 **LICENÇA**
+
+Este projeto está sob a licença MIT. Veja o arquivo LICENSE para mais detalhes.
+
+## 📞 **SUPORTE**
+
+- **Email:** cobranca@desktop.com.br
+- **Website:** https://sac.desktop.com.br
+- **Documentação:** Este README
 
 ---
 
-> 🚀 **CLAUDIA COBRANÇAS - SISTEMA FINALIZADO!**
-> 
-> **O BOT DE COBRANÇA MAIS INTELIGENTE DA DESKTOP!**
-> 
-> Capaz de entender QUALQUER cliente, por mais burro que seja! 🧠⚡
+**Desenvolvido com ❤️ pela Desktop**
  
