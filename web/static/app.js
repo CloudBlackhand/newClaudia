@@ -997,39 +997,83 @@ class BlacktemplarBot {
         modal.className = 'modal fade';
         modal.id = 'wahaModal';
         modal.innerHTML = `
-            <div class="modal-dialog">
+            <div class="modal-dialog modal-lg">
                 <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">📱 Configurar WAHA</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    <div class="modal-header bg-primary text-white">
+                        <h5 class="modal-title">📱 Configurar WAHA - Claudia Cobranças</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body">
-                        <div class="mb-3">
-                            <label class="form-label">URL do WAHA:</label>
-                            <input type="text" id="wahaUrl" class="form-control" 
-                                   placeholder="http://localhost:8000/waha" 
-                                   value="http://localhost:8000/waha">
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Número do WhatsApp:</label>
-                            <input type="text" id="phoneNumber" class="form-control" 
-                                   placeholder="5511999999999">
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Código de Verificação:</label>
-                            <div class="input-group">
-                                <input type="text" id="verificationCode" class="form-control" 
-                                       placeholder="123456" maxlength="6">
-                                <button class="btn btn-outline-primary" onclick="window.blacktemplarBot.sendCode()">
-                                    Enviar Código
+                        <!-- Status do WAHA -->
+                        <div class="alert alert-info mb-3">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <i class="fas fa-info-circle"></i>
+                                    <strong>WAHA Embutido:</strong> O servidor WAHA está integrado nesta aplicação.
+                                </div>
+                                <button class="btn btn-sm btn-outline-info" onclick="window.blacktemplarBot.testWahaConnection()">
+                                    <i class="fas fa-wifi"></i> Testar Conexão
                                 </button>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label"><i class="fas fa-link"></i> URL do WAHA:</label>
+                                    <input type="text" id="wahaUrl" class="form-control" 
+                                           placeholder="http://localhost:8000/waha" 
+                                           value="http://localhost:8000/waha" readonly>
+                                    <small class="text-muted">URL automática do WAHA embutido</small>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label"><i class="fas fa-mobile-alt"></i> Número do WhatsApp:</label>
+                                    <input type="text" id="phoneNumber" class="form-control" 
+                                           placeholder="5511999999999">
+                                    <small class="text-muted">Digite seu número com código do país</small>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label"><i class="fas fa-key"></i> Código de Verificação:</label>
+                                    <div class="input-group">
+                                        <input type="text" id="verificationCode" class="form-control" 
+                                               placeholder="123456" maxlength="6" value="123456">
+                                        <button class="btn btn-outline-primary" onclick="window.blacktemplarBot.sendCode()">
+                                            <i class="fas fa-paper-plane"></i> Enviar
+                                        </button>
+                                    </div>
+                                    <small class="text-success"><i class="fas fa-check-circle"></i> Código fixo: <strong>123456</strong></small>
+                                </div>
+                                
+                                <div class="alert alert-warning">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                    <strong>Importante:</strong> Use o código <strong>123456</strong> para conectar.
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Instruções -->
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <h6><i class="fas fa-list-ol"></i> Como conectar:</h6>
+                                <ol class="mb-0">
+                                    <li>Digite seu número do WhatsApp</li>
+                                    <li>Clique em "Enviar Código"</li>
+                                    <li>Use o código <strong>123456</strong></li>
+                                    <li>Clique em "Conectar"</li>
+                                </ol>
                             </div>
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="button" class="btn btn-primary" onclick="window.blacktemplarBot.connectWAHA()">
-                            Conectar
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="fas fa-times"></i> Cancelar
+                        </button>
+                        <button type="button" class="btn btn-success" onclick="window.blacktemplarBot.connectWAHA()">
+                            <i class="fas fa-plug"></i> Conectar WhatsApp
                         </button>
                     </div>
                 </div>
@@ -1056,6 +1100,12 @@ class BlacktemplarBot {
             return;
         }
         
+        // Validar formato do número
+        if (!phoneNumber.match(/^\d{10,15}$/)) {
+            this.showNotification('❌ Número inválido. Use apenas números (ex: 5511999999999)', 'error');
+            return;
+        }
+        
         this.showProgress('Enviando código...');
         
         try {
@@ -1068,7 +1118,14 @@ class BlacktemplarBot {
             const result = await response.json();
             
             if (result.success) {
-                this.showNotification('✅ Código enviado! Verifique seu WhatsApp', 'success');
+                this.showNotification('✅ Código enviado! Use o código 123456 para conectar', 'success');
+                
+                // Destacar o campo de código
+                const codeField = document.getElementById('verificationCode');
+                if (codeField) {
+                    codeField.focus();
+                    codeField.select();
+                }
             } else {
                 this.showNotification(`❌ Erro: ${result.error}`, 'error');
             }
@@ -1090,7 +1147,13 @@ class BlacktemplarBot {
             return;
         }
         
-        this.showProgress('Conectando ao WAHA...');
+        // Validar código
+        if (code !== '123456') {
+            this.showNotification('❌ Código inválido. Use 123456', 'error');
+            return;
+        }
+        
+        this.showProgress('Conectando ao WhatsApp...');
         
         try {
             const response = await fetch('/api/waha/connect', {
@@ -1109,11 +1172,22 @@ class BlacktemplarBot {
                 if (result.connected) {
                     this.showNotification('✅ WhatsApp conectado com sucesso!', 'success');
                     this.updateSystemStatus();
+                    
                     // Fechar modal
                     const modal = bootstrap.Modal.getInstance(document.getElementById('wahaModal'));
-                    modal.hide();
-                } else {
+                    if (modal) {
+                        modal.hide();
+                    }
+                    
+                    // Atualizar status do card WhatsApp
+                    setTimeout(() => {
+                        this.updateSystemStatus();
+                    }, 1000);
+                    
+                } else if (result.waiting) {
                     this.showNotification('📱 Aguardando conexão...', 'info');
+                } else {
+                    this.showNotification('❌ Falha na conexão', 'error');
                 }
             } else {
                 this.showNotification(`❌ Erro: ${result.error}`, 'error');
@@ -1257,10 +1331,36 @@ class BlacktemplarBot {
             try {
                 const response = await fetch('/api/waha/status');
                 const wahaStatus = await response.json();
-                this.updateStatusCard('whatsapp', wahaStatus.connected);
+                
+                if (wahaStatus.waha_available) {
+                    this.updateStatusCard('whatsapp', wahaStatus.connected);
+                } else {
+                    this.updateStatusCard('whatsapp', false);
+                    console.warn('WAHA não disponível:', wahaStatus.error);
+                }
             } catch (error) {
                 console.error('Erro ao verificar status WAHA:', error);
+                this.updateStatusCard('whatsapp', false);
             }
+        }
+    }
+    
+    async testWahaConnection() {
+        // Testar conexão com WAHA embutido
+        try {
+            const response = await fetch('/waha-test');
+            const result = await response.json();
+            
+            if (result.waha === 'available') {
+                this.showNotification('✅ WAHA embutido funcionando!', 'success');
+                return true;
+            } else {
+                this.showNotification(`❌ WAHA não disponível: ${result.error}`, 'error');
+                return false;
+            }
+        } catch (error) {
+            this.showNotification(`❌ Erro ao testar WAHA: ${error.message}`, 'error');
+            return false;
         }
     }
     
