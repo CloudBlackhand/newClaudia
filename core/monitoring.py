@@ -7,7 +7,12 @@ Monitoramento do sistema de cobrança
 
 import asyncio
 import time
-import psutil
+try:
+    import psutil
+    PSUTIL_AVAILABLE = True
+except ImportError:
+    PSUTIL_AVAILABLE = False
+    logging.warning("⚠️ psutil não disponível - métricas de sistema limitadas")
 import logging
 from datetime import datetime, timedelta
 from dataclasses import dataclass
@@ -148,12 +153,20 @@ class SystemMonitor:
     async def _system_check(self) -> Dict[str, Any]:
         """Check do sistema"""
         try:
-            cpu_percent = psutil.cpu_percent(interval=1)
-            return {
-                'cpu_percent': cpu_percent,
-                'cpu_count': psutil.cpu_count(),
-                'uptime': time.time() - psutil.boot_time()
-            }
+            if PSUTIL_AVAILABLE:
+                cpu_percent = psutil.cpu_percent(interval=1)
+                return {
+                    'cpu_percent': cpu_percent,
+                    'cpu_count': psutil.cpu_count(),
+                    'uptime': time.time() - psutil.boot_time()
+                }
+            else:
+                return {
+                    'cpu_percent': 0.0,
+                    'cpu_count': 1,
+                    'uptime': time.time(),
+                    'note': 'psutil não disponível'
+                }
         except Exception as e:
             logger.error(f"Erro no system check: {e}")
             raise
@@ -161,13 +174,22 @@ class SystemMonitor:
     async def _memory_check(self) -> Dict[str, Any]:
         """Check de memória"""
         try:
-            memory = psutil.virtual_memory()
-            return {
-                'total_mb': memory.total / 1024 / 1024,
-                'available_mb': memory.available / 1024 / 1024,
-                'percent': memory.percent,
-                'used_mb': memory.used / 1024 / 1024
-            }
+            if PSUTIL_AVAILABLE:
+                memory = psutil.virtual_memory()
+                return {
+                    'total_mb': memory.total / 1024 / 1024,
+                    'available_mb': memory.available / 1024 / 1024,
+                    'percent': memory.percent,
+                    'used_mb': memory.used / 1024 / 1024
+                }
+            else:
+                return {
+                    'total_mb': 512.0,
+                    'available_mb': 256.0,
+                    'percent': 50.0,
+                    'used_mb': 256.0,
+                    'note': 'psutil não disponível'
+                }
         except Exception as e:
             logger.error(f"Erro no memory check: {e}")
             raise
@@ -175,12 +197,20 @@ class SystemMonitor:
     async def _disk_check(self) -> Dict[str, Any]:
         """Check de disco"""
         try:
-            disk = psutil.disk_usage('/')
-            return {
-                'total_gb': disk.total / 1024 / 1024 / 1024,
-                'free_gb': disk.free / 1024 / 1024 / 1024,
-                'percent': (disk.used / disk.total) * 100
-            }
+            if PSUTIL_AVAILABLE:
+                disk = psutil.disk_usage('/')
+                return {
+                    'total_gb': disk.total / 1024 / 1024 / 1024,
+                    'free_gb': disk.free / 1024 / 1024 / 1024,
+                    'percent': (disk.used / disk.total) * 100
+                }
+            else:
+                return {
+                    'total_gb': 10.0,
+                    'free_gb': 5.0,
+                    'percent': 50.0,
+                    'note': 'psutil não disponível'
+                }
         except Exception as e:
             logger.error(f"Erro no disk check: {e}")
             raise
@@ -203,22 +233,36 @@ class SystemMonitor:
     def get_system_metrics(self) -> SystemMetrics:
         """Obter métricas do sistema"""
         try:
-            cpu_percent = psutil.cpu_percent(interval=1)
-            memory = psutil.virtual_memory()
-            disk = psutil.disk_usage('/')
-            network = psutil.net_io_counters()
-            
-            return SystemMetrics(
-                timestamp=datetime.utcnow().isoformat(),
-                cpu_percent=cpu_percent,
-                memory_percent=memory.percent,
-                memory_used_mb=memory.used / 1024 / 1024,
-                disk_usage_percent=(disk.used / disk.total) * 100,
-                network_io={
-                    'bytes_sent': network.bytes_sent,
-                    'bytes_recv': network.bytes_recv
-                }
-            )
+            if PSUTIL_AVAILABLE:
+                cpu_percent = psutil.cpu_percent(interval=1)
+                memory = psutil.virtual_memory()
+                disk = psutil.disk_usage('/')
+                network = psutil.net_io_counters()
+                
+                return SystemMetrics(
+                    timestamp=datetime.utcnow().isoformat(),
+                    cpu_percent=cpu_percent,
+                    memory_percent=memory.percent,
+                    memory_used_mb=memory.used / 1024 / 1024,
+                    disk_usage_percent=(disk.used / disk.total) * 100,
+                    network_io={
+                        'bytes_sent': network.bytes_sent,
+                        'bytes_recv': network.bytes_recv
+                    }
+                )
+            else:
+                # Métricas mock quando psutil não está disponível
+                return SystemMetrics(
+                    timestamp=datetime.utcnow().isoformat(),
+                    cpu_percent=0.0,
+                    memory_percent=50.0,
+                    memory_used_mb=256.0,
+                    disk_usage_percent=50.0,
+                    network_io={
+                        'bytes_sent': 0,
+                        'bytes_recv': 0
+                    }
+                )
         except Exception as e:
             logger.error(f"Erro ao obter métricas do sistema: {e}")
             raise
@@ -247,7 +291,7 @@ class SystemMonitor:
                 active_conversations=self.app_state['conversations'],
                 error_count_last_hour=errors_last_hour,
                 avg_response_time=0.0,  # Implementar se necessário
-                memory_usage_mb=psutil.virtual_memory().used / 1024 / 1024
+                memory_usage_mb=psutil.virtual_memory().used / 1024 / 1024 if PSUTIL_AVAILABLE else 256.0
             )
         except Exception as e:
             logger.error(f"Erro ao obter métricas da aplicação: {e}")

@@ -29,6 +29,25 @@ def create_directories():
         os.makedirs(dir_name, exist_ok=True)
     print("✅ Diretórios criados")
 
+def install_dependencies():
+    """Instalar dependências se necessário"""
+    try:
+        # Tentar importar dependências essenciais
+        import fastapi
+        import uvicorn
+        import requests
+        print("✅ Dependências essenciais já instaladas")
+        return True
+    except ImportError:
+        print("📦 Instalando dependências essenciais...")
+        try:
+            import subprocess
+            subprocess.check_call([sys.executable, "install_railway.py"])
+            return True
+        except Exception as e:
+            print(f"❌ Erro ao instalar dependências: {e}")
+            return False
+
 def main():
     """Inicialização otimizada para Railway"""
     print("🚀 Iniciando Claudia Cobranças - Railway Mode")
@@ -42,6 +61,11 @@ def main():
     
     # Criar diretórios imediatamente
     create_directories()
+    
+    # Instalar dependências se necessário
+    if not install_dependencies():
+        print("❌ Falha na instalação de dependências")
+        sys.exit(1)
     
     # Configurações do servidor
     config = {

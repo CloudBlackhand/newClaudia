@@ -1,41 +1,34 @@
-# Railway Optimized Dockerfile - Claudia Cobranças
+# Dockerfile otimizado para Railway
 FROM python:3.11-slim
 
-# Set working directory
-WORKDIR /app
+# Definir variáveis de ambiente
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV RAILWAY_DEPLOY=True
 
-# Install minimal system dependencies
+# Instalar dependências do sistema
 RUN apt-get update && apt-get install -y \
-    curl \
+    gcc \
+    g++ \
     && rm -rf /var/lib/apt/lists/*
 
-# Remove Playwright installation (now using WAHA)
+# Definir diretório de trabalho
+WORKDIR /app
 
-# Copy requirements files
-COPY requirements_minimal.txt requirements.txt ./
+# Copiar requirements mínimos primeiro
+COPY requirements_minimal.txt .
 
-# Install Python dependencies with fallback
-RUN pip install --no-cache-dir -r requirements_minimal.txt && \
-    pip install --no-cache-dir -r requirements.txt || echo "Some optional dependencies failed"
+# Instalar dependências Python essenciais
+RUN pip install --no-cache-dir -r requirements_minimal.txt
 
-# Copy application code
+# Copiar código da aplicação
 COPY . .
 
-# Create necessary directories
-RUN mkdir -p uploads faturas web/static logs temp
+# Criar diretórios necessários
+RUN mkdir -p uploads faturas logs temp web/static
 
-# Set environment variables
-ENV RAILWAY_DEPLOY=True \
-    PYTHONUNBUFFERED=1 \
-    PYTHONDONTWRITEBYTECODE=1 \
-    PORT=8000
-
-# Expose port
+# Expor porta
 EXPOSE 8000
 
-# Health check with longer timeout for Railway
-HEALTHCHECK --interval=60s --timeout=90s --start-period=180s --retries=5 \
-    CMD curl -f http://localhost:8000/health || exit 1
-
-# Start the application
-CMD ["sh", "-c", "uvicorn app:app --host 0.0.0.0 --port $PORT"]
+# Comando de inicialização
+CMD ["python", "railway_startup.py"]

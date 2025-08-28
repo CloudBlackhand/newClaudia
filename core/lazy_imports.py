@@ -32,11 +32,35 @@ except ImportError:
     REQUESTS_AVAILABLE = False
     logger.warning("⚠️ Requests não disponível")
 
+try:
+    import psutil
+    PSUTIL_AVAILABLE = True
+except ImportError:
+    PSUTIL_AVAILABLE = False
+    logger.warning("⚠️ psutil não disponível")
+
+try:
+    import playwright
+    PLAYWRIGHT_AVAILABLE = True
+except ImportError:
+    PLAYWRIGHT_AVAILABLE = False
+    logger.warning("⚠️ playwright não disponível")
+
+try:
+    import speech_recognition
+    SPEECH_AVAILABLE = True
+except ImportError:
+    SPEECH_AVAILABLE = False
+    logger.warning("⚠️ speech_recognition não disponível")
+
 # Status de disponibilidade
 MODULE_STATUS = {
     "pandas": PANDAS_AVAILABLE,
     "openpyxl": OPENPYXL_AVAILABLE,
-    "requests": REQUESTS_AVAILABLE
+    "requests": REQUESTS_AVAILABLE,
+    "psutil": PSUTIL_AVAILABLE,
+    "playwright": PLAYWRIGHT_AVAILABLE,
+    "speech_recognition": SPEECH_AVAILABLE
 }
 
 class LazyExcelProcessor:
