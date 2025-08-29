@@ -165,8 +165,8 @@ async def send_waha_response(phone: str, message: str):
         return
     
     try:
-        # Endpoint correto do WAHA Core
-        endpoint = f"https://{waha_url}/api/sessions/default/messages/text"
+        # Endpoint para WEBJS (já que Baileys não está funcionando)
+        endpoint = f"https://{waha_url}/api/sendText"
         
         # SOLUÇÃO TEMPORÁRIA: Simular resposta no log
         logger.info(f"🎯 RESPOSTA SIMULADA: {message}")
@@ -176,9 +176,10 @@ async def send_waha_response(phone: str, message: str):
         # Manter formato original do telefone (com @c.us)
         clean_phone = phone
         
-        # Formato correto do payload para WAHA Core
+        # Formato para WEBJS
         response_data = {
-            "chatId": clean_phone,
+            "session": "default",
+            "to": clean_phone,
             "text": message
         }
         
