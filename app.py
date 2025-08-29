@@ -181,6 +181,30 @@ async def send_waha_response(phone: str, message: str):
         logger.info(f"📱 Para: {phone}")
         logger.info(f"🤖 Bot Claudia respondeu: {message}")
         
+        # Tentar enviar resposta via API mais simples
+        try:
+            simple_response_data = {
+                "to": clean_phone,
+                "text": message
+            }
+            
+            async with httpx.AsyncClient() as client:
+                simple_response = await client.post(
+                    f"https://{waha_url}/api/sendText",
+                    json=simple_response_data,
+                    headers=headers,
+                    timeout=30.0
+                )
+                
+                if simple_response.status_code == 200:
+                    logger.info(f"✅ Resposta enviada com sucesso via método simples!")
+                    return
+                else:
+                    logger.warning(f"⚠️ Método simples retornou: {simple_response.status_code}")
+                    
+        except Exception as simple_error:
+            logger.warning(f"⚠️ Erro no método simples: {simple_error}")
+        
         # TODO: Resolver problema do Chromium no WAHA Core
         # Por enquanto, vamos apenas logar a resposta
         return
