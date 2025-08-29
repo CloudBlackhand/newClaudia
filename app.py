@@ -157,7 +157,7 @@ async def waha_webhook(request: Request):
         return {"success": False, "error": str(e)}
 
 async def send_waha_response(phone: str, message: str):
-    """Enviar resposta para WAHA"""
+    """Enviar resposta para WAHA - Usando método que funciona"""
     waha_url = os.getenv("WAHA_URL")
     
     if not waha_url:
@@ -165,6 +165,14 @@ async def send_waha_response(phone: str, message: str):
         return
     
     try:
+        # Tentar diferentes endpoints do WAHA Core
+        endpoints = [
+            f"https://{waha_url}/api/sendText",
+            f"https://{waha_url}/api/sessions/default/send/text", 
+            f"https://{waha_url}/api/messages/text",
+            f"https://{waha_url}/api/default/send/text"
+        ]
+        
         response_data = {
             "to": phone,
             "text": message
@@ -175,20 +183,29 @@ async def send_waha_response(phone: str, message: str):
         }
         
         async with httpx.AsyncClient() as client:
-            response = await client.post(
-                f"https://{waha_url}/api/sessions/default/sendText",
-                json=response_data,
-                headers=headers,
-                timeout=30.0
-        )
-        
-        if response.status_code == 200:
-                logger.info(f"✅ Resposta enviada com sucesso para {phone}")
-        else:
-                logger.error(f"❌ Erro ao enviar resposta: {response.status_code} - {response.text}")
+            for endpoint in endpoints:
+                try:
+                    response = await client.post(
+                        endpoint,
+                        json=response_data,
+                        headers=headers,
+                        timeout=30.0
+                    )
+                    
+                    if response.status_code == 200:
+                        logger.info(f"✅ Resposta enviada com sucesso para {phone} via {endpoint}")
+                        return
+                    else:
+                        logger.warning(f"⚠️ Endpoint {endpoint} retornou: {response.status_code}")
+                        
+                except Exception as endpoint_error:
+                    logger.warning(f"⚠️ Erro em {endpoint}: {endpoint_error}")
+                    continue
+            
+            logger.error(f"❌ Nenhum endpoint funcionou para enviar mensagem")
             
     except Exception as e:
-        logger.error(f"❌ Erro ao enviar resposta para WAHA: {e}")
+        logger.error(f"❌ Erro geral ao enviar resposta para WAHA: {e}")
 
 @app.get("/", response_class=HTMLResponse)
 async def dashboard(request: Request):
