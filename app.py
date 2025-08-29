@@ -209,8 +209,12 @@ async def send_waha_response(phone: str, message: str):
         # Por enquanto, vamos apenas logar a resposta
         return
         
-        # Limpar formato do telefone (remover @c.us se presente)
+        # Limpar formato do telefone (formato internacional)
         clean_phone = phone.replace("@c.us", "") if "@c.us" in phone else phone
+        
+        # Garantir formato internacional (adicionar 55 se não tiver)
+        if not clean_phone.startswith("55") and len(clean_phone) == 11:
+            clean_phone = "55" + clean_phone
         
         response_data = {
             "session": "default",
