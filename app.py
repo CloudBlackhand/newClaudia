@@ -181,12 +181,8 @@ async def send_waha_response(phone: str, message: str):
         logger.info(f"📱 Para: {phone}")
         logger.info(f"🤖 Bot Claudia respondeu: {message}")
         
-        # Limpar formato do telefone (formato internacional)
-        clean_phone = phone.replace("@c.us", "") if "@c.us" in phone else phone
-        
-        # Garantir formato internacional (adicionar 55 se não tiver)
-        if not clean_phone.startswith("55") and len(clean_phone) == 11:
-            clean_phone = "55" + clean_phone
+        # Manter formato original do telefone (com @c.us)
+        clean_phone = phone
         
         # Tentar enviar resposta via API mais simples
         try:
