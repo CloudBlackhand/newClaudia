@@ -166,12 +166,7 @@ async def send_waha_response(phone: str, message: str):
     
     try:
         # Endpoint correto para WEBJS (documentação oficial)
-        endpoint = f"https://{waha_url}/api/default/sendText"
-        
-        # SOLUÇÃO TEMPORÁRIA: Simular resposta no log
-        logger.info(f"🎯 RESPOSTA SIMULADA: {message}")
-        logger.info(f"📱 Para: {phone}")
-        logger.info(f"🤖 Bot Claudia respondeu: {message}")
+        endpoint = f"https://{waha_url}/api/sendText"
         
         # Manter formato original do telefone (com @c.us)
         clean_phone = phone
