@@ -174,7 +174,8 @@ async def send_waha_response(phone: str, message: str):
         ]
         
         response_data = {
-            "to": phone,
+            "session": "default",
+            "to": phone, 
             "text": message
         }
         
