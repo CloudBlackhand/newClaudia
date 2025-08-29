@@ -170,12 +170,18 @@ async def send_waha_response(phone: str, message: str):
             f"https://{waha_url}/api/sendText",
             f"https://{waha_url}/api/sessions/default/send/text", 
             f"https://{waha_url}/api/messages/text",
-            f"https://{waha_url}/api/default/send/text"
+            f"https://{waha_url}/api/default/send/text",
+            f"https://{waha_url}/api/sessions/default/messages/send",
+            f"https://{waha_url}/api/sessions/default/messages",
+            f"https://{waha_url}/api/messages/send"
         ]
+        
+        # Limpar formato do telefone (remover @c.us se presente)
+        clean_phone = phone.replace("@c.us", "") if "@c.us" in phone else phone
         
         response_data = {
             "session": "default",
-            "to": phone, 
+            "to": clean_phone, 
             "text": message
         }
         
