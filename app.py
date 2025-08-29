@@ -123,9 +123,27 @@ async def waha_webhook(request: Request):
         
         # Processar mensagem do WhatsApp
         if data.get("event") == "message":
-            message_data = data.get("data", {})
+            message_data = data.get("payload", {})
             phone = message_data.get("from")
-            message = message_data.get("text", "")
+            message = message_data.get("body", "")
+            
+            if not message or not phone:
+                return {"success": False, "error": "Dados inválidos"}
+            
+            logger.info(f"💬 Mensagem do WhatsApp: {phone} -> {message}")
+            
+            # Processar com engine de conversação
+            result = conversation_engine.process_message(message, {})
+            response = result.get("response", "Desculpe, não entendi.")
+            
+            # Atualizar estatísticas
+            system_state["stats"]["messages_processed"] += 1
+            
+            # Enviar resposta de volta para WAHA
+            await send_waha_response(phone, response)
+            
+            logger.info(f"✅ Resposta enviada para {phone}: {response}")
+            
         elif data.get("event") == "engine.event" and data.get("payload", {}).get("event") == "unread_count":
             # Processar evento de mensagem não lida
             payload = data.get("payload", {}).get("data", {})
