@@ -205,10 +205,6 @@ async def send_waha_response(phone: str, message: str):
         except Exception as simple_error:
             logger.warning(f"⚠️ Erro no método simples: {simple_error}")
         
-        # TODO: Resolver problema do Chromium no WAHA Core
-        # Por enquanto, vamos apenas logar a resposta
-        return
-        
         # Limpar formato do telefone (formato internacional)
         clean_phone = phone.replace("@c.us", "") if "@c.us" in phone else phone
         
@@ -247,7 +243,7 @@ async def send_waha_response(phone: str, message: str):
                     continue
             
             logger.error(f"❌ Nenhum endpoint funcionou para enviar mensagem")
-            
+        
     except Exception as e:
         logger.error(f"❌ Erro geral ao enviar resposta para WAHA: {e}")
 
@@ -540,7 +536,7 @@ async def reject_auth(request_id: str):
             return {"success": True, "message": "Acesso rejeitado"}
         else:
             return {"success": False, "message": "Solicitação não encontrada"}
-        
+            
     except Exception as e:
         logger.error(f"Erro ao rejeitar auth: {e}")
         raise HTTPException(status_code=500, detail=str(e))
