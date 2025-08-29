@@ -567,10 +567,10 @@ async def get_logs():
             {"timestamp": datetime.now().isoformat(), "level": "INFO", "message": f"WAHA URL: {os.getenv('WAHA_URL', 'Não configurado')}"}
         ]
         
-            return {
-                "success": True,
+        return {
+            "success": True,
             "logs": logs
-            }
+        }
             
     except Exception as e:
         logger.error(f"Erro ao obter logs: {e}")
