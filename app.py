@@ -176,7 +176,7 @@ async def send_waha_response(phone: str, message: str):
         
         async with httpx.AsyncClient() as client:
             response = await client.post(
-                f"https://{waha_url}/api/sendText",
+                f"https://{waha_url}/api/sessions/default/sendText",
                 json=response_data,
                 headers=headers,
                 timeout=30.0
