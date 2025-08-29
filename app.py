@@ -189,37 +189,44 @@ async def send_waha_response(phone: str, message: str):
         # Limpar formato do telefone (remover @c.us para evitar erro do WAHA)
         clean_phone = phone.replace("@c.us", "") if "@c.us" in phone else phone
         
-        # Formato correto do payload para WEBJS
-        response_data = {
-            "session": "default",
-            "to": clean_phone,
-            "text": message
-        }
+        # Tentar diferentes formatos para contornar bug do WAHA
+        phone_formats = [
+            clean_phone,  # 5521971364919
+            f"+{clean_phone}",  # +5521971364919
+            f"{clean_phone}@c.us",  # 5521971364919@c.us
+            f"+{clean_phone}@c.us"  # +5521971364919@c.us
+        ]
         
-        headers = {
-            "Content-Type": "application/json"
-        }
-        
-        async with httpx.AsyncClient() as client:
+        success = False
+        for phone_format in phone_formats:
             try:
-                response = await client.post(
-                    endpoint,
-                    json=response_data,
-                    headers=headers,
-                    timeout=30.0
-                )
+                # Formato correto do payload para WEBJS
+                response_data = {
+                    "session": "default",
+                    "to": phone_format,
+                    "text": message
+                }
                 
+                logger.info(f"🔄 Tentando formato: {phone_format}")
+                
+                async with httpx.AsyncClient(timeout=30.0) as client:
+                    response = await client.post(endpoint, json=response_data)
+                    
                 if response.status_code == 200:
                     logger.info(f"✅ Resposta enviada com sucesso para {phone} via {endpoint}")
-                    return
+                    success = True
+                    break
                 else:
-                    logger.warning(f"⚠️ Endpoint {endpoint} retornou: {response.status_code}")
-                    logger.warning(f"⚠️ Resposta: {response.text}")
+                    logger.warning(f"⚠️ Formato {phone_format} retornou: {response.status_code}")
                     
-            except Exception as endpoint_error:
-                logger.warning(f"⚠️ Erro em {endpoint}: {endpoint_error}")
-            
-            logger.error(f"❌ Falha ao enviar mensagem via WAHA")
+            except Exception as e:
+                logger.warning(f"⚠️ Erro com formato {phone_format}: {str(e)}")
+                continue
+        
+        if not success:
+            logger.error(f"❌ Nenhum formato de telefone funcionou para {phone}")
+            # Log da resposta do bot para debug
+            logger.info(f"🤖 Resposta do bot (não enviada): {message}")
         
     except Exception as e:
         logger.error(f"❌ Erro geral ao enviar resposta para WAHA: {e}")
