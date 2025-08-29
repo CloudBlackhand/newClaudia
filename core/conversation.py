@@ -323,54 +323,7 @@ class SuperConversationEngine:
             r'(negative|negativo)',
         ]
     
-    async def process_message(self, phone: str, text: str) -> Optional[Dict[str, Any]]:
-        """🧠 PROCESSAMENTO SUPER INTELIGENTE"""
-        try:
-            logger.info(f"🧠 SUPER ANÁLISE para {phone}: {text[:50]}...")
-            
-            # 1. PREPARAÇÃO CONTEXTUAL
-            conversation_context = self._get_conversation_context(phone)
-            normalized_text = self._super_normalize_text(text)
-            
-            # 2. EXTRAÇÃO DE ENTIDADES
-            entities = self._extract_all_entities(normalized_text)
-            logger.info(f"🔍 Entidades extraídas: {[e.type + ':' + e.value for e in entities]}")
-            
-            # 3. ANÁLISE EMOCIONAL PROFUNDA
-            emotional_state = self._analyze_emotion(normalized_text)
-            logger.info(f"😊 Estado emocional: {emotional_state}")
-            
-            # 4. ANÁLISE TEMPORAL
-            temporal_context = self._analyze_temporal_context(normalized_text)
-            logger.info(f"⏰ Contexto temporal: {temporal_context}")
-            
-            # 5. DETECÇÃO DE NEGAÇÃO
-            has_negation = self._detect_negation(normalized_text)
-            logger.info(f"❌ Negação detectada: {has_negation}")
-            
-            # 6. ANÁLISE DE INTENÇÕES MÚLTIPLAS
-            contextual_intent = self._analyze_contextual_intent(
-                normalized_text, entities, emotional_state, 
-                temporal_context, has_negation, conversation_context
-            )
-            
-            logger.info(f"🎯 Intenção principal: {contextual_intent.intent.value}")
-            logger.info(f"🎯 Intenções múltiplas: {[i.value for i in contextual_intent.multiple_intents]}")
-            logger.info(f"📊 Confiança: {contextual_intent.confidence:.3f}")
-            
-            # 7. ATUALIZAR CONTEXTO CONVERSACIONAL
-            self._update_conversation_context(phone, contextual_intent, text)
-            
-            # 8. GERAR RESPOSTA CONTEXTUAL
-            response = await self._generate_contextual_response(
-                phone, contextual_intent, entities, conversation_context
-            )
-            
-            return response
-            
-        except Exception as e:
-            logger.error(f"❌ Erro no processamento super inteligente: {e}")
-            return await self._generate_fallback_response(phone, text)
+    # Função assíncrona removida para evitar conflito com a função síncrona
     
     def _extract_all_entities(self, text: str) -> List[ExtractedEntity]:
         """Extração completa de entidades"""
