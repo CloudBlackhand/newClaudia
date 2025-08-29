@@ -176,6 +176,15 @@ async def send_waha_response(phone: str, message: str):
             f"https://{waha_url}/api/messages/send"
         ]
         
+        # SOLUÇÃO TEMPORÁRIA: Simular resposta no log
+        logger.info(f"🎯 RESPOSTA SIMULADA: {message}")
+        logger.info(f"📱 Para: {phone}")
+        logger.info(f"🤖 Bot Claudia respondeu: {message}")
+        
+        # TODO: Resolver problema do Chromium no WAHA Core
+        # Por enquanto, vamos apenas logar a resposta
+        return
+        
         # Limpar formato do telefone (remover @c.us se presente)
         clean_phone = phone.replace("@c.us", "") if "@c.us" in phone else phone
         
