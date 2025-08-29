@@ -186,8 +186,8 @@ async def send_waha_response(phone: str, message: str):
         # Endpoint correto para WEBJS (documentação oficial)
         endpoint = f"https://{waha_url}/api/sendText"
         
-        # Manter formato original do telefone (com @c.us)
-        clean_phone = phone
+        # Limpar formato do telefone (remover @c.us para evitar erro do WAHA)
+        clean_phone = phone.replace("@c.us", "") if "@c.us" in phone else phone
         
         # Formato correto do payload para WEBJS
         response_data = {
