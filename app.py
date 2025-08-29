@@ -165,16 +165,8 @@ async def send_waha_response(phone: str, message: str):
         return
     
     try:
-        # Tentar diferentes endpoints do WAHA Core
-        endpoints = [
-            f"https://{waha_url}/api/sendText",
-            f"https://{waha_url}/api/sessions/default/send/text", 
-            f"https://{waha_url}/api/messages/text",
-            f"https://{waha_url}/api/default/send/text",
-            f"https://{waha_url}/api/sessions/default/messages/send",
-            f"https://{waha_url}/api/sessions/default/messages",
-            f"https://{waha_url}/api/messages/send"
-        ]
+        # Endpoint correto do WAHA Core
+        endpoint = f"https://{waha_url}/api/sessions/default/messages/text"
         
         # SOLUÇÃO TEMPORÁRIA: Simular resposta no log
         logger.info(f"🎯 RESPOSTA SIMULADA: {message}")
@@ -184,61 +176,36 @@ async def send_waha_response(phone: str, message: str):
         # Manter formato original do telefone (com @c.us)
         clean_phone = phone
         
-        # Tentar enviar resposta via API mais simples
-        try:
-            simple_response_data = {
-                "to": clean_phone,
-                "text": message
-            }
-            
-            headers = {
-                "Content-Type": "application/json"
-            }
-            
-            async with httpx.AsyncClient() as client:
-                simple_response = await client.post(
-                    f"https://{waha_url}/api/sendText",
-                    json=simple_response_data,
+        # Formato correto do payload para WAHA Core
+        response_data = {
+            "chatId": clean_phone,
+            "text": message
+        }
+        
+        headers = {
+            "Content-Type": "application/json"
+        }
+        
+        async with httpx.AsyncClient() as client:
+            try:
+                response = await client.post(
+                    endpoint,
+                    json=response_data,
                     headers=headers,
                     timeout=30.0
                 )
                 
-                if simple_response.status_code == 200:
-                    logger.info(f"✅ Resposta enviada com sucesso via método simples!")
+                if response.status_code == 200:
+                    logger.info(f"✅ Resposta enviada com sucesso para {phone} via {endpoint}")
                     return
                 else:
-                    logger.warning(f"⚠️ Método simples retornou: {simple_response.status_code}")
+                    logger.warning(f"⚠️ Endpoint {endpoint} retornou: {response.status_code}")
+                    logger.warning(f"⚠️ Resposta: {response.text}")
                     
-        except Exception as simple_error:
-            logger.warning(f"⚠️ Erro no método simples: {simple_error}")
-        
-        response_data = {
-            "session": "default",
-            "to": clean_phone, 
-            "text": message
-        }
-        
-        async with httpx.AsyncClient() as client:
-            for endpoint in endpoints:
-                try:
-                    response = await client.post(
-                        endpoint,
-                        json=response_data,
-                        headers=headers,
-                        timeout=30.0
-                    )
-                    
-                    if response.status_code == 200:
-                        logger.info(f"✅ Resposta enviada com sucesso para {phone} via {endpoint}")
-                        return
-                    else:
-                        logger.warning(f"⚠️ Endpoint {endpoint} retornou: {response.status_code}")
-                        
-                except Exception as endpoint_error:
-                    logger.warning(f"⚠️ Erro em {endpoint}: {endpoint_error}")
-                    continue
+            except Exception as endpoint_error:
+                logger.warning(f"⚠️ Erro em {endpoint}: {endpoint_error}")
             
-            logger.error(f"❌ Nenhum endpoint funcionou para enviar mensagem")
+            logger.error(f"❌ Falha ao enviar mensagem via WAHA")
         
     except Exception as e:
         logger.error(f"❌ Erro geral ao enviar resposta para WAHA: {e}")
