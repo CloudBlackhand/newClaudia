@@ -126,6 +126,12 @@ async def waha_webhook(request: Request):
             message_data = data.get("data", {})
             phone = message_data.get("from")
             message = message_data.get("text", "")
+        elif data.get("event") == "engine.event" and data.get("payload", {}).get("event") == "unread_count":
+            # Processar evento de mensagem não lida
+            payload = data.get("payload", {}).get("data", {})
+            last_message = payload.get("lastMessage", {})
+            phone = last_message.get("from")
+            message = last_message.get("body", "")
             
             if not message or not phone:
                 return {"success": False, "error": "Dados inválidos"}
