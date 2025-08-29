@@ -494,8 +494,8 @@ def validate_session(token: str) -> bool:
 @app.get("/api/stats")
 async def get_stats():
     """Obter estatísticas do sistema"""
-            return {
-                "success": True,
+    return {
+        "success": True,
         "stats": system_state["stats"],
         "bot_active": system_state["bot_active"],
         "waha_url": os.getenv("WAHA_URL", "Não configurado"),
@@ -539,9 +539,9 @@ async def get_logs():
             {"timestamp": datetime.now().isoformat(), "level": "INFO", "message": "Bot ativo"},
             {"timestamp": datetime.now().isoformat(), "level": "INFO", "message": f"WAHA URL: {os.getenv('WAHA_URL', 'Não configurado')}"}
         ]
-            
-            return {
-                "success": True,
+        
+        return {
+            "success": True,
             "logs": logs
         }
         
