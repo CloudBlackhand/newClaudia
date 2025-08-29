@@ -165,7 +165,7 @@ async def send_waha_response(phone: str, message: str):
         return
     
     try:
-        # Endpoint para WEBJS (já que Baileys não está funcionando)
+        # Endpoint para WEBJS (motor atual)
         endpoint = f"https://{waha_url}/api/sendText"
         
         # SOLUÇÃO TEMPORÁRIA: Simular resposta no log
@@ -176,7 +176,7 @@ async def send_waha_response(phone: str, message: str):
         # Manter formato original do telefone (com @c.us)
         clean_phone = phone
         
-        # Formato para WEBJS
+        # Formato correto do payload para WEBJS
         response_data = {
             "session": "default",
             "to": clean_phone,
@@ -567,11 +567,11 @@ async def get_logs():
             {"timestamp": datetime.now().isoformat(), "level": "INFO", "message": f"WAHA URL: {os.getenv('WAHA_URL', 'Não configurado')}"}
         ]
         
-        return {
-            "success": True,
+            return {
+                "success": True,
             "logs": logs
-        }
-        
+            }
+            
     except Exception as e:
         logger.error(f"Erro ao obter logs: {e}")
         raise HTTPException(status_code=500, detail=str(e))
