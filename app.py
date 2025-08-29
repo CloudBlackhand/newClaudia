@@ -183,48 +183,63 @@ async def send_waha_response(phone: str, message: str):
         return
     
     try:
-        # Endpoint correto para WEBJS (documentação oficial)
-        endpoint = f"https://{waha_url}/api/sendText"
-        
-        # Limpar formato do telefone (remover @c.us para evitar erro do WAHA)
-        clean_phone = phone.replace("@c.us", "") if "@c.us" in phone else phone
-        
-        # Tentar diferentes formatos para contornar bug do WAHA
-        phone_formats = [
-            clean_phone,  # 5521971364919
-            f"+{clean_phone}",  # +5521971364919
-            f"{clean_phone}@c.us",  # 5521971364919@c.us
-            f"+{clean_phone}@c.us"  # +5521971364919@c.us
+        # Tentar diferentes endpoints e formatos para contornar bug do WAHA
+        attempts = [
+            # Tentativa 1: Endpoint padrão com chatId
+            {
+                "endpoint": f"https://{waha_url}/api/sessions/default/messages/text",
+                "payload": {"chatId": phone, "text": message}
+            },
+            # Tentativa 2: Endpoint alternativo com to
+            {
+                "endpoint": f"https://{waha_url}/api/sendText",
+                "payload": {"session": "default", "to": phone, "text": message}
+            },
+            # Tentativa 3: Formato Baileys
+            {
+                "endpoint": f"https://{waha_url}/api/sessions/default/send/text",
+                "payload": {"chatId": phone, "text": message}
+            },
+            # Tentativa 4: Sem session no payload
+            {
+                "endpoint": f"https://{waha_url}/api/sendText",
+                "payload": {"to": phone, "text": message}
+            },
+            # Tentativa 5: Formato simplificado
+            {
+                "endpoint": f"https://{waha_url}/api/messages/text",
+                "payload": {"chatId": phone, "text": message}
+            }
         ]
         
         success = False
-        for phone_format in phone_formats:
+        for i, attempt in enumerate(attempts, 1):
             try:
-                # Formato correto do payload para WEBJS
-                response_data = {
-                    "session": "default",
-                    "to": phone_format,
-                    "text": message
-                }
-                
-                logger.info(f"🔄 Tentando formato: {phone_format}")
+                logger.info(f"🔄 Tentativa {i}: {attempt['endpoint']}")
+                logger.info(f"📤 Payload: {attempt['payload']}")
                 
                 async with httpx.AsyncClient(timeout=30.0) as client:
-                    response = await client.post(endpoint, json=response_data)
+                    response = await client.post(
+                        attempt['endpoint'], 
+                        json=attempt['payload'],
+                        headers={"Content-Type": "application/json"}
+                    )
                     
                 if response.status_code == 200:
-                    logger.info(f"✅ Resposta enviada com sucesso para {phone} via {endpoint}")
+                    logger.info(f"✅ Resposta enviada com sucesso via tentativa {i}")
                     success = True
                     break
                 else:
-                    logger.warning(f"⚠️ Formato {phone_format} retornou: {response.status_code}")
+                    logger.warning(f"⚠️ Tentativa {i} retornou: {response.status_code}")
+                    if response.status_code != 404:
+                        logger.warning(f"⚠️ Resposta: {response.text[:200]}...")
                     
             except Exception as e:
-                logger.warning(f"⚠️ Erro com formato {phone_format}: {str(e)}")
+                logger.warning(f"⚠️ Erro na tentativa {i}: {str(e)}")
                 continue
         
         if not success:
-            logger.error(f"❌ Nenhum formato de telefone funcionou para {phone}")
+            logger.error(f"❌ Nenhuma tentativa funcionou para {phone}")
             # Log da resposta do bot para debug
             logger.info(f"🤖 Resposta do bot (não enviada): {message}")
         
