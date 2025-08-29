@@ -181,11 +181,22 @@ async def send_waha_response(phone: str, message: str):
         logger.info(f"📱 Para: {phone}")
         logger.info(f"🤖 Bot Claudia respondeu: {message}")
         
+        # Limpar formato do telefone (formato internacional)
+        clean_phone = phone.replace("@c.us", "") if "@c.us" in phone else phone
+        
+        # Garantir formato internacional (adicionar 55 se não tiver)
+        if not clean_phone.startswith("55") and len(clean_phone) == 11:
+            clean_phone = "55" + clean_phone
+        
         # Tentar enviar resposta via API mais simples
         try:
             simple_response_data = {
                 "to": clean_phone,
                 "text": message
+            }
+            
+            headers = {
+                "Content-Type": "application/json"
             }
             
             async with httpx.AsyncClient() as client:
@@ -205,21 +216,10 @@ async def send_waha_response(phone: str, message: str):
         except Exception as simple_error:
             logger.warning(f"⚠️ Erro no método simples: {simple_error}")
         
-        # Limpar formato do telefone (formato internacional)
-        clean_phone = phone.replace("@c.us", "") if "@c.us" in phone else phone
-        
-        # Garantir formato internacional (adicionar 55 se não tiver)
-        if not clean_phone.startswith("55") and len(clean_phone) == 11:
-            clean_phone = "55" + clean_phone
-        
         response_data = {
             "session": "default",
             "to": clean_phone, 
             "text": message
-        }
-        
-        headers = {
-            "Content-Type": "application/json"
         }
         
         async with httpx.AsyncClient() as client:
