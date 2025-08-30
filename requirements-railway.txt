@@ -29,6 +29,7 @@ loguru==0.7.0
 # Utils - Básico
 python-dateutil==2.8.2
 validators==0.20.0
+phonenumbers==8.13.19
 
 # Development - Mínimo para produção
 black==23.3.0
