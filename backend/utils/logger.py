@@ -49,8 +49,8 @@ class LoggerSetup:
             self.config.LOG_FILE,
             format=log_format,
             level=self.config.LOG_LEVEL,
-            rotation=f"{self.config.LOG_MAX_BYTES} bytes",
-            retention=f"{self.config.LOG_BACKUP_COUNT} files",
+            rotation="10 MB",
+            retention="10 days",
             compression="zip",
             encoding="utf-8"
         )
