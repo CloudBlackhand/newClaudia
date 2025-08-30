@@ -1732,9 +1732,15 @@ class BillingChatBot:
     
     def _load_or_initialize_model(self):
         """Carrega modelo existente ou inicializa novo"""
+        if not TORCH_AVAILABLE:
+            # Modo fallback sem PyTorch
+            self.intent_model = IntentClassifier(len(self.intent_labels))
+            app_logger.info("CHATBOT_FALLBACK_MODE", {"reason": "PyTorch not available"})
+            return
+            
         try:
             model_path = self.config.MODEL_PATH
-            if torch.cuda.is_available() and self.device.type == 'cuda':
+            if torch.cuda.is_available() and self.device and self.device.type == 'cuda':
                 checkpoint = torch.load(model_path)
             else:
                 checkpoint = torch.load(model_path, map_location='cpu')
@@ -1750,7 +1756,8 @@ class BillingChatBot:
             app_logger.warning("CHATBOT_MODEL_LOAD_FAILED", {"error": str(e)})
             # Inicializa modelo vazio para treinamento futuro
             self.intent_model = IntentClassifier(len(self.intent_labels))
-            self.intent_model.to(self.device)
+            if hasattr(self.intent_model, 'to'):  # Só chama .to() se existir
+                self.intent_model.to(self.device)
     
     async def process_message(self, message: str, context: ConversationContext, user_id: str = None) -> Dict[str, Any]:
         """🚀 PROCESSAMENTO SUPREMO DE MENSAGEM - NÍVEL CHATGPT++"""
@@ -2214,6 +2221,10 @@ class BillingChatBot:
     
     async def _classify_by_neural_model(self, message: str) -> Dict[str, Any]:
         """Classificação usando modelo neural"""
+        if not TORCH_AVAILABLE or not hasattr(self, 'tokenizer') or self.tokenizer is None:
+            # Fallback para classificação por regras
+            return await self._classify_by_rules(message)
+            
         try:
             # Tokeniza mensagem
             inputs = self.tokenizer(
@@ -2224,9 +2235,13 @@ class BillingChatBot:
                 padding=True
             )
             
-            # Move para device apropriado
-            input_ids = inputs["input_ids"].to(self.device)
-            attention_mask = inputs["attention_mask"].to(self.device)
+            # Move para device apropriado (só se disponível)
+            if self.device:
+                input_ids = inputs["input_ids"].to(self.device)
+                attention_mask = inputs["attention_mask"].to(self.device)
+            else:
+                input_ids = inputs["input_ids"]
+                attention_mask = inputs["attention_mask"]
             
             # Faz predição
             with torch.no_grad():
