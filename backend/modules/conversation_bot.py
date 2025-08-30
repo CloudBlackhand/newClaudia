@@ -95,12 +95,38 @@ class ConversationContext:
 
 @dataclass
 class AnalysisResult:
-    """Resultado da análise de mensagem"""
+    """Resultado da análise de mensagem SUPREMA"""
     intent: IntentType
     sentiment: SentimentType
     confidence: float
     entities: Dict[str, Any]
     keywords: List[str]
+    
+    # Campos avançados de compreensão
+    multiple_intents: List[Dict[str, Any]] = None
+    contradictions: List[Dict[str, str]] = None
+    ambiguities: List[str] = None
+    subtext: Dict[str, List[str]] = None
+    personality: Dict[str, float] = None
+    urgency_score: float = 0.0
+    regional_context: str = 'generic'
+    semantic_expansion: Dict[str, List[str]] = None
+    emotional_intensity: float = 0.0
+    communication_style: str = 'neutral'
+    
+    def __post_init__(self):
+        if self.multiple_intents is None:
+            self.multiple_intents = []
+        if self.contradictions is None:
+            self.contradictions = []
+        if self.ambiguities is None:
+            self.ambiguities = []
+        if self.subtext is None:
+            self.subtext = {}
+        if self.personality is None:
+            self.personality = {}
+        if self.semantic_expansion is None:
+            self.semantic_expansion = {}
 
 @dataclass
 class BotResponse:
@@ -116,14 +142,24 @@ class BotResponse:
             self.suggested_actions = []
 
 class NLPProcessor:
-    """Processador de linguagem natural"""
+    """Processador de linguagem natural avançado"""
     
     def __init__(self):
         self.intent_patterns = self._load_intent_patterns()
         self.sentiment_words = self._load_sentiment_words()
         self.entity_patterns = self._load_entity_patterns()
         
-        logger.info(LogCategory.CONVERSATION, "NLP Processor inicializado")
+        # Sistemas avançados de compreensão
+        self.synonym_map = self._load_synonym_map()
+        self.regional_patterns = self._load_regional_patterns()
+        self.contradiction_detectors = self._load_contradiction_patterns()
+        self.ambiguity_resolvers = self._load_ambiguity_patterns()
+        self.subtext_analyzers = self._load_subtext_patterns()
+        self.personality_indicators = self._load_personality_patterns()
+        self.urgency_multipliers = self._load_urgency_multipliers()
+        self.multi_intent_separators = self._load_multi_intent_patterns()
+        
+        logger.info(LogCategory.CONVERSATION, "NLP Processor SUPREMO inicializado")
     
     def _load_intent_patterns(self) -> Dict[IntentType, List[str]]:
         """Carregar padrões de intenção"""
@@ -294,31 +330,276 @@ class NLPProcessor:
             'urgency_level': r'\b(muito urgente|super urgente|emergencial|crítico|importante)\b'
         }
     
+    def _load_synonym_map(self) -> Dict[str, List[str]]:
+        """Mapa de sinônimos para expandir entendimento"""
+        return {
+            # Dinheiro/Pagamento
+            'dinheiro': ['grana', 'bufunfa', 'dim', 'tutu', 'pila', 'verba', 'cash', 'money'],
+            'pagar': ['quitar', 'acertar', 'liquidar', 'saldar', 'regularizar', 'resolver'],
+            'valor': ['quantia', 'montante', 'soma', 'total', 'preço'],
+            
+            # Dificuldade/Problemas
+            'difícil': ['complicado', 'tenso', 'apertado', 'pesado', 'brabo', 'osso'],
+            'problema': ['perrengue', 'treta', 'briga', 'confusão', 'encrenca', 'b.o.'],
+            'ruim': ['péssimo', 'horrível', 'terrível', 'tosco', 'zuado', 'merda'],
+            
+            # Tempo/Urgência
+            'rápido': ['ligeiro', 'veloz', 'correndo', 'voando', 'já', 'agora'],
+            'urgente': ['correndo', 'emergência', 'pressa', 'fire', 'crítico'],
+            'devagar': ['calma', 'tranquilo', 'sem pressa', 'no tempo'],
+            
+            # Negociação
+            'desconto': ['abatimento', 'redução', 'diminuição', 'promoção'],
+            'parcelar': ['dividir', 'fatiar', 'quebrar', 'picotear'],
+            'negociar': ['conversar', 'acertar', 'combinar', 'bater papo'],
+            
+            # Sentimentos Positivos
+            'bom': ['legal', 'bacana', 'massa', 'show', 'top', 'dahora'],
+            'ótimo': ['perfeito', 'excelente', 'maravilhoso', 'sensacional'],
+            'obrigado': ['valeu', 'thanks', 'grato', 'agradecido'],
+            
+            # Sentimentos Negativos
+            'irritado': ['puto', 'nervoso', 'bravo', 'pistola', 'bolado'],
+            'triste': ['chateado', 'down', 'mal', 'depre', 'cabisbaixo'],
+            'preocupado': ['aflito', 'ansioso', 'tenso', 'agoniado'],
+            
+            # Gírias Regionais
+            'cara': ['mano', 'brother', 'bro', 'véi', 'parceiro', 'amigo'],
+            'muito': ['demais', 'pra caramba', 'bagarai', 'pra caralho', 'absurdo'],
+            'entender': ['sacar', 'captar', 'pegar', 'manjar', 'entender'],
+            
+            # Afirmação/Negação
+            'sim': ['é', 'claro', 'com certeza', 'óbvio', 'lógico', 'pode crer'],
+            'não': ['nada', 'nope', 'negativo', 'nem', 'jamais', 'nunca'],
+            
+            # Trabalho/Emprego
+            'trabalho': ['trampo', 'job', 'emprego', 'serviço', 'labuta'],
+            'desempregado': ['sem trampo', 'parado', 'encostado', 'na seca'],
+            
+            # Relacionamento Cliente
+            'empresa': ['firma', 'companhia', 'negócio', 'estabelecimento'],
+            'atendimento': ['serviço', 'suporte', 'help', 'apoio'],
+            'cliente': ['consumidor', 'usuário', 'comprador', 'pessoa']
+        }
+    
+    def _load_regional_patterns(self) -> Dict[str, List[str]]:
+        """Padrões linguísticos regionais e gírias"""
+        return {
+            'nordeste': [
+                r'\b(oxe|eita|vixe|rapaz|cabra|arretado|massa|véi)\b',
+                r'\b(pra chuchu|do caramba|da peste|dos inferno)\b'
+            ],
+            'sudeste': [
+                r'\b(mano|cara|véio|truta|parça|firmeza|suave)\b',
+                r'\b(da hora|dahora|maneiro|irado|sinistro)\b'
+            ],
+            'sul': [
+                r'\b(bah|tchê|guri|piá|barbaridade|bom demais)\b',
+                r'\b(tri|muito bom|legal demais)\b'
+            ],
+            'norte': [
+                r'\b(rapaz|mermão|doido|caboclo|massa)\b',
+                r'\b(da hora|top demais|muito bom)\b'
+            ],
+            'internet': [
+                r'\b(kk|rs|lol|wtf|omg|plz|tbm|vc|pq|qnd)\b',
+                r'\b(naum|eh|pra|aki|la|to|ta|tava)\b'
+            ]
+        }
+    
+    def _load_contradiction_patterns(self) -> List[Dict[str, str]]:
+        """Detectores de contradições na fala"""
+        return [
+            {
+                'pattern1': r'\b(não tenho dinheiro|sem grana|sem condições)\b',
+                'pattern2': r'\b(posso pagar|vou pagar|tenho como)\b',
+                'type': 'financial_contradiction'
+            },
+            {
+                'pattern1': r'\b(não é meu|não devo|não reconheço)\b',
+                'pattern2': r'\b(vou pagar|como pagar|quando pagar)\b',
+                'type': 'debt_contradiction'
+            },
+            {
+                'pattern1': r'\b(não tenho pressa|sem urgência|tranquilo)\b',
+                'pattern2': r'\b(urgente|rápido|já|agora|hoje)\b',
+                'type': 'urgency_contradiction'
+            },
+            {
+                'pattern1': r'\b(não quero parcelar|à vista)\b',
+                'pattern2': r'\b(posso dividir|em quantas vezes)\b',
+                'type': 'payment_method_contradiction'
+            }
+        ]
+    
+    def _load_ambiguity_patterns(self) -> Dict[str, List[str]]:
+        """Padrões que indicam ambiguidade ou incerteza"""
+        return {
+            'uncertainty': [
+                r'\b(acho que|talvez|pode ser|não sei se|meio que)\b',
+                r'\b(mais ou menos|tipo assim|sei lá|vai ver)\b'
+            ],
+            'confusion': [
+                r'\b(não entendi|como assim|que isso|perdão)\b',
+                r'\b(não sei|confuso|perdido|não compreendo)\b'
+            ],
+            'hesitation': [
+                r'\b(bem|né|então|assim|ahn|hmm)\b',
+                r'\b(é que|acontece que|a questão é)\b'
+            ],
+            'multiple_options': [
+                r'\b(ou|talvez|quem sabe|pode ser)\b',
+                r'\b(tanto faz|qualquer um|qualquer coisa)\b'
+            ]
+        }
+    
+    def _load_subtext_patterns(self) -> Dict[str, List[str]]:
+        """Detectores de subtexto e comunicação indireta"""
+        return {
+            'passive_aggressive': [
+                r'\b(imagino que|suponho que|creio que|deve ser)\b',
+                r'\b(claro né|óbvio né|lógico né)\b'
+            ],
+            'hidden_anger': [
+                r'\b(tudo bem|ok|certo)\b.*[.]{2,}',  # "Tudo bem..." com reticências
+                r'\b(entendi|compreendi|vejo)\b.*!'   # "Entendi!" com exclamação
+            ],
+            'desperation': [
+                r'\b(pelo amor de|por favor|imploro|preciso muito)\b',
+                r'\b(não aguento mais|não sei mais|to perdido)\b'
+            ],
+            'testing_limits': [
+                r'\b(se eu não pagar|e se eu|what if|e daí)\b',
+                r'\b(o que acontece|qual a consequência)\b'
+            ],
+            'social_proof': [
+                r'\b(todo mundo|todos|outras pessoas|outros clientes)\b',
+                r'\b(meu amigo|conhecidos|vizinho|parente)\b'
+            ],
+            'emotional_manipulation': [
+                r'\b(tenho filhos|família|doente|hospital)\b',
+                r'\b(situação difícil|momento complicado|fase ruim)\b'
+            ]
+        }
+    
+    def _load_personality_patterns(self) -> Dict[str, List[str]]:
+        """Indicadores de personalidade/estilo comunicativo"""
+        return {
+            'analytical': [
+                r'\b(analisar|verificar|conferir|checar|dados)\b',
+                r'\b(detalhes|especificamente|exatamente|precisamente)\b'
+            ],
+            'emotional': [
+                r'\b(sinto|sente|emoção|coração|sentimento)\b',
+                r'\b(♥|❤|💔|😢|😭|🥺)\b'
+            ],
+            'aggressive': [
+                r'\b(exijo|demando|quero já|inaceitável)\b',
+                r'[!]{2,}|[?]{2,}',  # Múltiplos ! ou ?
+                r'[A-Z]{5,}'  # Texto em CAPS
+            ],
+            'formal': [
+                r'\b(solicito|gostaria|cordialmente|atenciosamente)\b',
+                r'\b(prezados|venho por meio|informo que)\b'
+            ],
+            'informal': [
+                r'\b(oi|opa|eae|salve|fala|véi|mano)\b',
+                r'\b(kk|rs|haha|kkk|rsrs)\b'
+            ],
+            'anxious': [
+                r'\b(preocup|ansios|nervos|aflito|tenso)\b',
+                r'[?]{1,}.*[!]{1,}',  # Mistura ? e !
+                r'\b(será que|será|e se|como será)\b'
+            ]
+        }
+    
+    def _load_urgency_multipliers(self) -> Dict[str, float]:
+        """Multiplicadores para cálculo de urgência"""
+        return {
+            'time_pressure': 3.0,    # "hoje", "agora", "já"
+            'consequences': 2.5,     # "senão", "caso contrário"
+            'external_pressure': 2.0, # "chefe mandou", "esposa cobrando"
+            'repetition': 1.5,       # Repetir a mesma coisa
+            'emotional_intensity': 2.2, # "desesperado", "aflito"
+            'financial_impact': 1.8,  # "prejuízo", "perda"
+            'health_related': 2.8,    # "hospital", "remédio"
+            'legal_threats': 1.7      # "advogado", "processo"
+        }
+    
+    def _load_multi_intent_patterns(self) -> List[str]:
+        """Separadores para múltiplas intenções"""
+        return [
+            r'\b(mas|porém|contudo|entretanto|todavia)\b',
+            r'\b(também|além disso|e mais|e também)\b',
+            r'\b(ou então|ou|talvez|quem sabe)\b',
+            r'\b(primeiro|segundo|terceiro|por último)\b',
+            r'[.!?]\s+',  # Pontuação seguida de espaço
+            r'\b(agora|depois|então|aí)\b'
+        ]
+    
     def analyze_message(self, message: str) -> AnalysisResult:
-        """Analisar mensagem do usuário"""
+        """Analisar mensagem do usuário com SUPREMA compreensão"""
         message_clean = self._clean_text(message)
         
-        # Detectar intenção
-        intent, intent_confidence = self._detect_intent(message_clean)
+        # ETAPA 1: Expansão semântica (sinônimos e gírias)
+        expanded_message, semantic_expansion = self._expand_semantics(message_clean)
         
-        # Analisar sentimento
-        sentiment = self._analyze_sentiment(message_clean)
+        # ETAPA 2: Detecção de múltiplas intenções
+        multiple_intents = self._detect_multiple_intents(expanded_message)
+        primary_intent, intent_confidence = self._get_primary_intent(multiple_intents)
         
-        # Extrair entidades
-        entities = self._extract_entities(message_clean)
+        # ETAPA 3: Análise de sentimento contextual
+        sentiment = self._analyze_sentiment_advanced(expanded_message, multiple_intents)
         
-        # Extrair palavras-chave
+        # ETAPA 4: Extração de entidades avançada
+        entities = self._extract_entities_advanced(expanded_message)
+        
+        # ETAPA 5: Detecção de contradições
+        contradictions = self._detect_contradictions(expanded_message)
+        
+        # ETAPA 6: Análise de ambiguidade
+        ambiguities = self._detect_ambiguities(expanded_message)
+        
+        # ETAPA 7: Análise de subtexto
+        subtext = self._analyze_subtext(expanded_message)
+        
+        # ETAPA 8: Análise de personalidade
+        personality = self._analyze_personality(expanded_message)
+        
+        # ETAPA 9: Cálculo de urgência avançado
+        urgency_score = self._calculate_urgency_score(expanded_message, sentiment, multiple_intents)
+        
+        # ETAPA 10: Detecção regional
+        regional_context = self._detect_regional_context(expanded_message)
+        
+        # ETAPA 11: Intensidade emocional
+        emotional_intensity = self._calculate_emotional_intensity(expanded_message, sentiment)
+        
+        # ETAPA 12: Estilo comunicativo
+        communication_style = self._detect_communication_style(expanded_message)
+        
+        # Extrair palavras-chave básicas
         keywords = self._extract_keywords(message_clean)
         
         # Calcular confiança geral
         confidence = intent_confidence
         
         result = AnalysisResult(
-            intent=intent,
+            intent=primary_intent,
             sentiment=sentiment,
             confidence=confidence,
             entities=entities,
-            keywords=keywords
+            keywords=keywords,
+            multiple_intents=multiple_intents,
+            contradictions=contradictions,
+            ambiguities=ambiguities,
+            subtext=subtext,
+            personality=personality,
+            urgency_score=urgency_score,
+            regional_context=regional_context,
+            semantic_expansion=semantic_expansion,
+            emotional_intensity=emotional_intensity,
+            communication_style=communication_style
         )
         
         logger.debug(LogCategory.CONVERSATION, 
@@ -330,6 +611,277 @@ class NLPProcessor:
                     })
         
         return result
+    
+    def _expand_semantics(self, message: str) -> tuple[str, Dict[str, List[str]]]:
+        """Expandir mensagem com sinônimos e variações"""
+        expanded = message.lower()
+        expansions = {}
+        
+        for word, synonyms in self.synonym_map.items():
+            if word in expanded:
+                expansions[word] = synonyms
+                # Adicionar sinônimos como palavras "virtuais" para detecção
+                for synonym in synonyms:
+                    expanded += f" {synonym}"
+        
+        return expanded, expansions
+    
+    def _detect_multiple_intents(self, message: str) -> List[Dict[str, Any]]:
+        """Detectar múltiplas intenções em uma mensagem"""
+        intents = []
+        
+        # Dividir mensagem por separadores
+        segments = []
+        for separator in self.multi_intent_separators:
+            if re.search(separator, message, re.IGNORECASE):
+                segments = re.split(separator, message, flags=re.IGNORECASE)
+                break
+        
+        if not segments:
+            segments = [message]
+        
+        # Analisar cada segmento
+        for i, segment in enumerate(segments):
+            if segment.strip():
+                intent, confidence = self._detect_intent(segment.strip())
+                intents.append({
+                    'intent': intent,
+                    'confidence': confidence,
+                    'segment': segment.strip(),
+                    'order': i
+                })
+        
+        return intents
+    
+    def _get_primary_intent(self, multiple_intents: List[Dict[str, Any]]) -> tuple[IntentType, float]:
+        """Obter intenção primária das múltiplas detectadas"""
+        if not multiple_intents:
+            return IntentType.UNKNOWN, 0.0
+        
+        # Priorizar por confiança e tipo de intenção
+        priority_weights = {
+            IntentType.URGENCY: 3.0,
+            IntentType.PAYMENT_CONFIRMATION: 2.5,
+            IntentType.COMPLAINT: 2.0,
+            IntentType.FINANCIAL_DIFFICULTY: 1.8,
+            IntentType.NEGOTIATION: 1.5,
+            IntentType.PAYMENT_QUESTION: 1.3,
+            IntentType.GREETING: 0.5,
+            IntentType.GOODBYE: 0.3
+        }
+        
+        best_intent = None
+        best_score = 0
+        
+        for intent_data in multiple_intents:
+            intent = intent_data['intent']
+            confidence = intent_data['confidence']
+            weight = priority_weights.get(intent, 1.0)
+            score = confidence * weight
+            
+            if score > best_score:
+                best_score = score
+                best_intent = intent_data
+        
+        return best_intent['intent'] if best_intent else IntentType.UNKNOWN, best_intent['confidence'] if best_intent else 0.0
+    
+    def _analyze_sentiment_advanced(self, message: str, multiple_intents: List[Dict[str, Any]]) -> SentimentType:
+        """Análise de sentimento avançada considerando contexto"""
+        # Primeiro análise básica
+        basic_sentiment = self._analyze_sentiment(message)
+        
+        # Ajustes baseados nas intenções
+        intent_sentiment_modifiers = {
+            IntentType.URGENCY: SentimentType.URGENT,
+            IntentType.COMPLAINT: SentimentType.ANGRY,
+            IntentType.FINANCIAL_DIFFICULTY: SentimentType.ANXIOUS,
+            IntentType.PAYMENT_CONFIRMATION: SentimentType.POSITIVE
+        }
+        
+        for intent_data in multiple_intents:
+            intent = intent_data['intent']
+            if intent in intent_sentiment_modifiers:
+                confidence = intent_data['confidence']
+                if confidence > 0.7:
+                    return intent_sentiment_modifiers[intent]
+        
+        return basic_sentiment
+    
+    def _extract_entities_advanced(self, message: str) -> Dict[str, Any]:
+        """Extração de entidades avançada"""
+        entities = self._extract_entities(message)
+        
+        # Adicionar entidades de contexto temporal
+        time_entities = []
+        for pattern in ['hoje', 'amanhã', 'semana que vem', 'mês que vem', 'ano que vem']:
+            if pattern in message.lower():
+                time_entities.append(pattern)
+        
+        if time_entities:
+            entities['temporal_context'] = time_entities
+        
+        # Entidades de intensidade
+        intensity_words = ['muito', 'super', 'extremamente', 'absurdamente', 'pra caramba']
+        found_intensity = [word for word in intensity_words if word in message.lower()]
+        if found_intensity:
+            entities['intensity_modifiers'] = found_intensity
+        
+        # Entidades de negação
+        negation_words = ['não', 'nunca', 'jamais', 'nem', 'nada']
+        found_negations = [word for word in negation_words if word in message.lower()]
+        if found_negations:
+            entities['negations'] = found_negations
+        
+        return entities
+    
+    def _detect_contradictions(self, message: str) -> List[Dict[str, str]]:
+        """Detectar contradições na mensagem"""
+        contradictions = []
+        
+        for contradiction in self.contradiction_detectors:
+            pattern1 = contradiction['pattern1']
+            pattern2 = contradiction['pattern2']
+            
+            if re.search(pattern1, message, re.IGNORECASE) and re.search(pattern2, message, re.IGNORECASE):
+                contradictions.append({
+                    'type': contradiction['type'],
+                    'pattern1': pattern1,
+                    'pattern2': pattern2,
+                    'description': f"Contradiction detected: {contradiction['type']}"
+                })
+        
+        return contradictions
+    
+    def _detect_ambiguities(self, message: str) -> List[str]:
+        """Detectar ambiguidades e incertezas"""
+        ambiguities = []
+        
+        for ambiguity_type, patterns in self.ambiguity_resolvers.items():
+            for pattern in patterns:
+                if re.search(pattern, message, re.IGNORECASE):
+                    ambiguities.append(ambiguity_type)
+                    break
+        
+        return list(set(ambiguities))  # Remove duplicatas
+    
+    def _analyze_subtext(self, message: str) -> Dict[str, List[str]]:
+        """Analisar subtexto e comunicação indireta"""
+        subtext = {}
+        
+        for subtext_type, patterns in self.subtext_analyzers.items():
+            matches = []
+            for pattern in patterns:
+                if re.search(pattern, message, re.IGNORECASE):
+                    matches.append(pattern)
+            
+            if matches:
+                subtext[subtext_type] = matches
+        
+        return subtext
+    
+    def _analyze_personality(self, message: str) -> Dict[str, float]:
+        """Analisar indicadores de personalidade"""
+        personality_scores = {}
+        
+        for personality_type, patterns in self.personality_indicators.items():
+            score = 0
+            for pattern in patterns:
+                matches = len(re.findall(pattern, message, re.IGNORECASE))
+                score += matches
+            
+            # Normalizar score (0-1)
+            personality_scores[personality_type] = min(score / 5.0, 1.0)
+        
+        return personality_scores
+    
+    def _calculate_urgency_score(self, message: str, sentiment: SentimentType, multiple_intents: List[Dict[str, Any]]) -> float:
+        """Calcular score de urgência avançado"""
+        base_score = 0.0
+        
+        # Score baseado no sentimento
+        sentiment_urgency = {
+            SentimentType.URGENT: 5.0,
+            SentimentType.ANGRY: 3.0,
+            SentimentType.FRUSTRATED: 2.5,
+            SentimentType.ANXIOUS: 2.0,
+            SentimentType.NEGATIVE: 1.0
+        }
+        
+        base_score += sentiment_urgency.get(sentiment, 0.0)
+        
+        # Score baseado nas intenções
+        for intent_data in multiple_intents:
+            if intent_data['intent'] == IntentType.URGENCY:
+                base_score += 4.0 * intent_data['confidence']
+        
+        # Multiplicadores baseados em padrões
+        for multiplier_type, multiplier_value in self.urgency_multipliers.items():
+            if multiplier_type == 'time_pressure' and any(word in message.lower() for word in ['hoje', 'agora', 'já', 'imediato']):
+                base_score *= multiplier_value
+            elif multiplier_type == 'consequences' and any(word in message.lower() for word in ['senão', 'caso contrário', 'vai dar']):
+                base_score *= multiplier_value
+            elif multiplier_type == 'emotional_intensity' and sentiment in [SentimentType.URGENT, SentimentType.ANGRY]:
+                base_score *= multiplier_value
+        
+        # Normalizar (0-10)
+        return min(base_score, 10.0)
+    
+    def _detect_regional_context(self, message: str) -> str:
+        """Detectar contexto regional da linguagem"""
+        for region, patterns in self.regional_patterns.items():
+            for pattern in patterns:
+                if re.search(pattern, message, re.IGNORECASE):
+                    return region
+        
+        return 'generic'
+    
+    def _calculate_emotional_intensity(self, message: str, sentiment: SentimentType) -> float:
+        """Calcular intensidade emocional"""
+        intensity = 0.0
+        
+        # Pontuação como indicador
+        exclamations = message.count('!')
+        questions = message.count('?')
+        caps_ratio = sum(1 for c in message if c.isupper()) / max(len(message), 1)
+        
+        intensity += exclamations * 0.5
+        intensity += questions * 0.3
+        intensity += caps_ratio * 2.0
+        
+        # Palavras intensificadoras
+        intensifiers = ['muito', 'super', 'extremamente', 'absurdamente', 'demais', 'pra caramba']
+        for intensifier in intensifiers:
+            if intensifier in message.lower():
+                intensity += 1.0
+        
+        # Multiplicador baseado no sentimento
+        sentiment_multipliers = {
+            SentimentType.ANGRY: 2.0,
+            SentimentType.URGENT: 1.8,
+            SentimentType.FRUSTRATED: 1.5,
+            SentimentType.ANXIOUS: 1.3,
+            SentimentType.POSITIVE: 0.8
+        }
+        
+        intensity *= sentiment_multipliers.get(sentiment, 1.0)
+        
+        return min(intensity, 10.0)
+    
+    def _detect_communication_style(self, message: str) -> str:
+        """Detectar estilo comunicativo"""
+        style_scores = {}
+        
+        for style_type, patterns in self.personality_indicators.items():
+            score = 0
+            for pattern in patterns:
+                score += len(re.findall(pattern, message, re.IGNORECASE))
+            style_scores[style_type] = score
+        
+        # Retornar estilo dominante
+        if style_scores:
+            return max(style_scores, key=style_scores.get)
+        
+        return 'neutral'
     
     def _clean_text(self, text: str) -> str:
         """Limpar e normalizar texto"""
