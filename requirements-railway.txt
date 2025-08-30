@@ -17,6 +17,7 @@ httpx==0.24.1
 # Data Processing - Essencial
 pydantic==2.0.3
 python-dotenv==1.0.0
+ijson==3.2.3
 
 # Security - Mínimo necessário
 bcrypt==4.0.1
