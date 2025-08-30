@@ -1,209 +1,331 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
-Rotas da API para funcionalidades de cobrança
+Rotas da API de Cobrança
+Endpoints para gerenciamento de cobranças
 """
-from fastapi import APIRouter, HTTPException, UploadFile, File, Form, BackgroundTasks
-from fastapi.responses import JSONResponse
-from typing import Optional, Dict, Any
+
+import asyncio
 import json
-import logging
+from flask import Blueprint, request, jsonify, current_app
+from typing import Dict, Any
 
-from modules.billing_dispatcher import BillingDispatcher
-from modules.validation_engine import ValidationEngine
-from modules.logger_system import LoggerSystem
+from backend.modules.billing_dispatcher import BillingDispatcher
+from backend.modules.waha_integration import WahaIntegration
+from backend.modules.logger_system import LogManager, LogCategory
+from backend.config.settings import Config
 
-logger = logging.getLogger(__name__)
-router = APIRouter()
+logger = LogManager.get_logger('api_billing')
+billing_bp = Blueprint('billing', __name__)
 
-# Referências globais (serão definidas no app.py)
-billing_dispatcher: Optional[BillingDispatcher] = None
-validation_engine: Optional[ValidationEngine] = None
-logger_system: Optional[LoggerSystem] = None
+# Instância global do dispatcher
+billing_dispatcher = None
+waha_client = None
 
-def set_dependencies(bd: BillingDispatcher, ve: ValidationEngine, ls: LoggerSystem):
-    """Definir dependências dos módulos"""
-    global billing_dispatcher, validation_engine, logger_system
-    billing_dispatcher = bd
-    validation_engine = ve
-    logger_system = ls
-
-@router.post("/process-json")
-async def process_billing_json(
-    background_tasks: BackgroundTasks,
-    json_data: str = Form(...),
-    template: Optional[str] = Form(None)
-):
-    """
-    Processar JSON com dados de cobrança
+def get_billing_dispatcher():
+    """Obter instância do billing dispatcher"""
+    global billing_dispatcher, waha_client
     
-    Args:
-        json_data: String JSON com dados dos clientes
-        template: Template customizado de mensagem (opcional)
-    """
+    if billing_dispatcher is None:
+        # Inicializar integração com Waha se configurada
+        if Config.WAHA_BASE_URL:
+            waha_client = WahaIntegration()
+        
+        billing_dispatcher = BillingDispatcher(waha_client)
+        logger.info(LogCategory.BILLING, "Billing Dispatcher inicializado")
+    
+    return billing_dispatcher
+
+@billing_bp.route('/health', methods=['GET'])
+def health_check():
+    """Health check do módulo de cobrança"""
     try:
-        if not billing_dispatcher:
-            raise HTTPException(status_code=500, detail="Sistema não inicializado")
+        dispatcher = get_billing_dispatcher()
+        stats = dispatcher.get_statistics()
         
-        # Validar estrutura do JSON
-        json_validation = await validation_engine.validate_json_structure(json_data)
-        if not json_validation["is_valid"]:
-            raise HTTPException(status_code=400, detail=json_validation["error"])
+        return jsonify({
+            'status': 'healthy',
+            'module': 'billing',
+            'statistics': stats,
+            'timestamp': logger.get_stats()['start_time']
+        }), 200
         
-        # Validar template se fornecido
-        if template:
-            template_validation = await validation_engine.validate_template(template)
-            if not template_validation["is_valid"]:
-                raise HTTPException(status_code=400, detail=template_validation["error"])
+    except Exception as e:
+        logger.error(LogCategory.BILLING, f"Erro no health check: {e}")
+        return jsonify({
+            'status': 'unhealthy',
+            'error': str(e)
+        }), 500
+
+@billing_bp.route('/send-batch', methods=['POST'])
+def send_billing_batch():
+    """Enviar lote de cobranças"""
+    try:
+        # Validar dados de entrada
+        if not request.is_json:
+            return jsonify({
+                'error': 'Content-Type deve ser application/json'
+            }), 400
         
-        # Processar em background
-        background_tasks.add_task(
-            _process_billing_background,
-            json_data,
-            template
+        data = request.get_json()
+        
+        # Validar campos obrigatórios
+        if 'clients' not in data:
+            return jsonify({
+                'error': 'Campo "clients" é obrigatório'
+            }), 400
+        
+        template_id = data.get('template_id', 'initial_br')
+        schedule_time = data.get('schedule_time')  # ISO format
+        
+        logger.info(LogCategory.BILLING, 
+                   f"Iniciando envio de lote de cobrança",
+                   details={
+                       'client_count': len(data['clients']),
+                       'template_id': template_id,
+                       'scheduled': schedule_time is not None
+                   })
+        
+        # Obter dispatcher
+        dispatcher = get_billing_dispatcher()
+        
+        # Processar JSON de clientes
+        json_data = json.dumps(data)
+        clients, errors = dispatcher.load_clients_from_json(json_data)
+        
+        if errors:
+            logger.error(LogCategory.BILLING, "Erro na validação dos clientes", details={'errors': errors})
+            return jsonify({
+                'error': 'Dados inválidos',
+                'validation_errors': errors
+            }), 400
+        
+        # Criar mensagens
+        from datetime import datetime
+        schedule_datetime = None
+        if schedule_time:
+            try:
+                schedule_datetime = datetime.fromisoformat(schedule_time)
+            except ValueError:
+                return jsonify({
+                    'error': 'Formato de data/hora inválido para schedule_time'
+                }), 400
+        
+        messages = dispatcher.create_billing_messages(
+            clients=clients,
+            template_id=template_id,
+            schedule_time=schedule_datetime
         )
         
-        return {
-            "success": True,
-            "message": "Processamento iniciado",
-            "records_count": json_validation["records_count"]
-        }
+        # Enviar mensagens de forma assíncrona
+        async def send_messages():
+            return await dispatcher.dispatch_batch(messages)
         
-    except HTTPException:
-        raise
+        # Executar envio
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        try:
+            result = loop.run_until_complete(send_messages())
+        finally:
+            loop.close()
+        
+        logger.billing_event('batch_sent', 'system', {
+            'total_messages': result.total_messages,
+            'successful': result.successful,
+            'failed': result.failed,
+            'execution_time': result.execution_time
+        })
+        
+        return jsonify({
+            'success': True,
+            'message': 'Lote de cobrança processado',
+            'result': {
+                'total_messages': result.total_messages,
+                'successful': result.successful,
+                'failed': result.failed,
+                'skipped': result.skipped,
+                'execution_time': result.execution_time,
+                'errors': result.errors
+            }
+        }), 200
+        
     except Exception as e:
-        logger.error(f"Erro ao processar JSON de cobrança: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(LogCategory.BILLING, f"Erro no envio de lote: {e}")
+        return jsonify({
+            'error': 'Erro interno do servidor',
+            'message': str(e)
+        }), 500
 
-async def _process_billing_background(json_data: str, template: Optional[str]):
-    """Processar cobrança em background"""
+@billing_bp.route('/validate-clients', methods=['POST'])
+def validate_clients():
+    """Validar dados de clientes sem enviar"""
     try:
-        result = await billing_dispatcher.process_billing_json(json_data, template)
-        logger.info(f"Processamento concluído: {result}")
+        if not request.is_json:
+            return jsonify({
+                'error': 'Content-Type deve ser application/json'
+            }), 400
+        
+        data = request.get_json()
+        json_data = json.dumps(data)
+        
+        # Obter dispatcher
+        dispatcher = get_billing_dispatcher()
+        
+        # Validar dados
+        clients, errors = dispatcher.load_clients_from_json(json_data)
+        
+        if errors:
+            return jsonify({
+                'valid': False,
+                'errors': errors,
+                'client_count': 0
+            }), 400
+        
+        logger.info(LogCategory.BILLING, f"Validação de clientes concluída: {len(clients)} válidos")
+        
+        return jsonify({
+            'valid': True,
+            'client_count': len(clients),
+            'clients_preview': clients[:5],  # Prévia dos primeiros 5
+            'message': f'{len(clients)} clientes validados com sucesso'
+        }), 200
+        
     except Exception as e:
-        logger.error(f"Erro no processamento em background: {str(e)}")
+        logger.error(LogCategory.BILLING, f"Erro na validação: {e}")
+        return jsonify({
+            'error': 'Erro interno do servidor',
+            'message': str(e)
+        }), 500
 
-@router.post("/upload-file")
-async def upload_billing_file(
-    background_tasks: BackgroundTasks,
-    file: UploadFile = File(...),
-    template: Optional[str] = Form(None)
-):
-    """
-    Upload de arquivo JSON com dados de cobrança
-    """
+@billing_bp.route('/templates', methods=['GET'])
+def get_templates():
+    """Obter templates de mensagem disponíveis"""
     try:
-        if not billing_dispatcher:
-            raise HTTPException(status_code=500, detail="Sistema não inicializado")
+        dispatcher = get_billing_dispatcher()
+        templates = {}
         
-        # Verificar tipo de arquivo
-        if not file.filename.endswith('.json'):
-            raise HTTPException(status_code=400, detail="Apenas arquivos JSON são aceitos")
+        for template_id, template in dispatcher.template_manager.templates.items():
+            templates[template_id] = {
+                'id': template_id,
+                'type': template.type.value,
+                'subject': template.subject,
+                'content': template.content,
+                'variables': template.variables,
+                'priority': template.priority
+            }
         
-        # Ler conteúdo do arquivo
-        content = await file.read()
-        json_data = content.decode('utf-8')
+        return jsonify({
+            'templates': templates,
+            'count': len(templates)
+        }), 200
         
-        # Validar estrutura do JSON
-        json_validation = await validation_engine.validate_json_structure(json_data)
-        if not json_validation["is_valid"]:
-            raise HTTPException(status_code=400, detail=json_validation["error"])
-        
-        # Validar template se fornecido
-        if template:
-            template_validation = await validation_engine.validate_template(template)
-            if not template_validation["is_valid"]:
-                raise HTTPException(status_code=400, detail=template_validation["error"])
-        
-        # Processar em background
-        background_tasks.add_task(
-            _process_billing_background,
-            json_data,
-            template
-        )
-        
-        return {
-            "success": True,
-            "message": "Arquivo processado com sucesso",
-            "filename": file.filename,
-            "records_count": json_validation["records_count"]
-        }
-        
-    except HTTPException:
-        raise
     except Exception as e:
-        logger.error(f"Erro ao processar arquivo: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(LogCategory.BILLING, f"Erro ao obter templates: {e}")
+        return jsonify({
+            'error': 'Erro interno do servidor',
+            'message': str(e)
+        }), 500
 
-@router.get("/validate-json")
-async def validate_json_data(json_data: str):
-    """Validar estrutura de dados JSON"""
+@billing_bp.route('/statistics', methods=['GET'])
+def get_statistics():
+    """Obter estatísticas do sistema de cobrança"""
     try:
-        if not validation_engine:
-            raise HTTPException(status_code=500, detail="Sistema não inicializado")
+        dispatcher = get_billing_dispatcher()
+        stats = dispatcher.get_statistics()
         
-        result = await validation_engine.validate_json_structure(json_data)
-        return result
+        # Adicionar estatísticas do logger
+        logger_stats = logger.get_stats()
+        
+        return jsonify({
+            'billing_stats': stats,
+            'logger_stats': logger_stats,
+            'timestamp': logger_stats['start_time']
+        }), 200
         
     except Exception as e:
-        logger.error(f"Erro ao validar JSON: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(LogCategory.BILLING, f"Erro ao obter estatísticas: {e}")
+        return jsonify({
+            'error': 'Erro interno do servidor',
+            'message': str(e)
+        }), 500
 
-@router.get("/validate-template")
-async def validate_template_data(template: str):
-    """Validar template de mensagem"""
+@billing_bp.route('/retry-failed', methods=['POST'])
+def retry_failed_messages():
+    """Reenviar mensagens falhadas"""
     try:
-        if not validation_engine:
-            raise HTTPException(status_code=500, detail="Sistema não inicializado")
+        dispatcher = get_billing_dispatcher()
         
-        result = await validation_engine.validate_template(template)
-        return result
+        # Executar retry de forma assíncrona
+        async def retry_messages():
+            return await dispatcher.retry_failed_messages()
+        
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        try:
+            result = loop.run_until_complete(retry_messages())
+        finally:
+            loop.close()
+        
+        logger.billing_event('retry_completed', 'system', {
+            'successful': result.successful,
+            'failed': result.failed,
+            'execution_time': result.execution_time
+        })
+        
+        return jsonify({
+            'success': True,
+            'message': 'Retry de mensagens concluído',
+            'result': {
+                'total_messages': result.total_messages,
+                'successful': result.successful,
+                'failed': result.failed,
+                'execution_time': result.execution_time,
+                'errors': result.errors
+            }
+        }), 200
         
     except Exception as e:
-        logger.error(f"Erro ao validar template: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(LogCategory.BILLING, f"Erro no retry: {e}")
+        return jsonify({
+            'error': 'Erro interno do servidor',
+            'message': str(e)
+        }), 500
 
-@router.get("/stats")
-async def get_billing_stats():
-    """Obter estatísticas de processamento"""
+@billing_bp.route('/test-template', methods=['POST'])
+def test_template():
+    """Testar renderização de template"""
     try:
-        if not billing_dispatcher:
-            raise HTTPException(status_code=500, detail="Sistema não inicializado")
+        if not request.is_json:
+            return jsonify({
+                'error': 'Content-Type deve ser application/json'
+            }), 400
         
-        stats = await billing_dispatcher.get_processing_stats()
-        return stats
+        data = request.get_json()
+        template_id = data.get('template_id')
+        variables = data.get('variables', {})
+        
+        if not template_id:
+            return jsonify({
+                'error': 'Campo "template_id" é obrigatório'
+            }), 400
+        
+        dispatcher = get_billing_dispatcher()
+        rendered = dispatcher.template_manager.render_template(template_id, variables)
+        
+        if rendered is None:
+            return jsonify({
+                'error': f'Template "{template_id}" não encontrado'
+            }), 404
+        
+        return jsonify({
+            'template_id': template_id,
+            'variables': variables,
+            'rendered': rendered
+        }), 200
         
     except Exception as e:
-        logger.error(f"Erro ao obter estatísticas: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-@router.get("/logs")
-async def get_billing_logs(limit: int = 100):
-    """Obter logs de operações de cobrança"""
-    try:
-        if not logger_system:
-            raise HTTPException(status_code=500, detail="Sistema não inicializado")
-        
-        operation_logs = await logger_system.get_operation_logs(limit=limit)
-        message_logs = await logger_system.get_message_logs(limit=limit)
-        
-        return {
-            "operation_logs": operation_logs,
-            "message_logs": message_logs
-        }
-        
-    except Exception as e:
-        logger.error(f"Erro ao obter logs: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-@router.get("/report")
-async def generate_billing_report(start_date: Optional[str] = None):
-    """Gerar relatório de atividades"""
-    try:
-        if not logger_system:
-            raise HTTPException(status_code=500, detail="Sistema não inicializado")
-        
-        report = await logger_system.generate_report(start_date)
-        return report
-        
-    except Exception as e:
-        logger.error(f"Erro ao gerar relatório: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(LogCategory.BILLING, f"Erro no teste de template: {e}")
+        return jsonify({
+            'error': 'Erro interno do servidor',
+            'message': str(e)
+        }), 500

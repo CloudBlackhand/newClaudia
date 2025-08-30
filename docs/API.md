@@ -1,454 +1,807 @@
-# Documentação da API
+# Documentação da API - Sistema de Cobrança Inteligente
 
-## Visão Geral
+Esta documentação detalha todos os endpoints disponíveis no sistema.
 
-O Sistema de Cobrança Avançado fornece uma API REST completa para gerenciar operações de cobrança e conversação inteligente.
+## 📋 Índice
 
-### Base URL
+- [Autenticação](#autenticação)
+- [API de Cobrança](#api-de-cobrança)
+- [API de Conversação](#api-de-conversação)
+- [API de Webhooks](#api-de-webhooks)
+- [Códigos de Erro](#códigos-de-erro)
+- [Exemplos Práticos](#exemplos-práticos)
+
+## 🔐 Autenticação
+
+### Headers Obrigatórios
+```http
+Content-Type: application/json
+X-API-Key: sua_api_key_aqui (opcional, se configurada)
 ```
-https://seu-app.railway.app/api
+
+### Webhooks
+```http
+X-Hub-Signature-256: sha256=hash_hmac_sha256 (se WEBHOOK_SECRET configurado)
 ```
 
-### Autenticação
-Atualmente o sistema não requer autenticação para endpoints públicos. Para produção, configure as variáveis de ambiente de segurança.
+## 💰 API de Cobrança
 
-## Endpoints
+Base URL: `/api/billing`
 
-### 🏥 Health Check
+### Health Check
+Verifica status do módulo de cobrança.
 
-#### `GET /health`
-Verificar saúde do sistema
+```http
+GET /api/billing/health
+```
 
-**Resposta:**
+**Response:**
 ```json
 {
   "status": "healthy",
-  "modules": {
-    "billing_dispatcher": true,
-    "conversation_bot": true,
-    "waha_integration": true
-  }
-}
-```
-
-### 💰 Endpoints de Cobrança
-
-#### `POST /api/billing/process-json`
-Processar arquivo JSON com dados de cobrança
-
-**Parâmetros:**
-- `json_data` (form): String JSON com dados dos clientes
-- `template` (form, opcional): Template personalizado de mensagem
-
-**Exemplo:**
-```bash
-curl -X POST "https://seu-app.railway.app/api/billing/process-json" \
-  -F "json_data=[{\"nome\":\"João\",\"telefone\":\"+5511999999999\",\"valor\":\"100.00\"}]" \
-  -F "template=Olá {nome}, você deve R$ {valor}"
-```
-
-**Resposta:**
-```json
-{
-  "success": true,
-  "message": "Processamento iniciado",
-  "records_count": 1
-}
-```
-
-#### `POST /api/billing/upload-file`
-Upload de arquivo JSON
-
-**Parâmetros:**
-- `file` (multipart): Arquivo JSON
-- `template` (form, opcional): Template personalizado
-
-**Resposta:**
-```json
-{
-  "success": true,
-  "message": "Arquivo processado com sucesso",
-  "filename": "clientes.json",
-  "records_count": 50
-}
-```
-
-#### `GET /api/billing/validate-json`
-Validar estrutura de JSON
-
-**Parâmetros:**
-- `json_data` (query): String JSON para validar
-
-**Resposta:**
-```json
-{
-  "is_valid": true,
-  "records_count": 10,
-  "data": [...]
-}
-```
-
-#### `GET /api/billing/validate-template`
-Validar template de mensagem
-
-**Parâmetros:**
-- `template` (query): Template para validar
-
-**Resposta:**
-```json
-{
-  "is_valid": true,
-  "placeholders_found": ["{nome}", "{valor}"],
-  "template_length": 50
-}
-```
-
-#### `GET /api/billing/stats`
-Obter estatísticas de processamento
-
-**Resposta:**
-```json
-{
-  "is_healthy": true,
-  "queue_size": 0,
-  "workers_running": true
-}
-```
-
-#### `GET /api/billing/logs`
-Obter logs de operações
-
-**Parâmetros:**
-- `limit` (query, opcional): Número máximo de logs (padrão: 100)
-
-**Resposta:**
-```json
-{
-  "operation_logs": [...],
-  "message_logs": [...]
-}
-```
-
-#### `GET /api/billing/report`
-Gerar relatório de atividades
-
-**Parâmetros:**
-- `start_date` (query, opcional): Data inicial (ISO format)
-
-**Resposta:**
-```json
-{
-  "report_timestamp": "2024-01-15T10:30:00",
-  "operations": {
-    "total": 100,
-    "successful": 95,
-    "failed": 5,
-    "success_rate": 95.0
+  "module": "billing",
+  "statistics": {
+    "total_messages": 150,
+    "sent_messages": 142,
+    "pending_messages": 8
   },
-  "messages": {
-    "total": 500,
-    "successful": 485,
-    "failed": 15,
-    "success_rate": 97.0
-  }
+  "timestamp": "2024-01-01T10:00:00Z"
 }
 ```
 
-### 🤖 Endpoints de Conversação
+### Validar Clientes
+Valida estrutura e dados de clientes sem enviar mensagens.
 
-#### `POST /api/conversation/send-message`
-Enviar mensagem para o bot
-
-**Parâmetros:**
-```json
-{
-  "user_phone": "+5511999999999",
-  "message": "Olá",
-  "context": {}
-}
+```http
+POST /api/billing/validate-clients
 ```
 
-**Resposta:**
+**Request Body:**
 ```json
 {
-  "success": true,
-  "bot_response": "Olá! Como posso ajudá-lo?",
-  "intent": "saudacao",
-  "confidence": 0.95,
-  "suggested_actions": ["continuar_conversa"],
-  "requires_human": false
-}
-```
-
-#### `GET /api/conversation/conversation-history/{user_phone}`
-Obter histórico de conversa
-
-**Resposta:**
-```json
-{
-  "success": true,
-  "user_phone": "+5511999999999",
-  "conversation_history": [
+  "clients": [
     {
-      "timestamp": "2024-01-15T10:30:00",
-      "type": "user",
-      "message": "Olá",
-      "intent": "saudacao",
-      "sentiment": "neutro"
-    },
-    {
-      "timestamp": "2024-01-15T10:30:01",
-      "type": "bot",
-      "message": "Olá! Como posso ajudá-lo?",
-      "intent": "saudacao",
-      "confidence": 0.95
+      "name": "João Silva",
+      "phone": "11999999999",
+      "amount": 150.50,
+      "due_date": "2024-12-31",
+      "email": "joao@email.com",
+      "cpf": "123.456.789-01",
+      "description": "Mensalidade dezembro"
     }
   ]
 }
 ```
 
-#### `GET /api/conversation/active-sessions`
-Obter número de sessões ativas
-
-**Resposta:**
+**Response (Sucesso):**
 ```json
 {
-  "success": true,
-  "active_sessions": 25
+  "valid": true,
+  "client_count": 1,
+  "clients_preview": [
+    {
+      "id": "client_0_123456",
+      "name": "João Silva",
+      "phone": "+5511999999999",
+      "amount": 150.50,
+      "due_date": "2024-12-31",
+      "email": "joao@email.com"
+    }
+  ],
+  "message": "1 clientes validados com sucesso"
 }
 ```
 
-#### `GET /api/conversation/conversation-logs`
-Obter logs de conversas
+**Response (Erro):**
+```json
+{
+  "valid": false,
+  "errors": [
+    "client[0].phone: Formato de telefone inválido",
+    "client[0].amount: Valor deve ser positivo"
+  ],
+  "client_count": 0
+}
+```
+
+### Enviar Lote de Cobranças
+Processa e envia mensagens de cobrança para lista de clientes.
+
+```http
+POST /api/billing/send-batch
+```
+
+**Request Body:**
+```json
+{
+  "clients": [
+    {
+      "name": "João Silva",
+      "phone": "11999999999",
+      "amount": 150.50,
+      "due_date": "2024-12-31"
+    }
+  ],
+  "template_id": "initial_br",
+  "schedule_time": "2024-12-25T10:00:00"
+}
+```
 
 **Parâmetros:**
-- `session_id` (query, opcional): ID da sessão específica
-- `limit` (query, opcional): Número máximo de logs
+- `clients` (array, obrigatório): Lista de clientes
+- `template_id` (string, opcional): ID do template (padrão: "initial_br")
+- `schedule_time` (string, opcional): Data/hora para agendamento (ISO 8601)
 
-**Resposta:**
+**Response:**
 ```json
 {
   "success": true,
-  "conversation_logs": [...]
+  "message": "Lote de cobrança processado",
+  "result": {
+    "total_messages": 1,
+    "successful": 1,
+    "failed": 0,
+    "skipped": 0,
+    "execution_time": 1.25,
+    "errors": []
+  }
 }
 ```
 
-#### `GET /api/conversation/bot-stats`
-Obter estatísticas do bot
+### Obter Templates
+Lista todos os templates de mensagem disponíveis.
 
-**Resposta:**
+```http
+GET /api/billing/templates
+```
+
+**Response:**
+```json
+{
+  "templates": {
+    "initial_br": {
+      "id": "initial_br",
+      "type": "initial",
+      "subject": "Cobrança - Vencimento {due_date}",
+      "content": "Olá {client_name}! Temos uma cobrança...",
+      "variables": ["client_name", "amount", "due_date"],
+      "priority": 1
+    }
+  },
+  "count": 4
+}
+```
+
+### Testar Template
+Renderiza template com variáveis fornecidas.
+
+```http
+POST /api/billing/test-template
+```
+
+**Request Body:**
+```json
+{
+  "template_id": "initial_br",
+  "variables": {
+    "client_name": "João Silva",
+    "amount": "150.50",
+    "due_date": "31/12/2024"
+  }
+}
+```
+
+**Response:**
+```json
+{
+  "template_id": "initial_br",
+  "variables": {
+    "client_name": "João Silva",
+    "amount": "150.50",
+    "due_date": "31/12/2024"
+  },
+  "rendered": "Olá João Silva! Temos uma cobrança pendente..."
+}
+```
+
+### Reenviar Mensagens Falhadas
+Reprocessa mensagens que falharam anteriormente.
+
+```http
+POST /api/billing/retry-failed
+```
+
+**Response:**
 ```json
 {
   "success": true,
-  "is_healthy": true,
-  "active_sessions": 25,
-  "is_initialized": true
+  "message": "Retry de mensagens concluído",
+  "result": {
+    "total_messages": 5,
+    "successful": 3,
+    "failed": 2,
+    "execution_time": 2.1,
+    "errors": [
+      "Falha ao enviar para +5511888888888"
+    ]
+  }
 }
 ```
 
-### 📱 Endpoints de WhatsApp (Webhooks)
+### Obter Estatísticas
+Retorna estatísticas detalhadas do sistema de cobrança.
 
-#### `POST /api/webhooks/waha`
-Receber webhooks do Waha
+```http
+GET /api/billing/statistics
+```
+
+**Response:**
+```json
+{
+  "billing_stats": {
+    "total_messages": 500,
+    "sent_messages": 475,
+    "pending_messages": 25,
+    "status_breakdown": {
+      "sent": 475,
+      "pending": 20,
+      "failed": 5
+    },
+    "templates_available": 4
+  },
+  "logger_stats": {
+    "total_logs": 1250,
+    "errors": 15,
+    "warnings": 45,
+    "uptime_seconds": 86400
+  }
+}
+```
+
+## 💬 API de Conversação
+
+Base URL: `/api/conversation`
+
+### Health Check
+Verifica status do módulo de conversação.
+
+```http
+GET /api/conversation/health
+```
+
+**Response:**
+```json
+{
+  "status": "healthy",
+  "module": "conversation",
+  "statistics": {
+    "total_contexts": 25,
+    "active_contexts": 18,
+    "total_messages": 342,
+    "average_messages_per_context": 13.7
+  }
+}
+```
+
+### Processar Mensagem
+Processa mensagem do usuário com IA e gera resposta.
+
+```http
+POST /api/conversation/process-message
+```
+
+**Request Body:**
+```json
+{
+  "phone": "+5511999999999",
+  "message": "Oi, recebi uma cobrança de vocês",
+  "user_name": "João Silva",
+  "auto_reply": true
+}
+```
+
+**Parâmetros:**
+- `phone` (string, obrigatório): Telefone do usuário
+- `message` (string, obrigatório): Mensagem do usuário
+- `user_name` (string, opcional): Nome do usuário
+- `auto_reply` (boolean, opcional): Enviar resposta automaticamente (padrão: true)
+
+**Response:**
+```json
+{
+  "success": true,
+  "response": {
+    "text": "Olá João! Obrigado por entrar em contato. Como posso ajudá-lo?",
+    "type": "informative",
+    "confidence": 0.95,
+    "should_escalate": false,
+    "suggested_actions": [
+      "Verificar dados da cobrança",
+      "Fornecer informações de pagamento"
+    ]
+  },
+  "auto_reply_sent": true,
+  "phone": "+5511999999999"
+}
+```
+
+### Analisar Mensagem
+Analisa mensagem sem gerar resposta ou atualizar contexto.
+
+```http
+POST /api/conversation/analyze-message
+```
+
+**Request Body:**
+```json
+{
+  "message": "Posso parcelar em 3 vezes?"
+}
+```
+
+**Response:**
+```json
+{
+  "analysis": {
+    "intent": "negotiation",
+    "sentiment": "neutral",
+    "confidence": 0.87,
+    "entities": {
+      "money": ["3"]
+    },
+    "keywords": ["parcelar", "vezes"]
+  },
+  "message": "Posso parcelar em 3 vezes?"
+}
+```
+
+### Obter Contextos Ativos
+Lista conversas ativas no sistema.
+
+```http
+GET /api/conversation/contexts?phone=11999&limit=20
+```
+
+**Parâmetros de Query:**
+- `phone` (string, opcional): Filtro por telefone
+- `limit` (integer, opcional): Limite de resultados (padrão: 50)
+
+**Response:**
+```json
+{
+  "contexts": [
+    {
+      "phone": "+5511999999999",
+      "session_id": "session_123",
+      "user_name": "João Silva",
+      "started_at": "2024-01-01T09:00:00Z",
+      "last_activity": "2024-01-01T09:15:00Z",
+      "message_count": 5,
+      "topics_discussed": ["greeting", "payment_question"],
+      "recent_intents": ["greeting", "payment_question", "negotiation"],
+      "recent_sentiments": ["neutral", "positive", "neutral"]
+    }
+  ],
+  "total_count": 25,
+  "filtered_count": 1
+}
+```
+
+### Obter Detalhes do Contexto
+Retorna informações detalhadas de uma conversa específica.
+
+```http
+GET /api/conversation/contexts/{phone}
+```
+
+**Response:**
+```json
+{
+  "context": {
+    "phone": "+5511999999999",
+    "session_id": "session_123",
+    "user_name": "João Silva",
+    "started_at": "2024-01-01T09:00:00Z",
+    "last_activity": "2024-01-01T09:15:00Z",
+    "message_count": 5,
+    "payment_amount": 150.50,
+    "due_date": "2024-12-31",
+    "topics_discussed": ["greeting", "payment_question", "negotiation"],
+    "intent_history": ["greeting", "payment_question", "negotiation", "payment_confirmation"],
+    "sentiment_history": ["neutral", "positive", "neutral", "positive"]
+  }
+}
+```
+
+### Excluir Contexto
+Remove contexto de conversa do sistema.
+
+```http
+DELETE /api/conversation/contexts/{phone}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Contexto de +5511999999999 excluído com sucesso"
+}
+```
+
+### Testar NLP
+Testa capacidades de processamento de linguagem natural.
+
+```http
+POST /api/conversation/test-nlp
+```
+
+**Request Body:**
+```json
+{
+  "messages": [
+    "Olá, tudo bem?",
+    "Quanto devo pagar?",
+    "Já paguei ontem via PIX"
+  ]
+}
+```
+
+**Response:**
+```json
+{
+  "results": [
+    {
+      "message": "Olá, tudo bem?",
+      "intent": "greeting",
+      "sentiment": "positive",
+      "confidence": 0.92,
+      "entities": {},
+      "keywords": ["olá", "tudo", "bem"]
+    }
+  ],
+  "count": 3
+}
+```
+
+## 🔗 API de Webhooks
+
+Base URL: `/api/webhook`
+
+### Health Check
+Verifica status do módulo de webhooks.
+
+```http
+GET /api/webhook/health
+```
+
+**Response:**
+```json
+{
+  "status": "healthy",
+  "module": "webhook",
+  "services": {
+    "conversation_bot": "initialized",
+    "waha_integration": "healthy"
+  },
+  "configuration": {
+    "webhook_secret_configured": true,
+    "waha_url_configured": true
+  }
+}
+```
+
+### Webhook do WhatsApp
+Recebe webhooks do Waha para processar mensagens.
+
+```http
+POST /api/webhook/whatsapp
+```
 
 **Headers:**
-- `X-Signature` (opcional): Assinatura do webhook
-- `Authorization` (opcional): Token de autorização
+```http
+Content-Type: application/json
+X-Hub-Signature-256: sha256=hash_calculado_com_webhook_secret
+```
 
-**Body:**
+**Request Body (Mensagem):**
 ```json
 {
-  "event": "message.text",
+  "event": "message",
+  "session": "default",
   "payload": {
-    "from": "+5511999999999",
-    "body": "Olá",
+    "id": "msg_123456",
+    "timestamp": 1640995200,
     "fromMe": false,
-    "type": "text"
+    "from": "5511999999999@c.us",
+    "chatId": "5511999999999@c.us",
+    "type": "text",
+    "body": "Olá, recebi uma cobrança"
   }
 }
 ```
 
-**Resposta:**
+**Response:**
 ```json
 {
-  "success": true,
-  "processed": true,
-  "result": {
-    "processed": true,
-    "user_phone": "+5511999999999",
-    "user_message": "Olá",
-    "bot_response": "Olá! Como posso ajudá-lo?",
-    "requires_human": false
+  "status": "processed",
+  "message": "Mensagem processada com sucesso",
+  "response_sent": true,
+  "should_escalate": false,
+  "phone": "5511999999999"
+}
+```
+
+**Request Body (Status da Sessão):**
+```json
+{
+  "event": "session.status",
+  "session": "default",
+  "payload": {
+    "name": "default",
+    "status": "WORKING"
   }
 }
 ```
 
-#### `GET /api/webhooks/waha/status`
-Obter status da integração Waha
-
-**Resposta:**
+**Response:**
 ```json
 {
-  "success": true,
-  "waha_status": {
-    "status": "WORKING",
-    "connected": true
+  "status": "processed",
+  "session": "default",
+  "new_status": "WORKING"
+}
+```
+
+### Webhook de Teste
+Endpoint para testar funcionalidade de webhooks.
+
+```http
+POST /api/webhook/test
+```
+
+**Request Body:**
+```json
+{
+  "test": "data",
+  "timestamp": "2024-01-01T10:00:00Z"
+}
+```
+
+**Response:**
+```json
+{
+  "status": "test_successful",
+  "message": "Webhook de teste processado",
+  "received_data": {
+    "test": "data",
+    "timestamp": "2024-01-01T10:00:00Z"
   },
-  "integration_stats": {
-    "is_initialized": true,
-    "connection_status": "connected",
-    "base_url": "https://waha.example.com",
-    "session_name": "default"
-  }
+  "timestamp": "2024-01-01T10:00:00Z"
 }
 ```
 
-#### `POST /api/webhooks/send-message`
-Enviar mensagem via WhatsApp
+## 🏥 Health Check Geral
+Verifica status geral da aplicação.
 
-**Parâmetros:**
-- `to_number` (query): Número de destino
-- `message` (query): Mensagem a ser enviada
+```http
+GET /health
+```
 
-**Resposta:**
+**Response:**
 ```json
 {
-  "success": true,
-  "message_id": "msg_123456789",
-  "result": {
-    "success": true,
-    "message_id": "msg_123456789"
-  }
+  "status": "healthy",
+  "service": "Sistema de Cobrança Inteligente",
+  "version": "1.0.0"
 }
 ```
 
-#### `POST /api/webhooks/send-bulk`
-Enviar múltiplas mensagens
+## ❌ Códigos de Erro
 
-**Body:**
-```json
-[
-  {
-    "to": "+5511999999999",
-    "message": "Mensagem 1"
-  },
-  {
-    "to": "+5511888888888",
-    "message": "Mensagem 2"
-  }
-]
-```
-
-**Resposta:**
-```json
-{
-  "success": true,
-  "bulk_result": {
-    "total_messages": 2,
-    "successful_sends": 2,
-    "failed_sends": 0,
-    "results": [...]
-  }
-}
-```
-
-#### `GET /api/webhooks/webhook-logs`
-Obter logs de webhooks
-
-**Parâmetros:**
-- `limit` (query, opcional): Número máximo de logs
-
-**Resposta:**
-```json
-{
-  "success": true,
-  "webhook_logs": [...]
-}
-```
-
-## Códigos de Status
-
+### Códigos HTTP
 - `200` - Sucesso
-- `400` - Erro na requisição (dados inválidos)
+- `400` - Requisição inválida
 - `401` - Não autorizado
 - `404` - Recurso não encontrado
 - `500` - Erro interno do servidor
 
-## Estrutura de Dados
-
-### Cliente (JSON de entrada)
+### Estrutura de Erro
 ```json
 {
-  "nome": "João Silva",           // Obrigatório
-  "telefone": "+5511999999999",   // Obrigatório
-  "valor": "150,00",              // Obrigatório
-  "vencimento": "15/12/2024",     // Opcional
-  "descricao": "Mensalidade",     // Opcional
-  "email": "joao@email.com"       // Opcional
+  "error": "Descrição breve do erro",
+  "message": "Descrição detalhada do que aconteceu",
+  "status": 400,
+  "details": {
+    "field": "campo_com_erro",
+    "validation_errors": ["Lista de erros específicos"]
+  }
 }
 ```
 
-### Placeholders do Template
-- `{nome}` - Nome do cliente
-- `{valor}` - Valor formatado
-- `{vencimento}` - Data de vencimento
-- `{descricao}` - Descrição da cobrança
+### Erros Comuns
 
-### Eventos de Webhook Suportados
-- `message.text` - Mensagem de texto recebida
-- `session.status` - Status da sessão
-- `state.change` - Mudança de estado
-- `qr` - QR Code para autenticação
-- `ready` - WhatsApp pronto
-- `auth_failure` - Falha na autenticação
-
-## Exemplos de Uso
-
-### Upload e Processamento Completo
-```bash
-# 1. Validar JSON
-curl -G "https://seu-app.railway.app/api/billing/validate-json" \
-  --data-urlencode 'json_data=[{"nome":"João","telefone":"+5511999999999","valor":"100.00"}]'
-
-# 2. Validar template
-curl -G "https://seu-app.railway.app/api/billing/validate-template" \
-  --data-urlencode 'template=Olá {nome}, você deve R$ {valor}'
-
-# 3. Processar dados
-curl -X POST "https://seu-app.railway.app/api/billing/process-json" \
-  -F "json_data=[{\"nome\":\"João\",\"telefone\":\"+5511999999999\",\"valor\":\"100.00\"}]" \
-  -F "template=Olá {nome}, você deve R$ {valor}"
-
-# 4. Acompanhar progresso
-curl "https://seu-app.railway.app/api/billing/stats"
+#### 400 - Bad Request
+```json
+{
+  "error": "Dados inválidos",
+  "message": "Os dados fornecidos não passaram na validação",
+  "status": 400,
+  "validation_errors": [
+    "client[0].phone: Formato de telefone inválido",
+    "client[0].amount: Valor deve ser positivo"
+  ]
+}
 ```
 
-### Simulação de Conversa
+#### 401 - Unauthorized
+```json
+{
+  "error": "Não autorizado",
+  "message": "API Key inválida ou ausente",
+  "status": 401
+}
+```
+
+#### 404 - Not Found
+```json
+{
+  "error": "Recurso não encontrado",
+  "message": "O contexto solicitado não existe",
+  "status": 404
+}
+```
+
+#### 500 - Internal Server Error
+```json
+{
+  "error": "Erro interno do servidor",
+  "message": "Ocorreu um erro inesperado no processamento",
+  "status": 500
+}
+```
+
+## 📝 Exemplos Práticos
+
+### Fluxo Completo de Cobrança
+
+#### 1. Validar Dados
 ```bash
-# 1. Enviar mensagem do usuário
-curl -X POST "https://seu-app.railway.app/api/conversation/send-message" \
+curl -X POST https://seu-app.railway.app/api/billing/validate-clients \
   -H "Content-Type: application/json" \
-  -d '{"user_phone":"+5511999999999","message":"Olá"}'
-
-# 2. Ver histórico
-curl "https://seu-app.railway.app/api/conversation/conversation-history/+5511999999999"
+  -d '{
+    "clients": [
+      {
+        "name": "João Silva",
+        "phone": "11999999999",
+        "amount": 150.50,
+        "due_date": "2024-12-31"
+      }
+    ]
+  }'
 ```
 
-## Monitoramento
-
-### Verificar Saúde
+#### 2. Enviar Cobranças
 ```bash
-curl "https://seu-app.railway.app/health"
+curl -X POST https://seu-app.railway.app/api/billing/send-batch \
+  -H "Content-Type: application/json" \
+  -d '{
+    "clients": [
+      {
+        "name": "João Silva",
+        "phone": "11999999999",
+        "amount": 150.50,
+        "due_date": "2024-12-31"
+      }
+    ],
+    "template_id": "initial_br"
+  }'
 ```
 
-### Obter Relatórios
+#### 3. Monitorar Estatísticas
 ```bash
-# Relatório geral
-curl "https://seu-app.railway.app/api/billing/report"
-
-# Logs recentes
-curl "https://seu-app.railway.app/api/billing/logs?limit=50"
-
-# Estatísticas do bot
-curl "https://seu-app.railway.app/api/conversation/bot-stats"
+curl -X GET https://seu-app.railway.app/api/billing/statistics
 ```
+
+### Interação com Conversação
+
+#### 1. Processar Mensagem
+```bash
+curl -X POST https://seu-app.railway.app/api/conversation/process-message \
+  -H "Content-Type: application/json" \
+  -d '{
+    "phone": "+5511999999999",
+    "message": "Oi, quero negociar minha dívida",
+    "user_name": "João Silva",
+    "auto_reply": false
+  }'
+```
+
+#### 2. Analisar Intent
+```bash
+curl -X POST https://seu-app.railway.app/api/conversation/analyze-message \
+  -H "Content-Type: application/json" \
+  -d '{
+    "message": "Posso parcelar em 5 vezes?"
+  }'
+```
+
+#### 3. Verificar Contextos
+```bash
+curl -X GET "https://seu-app.railway.app/api/conversation/contexts?limit=10"
+```
+
+### Configuração de Webhook
+
+#### 1. Configurar no Waha
+```bash
+curl -X POST https://sua-waha.com/api/sessions/start \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "default",
+    "config": {
+      "webhooks": [
+        {
+          "url": "https://seu-app.railway.app/api/webhook/whatsapp",
+          "events": ["message", "session.status"]
+        }
+      ]
+    }
+  }'
+```
+
+#### 2. Testar Webhook
+```bash
+curl -X POST https://seu-app.railway.app/api/webhook/test \
+  -H "Content-Type: application/json" \
+  -d '{
+    "test": "webhook funcionando",
+    "timestamp": "2024-01-01T10:00:00Z"
+  }'
+```
+
+## 🔧 Rate Limiting
+
+### Limites Padrão
+- **Cobrança**: 10 mensagens/minuto
+- **Conversação**: 60 mensagens/minuto
+- **Webhooks**: 100 requisições/minuto
+
+### Headers de Rate Limit
+```http
+X-RateLimit-Limit: 60
+X-RateLimit-Remaining: 59
+X-RateLimit-Reset: 1640995260
+```
+
+### Erro de Rate Limit
+```json
+{
+  "error": "Rate limit excedido",
+  "message": "Muitas requisições. Tente novamente em 60 segundos",
+  "status": 429,
+  "retry_after": 60
+}
+```
+
+## 📊 Paginação
+
+Para endpoints que retornam listas, use os parâmetros:
+- `limit`: Número máximo de itens (padrão: 50, máximo: 100)
+- `offset`: Número de itens para pular (padrão: 0)
+
+**Response com Paginação:**
+```json
+{
+  "data": [...],
+  "pagination": {
+    "limit": 20,
+    "offset": 0,
+    "total": 150,
+    "has_next": true
+  }
+}
+```
+
+---
+
+Esta documentação é mantida atualizada com cada versão do sistema. Para dúvidas ou sugestões, consulte o [README.md](../README.md) principal.

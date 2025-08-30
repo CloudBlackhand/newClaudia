@@ -1,0 +1,45 @@
+{
+  "clients": [
+    {
+      "name": "João Silva",
+      "phone": "11999999999",
+      "amount": 150.50,
+      "due_date": "2024-12-31",
+      "email": "joao.silva@email.com",
+      "cpf": "123.456.789-01",
+      "description": "Mensalidade dezembro 2024"
+    },
+    {
+      "name": "Maria Santos",
+      "phone": "11888888888",
+      "amount": 200.00,
+      "due_date": "2024-12-25",
+      "email": "maria.santos@empresa.com",
+      "description": "Serviços de consultoria"
+    },
+    {
+      "name": "Pedro Oliveira",
+      "phone": "(11) 77777-7777",
+      "amount": 89.90,
+      "due_date": "25/12/2024",
+      "email": "pedro@exemplo.com.br",
+      "cpf": "987.654.321-00",
+      "description": "Plano básico mensal"
+    },
+    {
+      "name": "Ana Costa",
+      "phone": "+55 11 66666-6666",
+      "amount": 350.75,
+      "due_date": "2024-12-30",
+      "description": "Pacote premium"
+    },
+    {
+      "name": "Carlos Ferreira",
+      "phone": "5511955555555",
+      "amount": 45.00,
+      "due_date": "31-12-2024",
+      "email": "CARLOS@EXEMPLO.COM",
+      "description": "Taxa de manutenção"
+    }
+  ]
+}

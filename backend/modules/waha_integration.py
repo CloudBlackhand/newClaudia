@@ -1,475 +1,390 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
-Integração com Waha - WhatsApp API
-Sistema para receber webhooks e enviar mensagens via Waha
+Integração com Waha (WhatsApp HTTP API)
+Módulo para comunicação com WhatsApp via Waha
 """
+
 import aiohttp
 import asyncio
 import json
-from typing import Dict, List, Any, Optional, Callable
-from datetime import datetime
-import logging
-from urllib.parse import urljoin
+from typing import Dict, Any, Optional, List, Tuple
+from dataclasses import dataclass
+from enum import Enum
+import time
 
-from .logger_system import LoggerSystem
-from .conversation_bot import ConversationBot
-from config.settings import settings
+from backend.modules.logger_system import LogManager, LogCategory
+from backend.config.settings import Config
 
-logger = logging.getLogger(__name__)
+logger = LogManager.get_logger('waha_integration')
+
+class MessageType(Enum):
+    """Tipos de mensagem suportados pelo Waha"""
+    TEXT = "text"
+    IMAGE = "image"
+    DOCUMENT = "document"
+    AUDIO = "audio"
+    VIDEO = "video"
+    LOCATION = "location"
+    CONTACT = "contact"
+
+class SessionStatus(Enum):
+    """Status da sessão do WhatsApp"""
+    STOPPED = "STOPPED"
+    STARTING = "STARTING"
+    SCAN_QR_CODE = "SCAN_QR_CODE"
+    WORKING = "WORKING"
+    FAILED = "FAILED"
+
+@dataclass
+class WahaMessage:
+    """Estrutura de mensagem do Waha"""
+    id: str
+    timestamp: int
+    from_me: bool
+    sender: str
+    chat_id: str
+    message_type: str
+    content: str
+    reply_to: Optional[str] = None
+
+@dataclass
+class WahaSession:
+    """Informações da sessão Waha"""
+    name: str
+    status: SessionStatus
+    config: Dict[str, Any]
+    me: Optional[Dict[str, str]] = None
 
 class WahaIntegration:
-    """Integração completa com Waha para WhatsApp"""
+    """Cliente para integração com Waha"""
     
-    def __init__(self, logger_system: LoggerSystem, conversation_bot: ConversationBot):
-        self.logger_system = logger_system
-        self.conversation_bot = conversation_bot
-        self.base_url = settings.waha_base_url
-        self.session_name = settings.waha_session
-        self.api_key = settings.waha_api_key
-        self.is_initialized = False
+    def __init__(self, base_url: str = None, session_name: str = None):
+        self.base_url = base_url or Config.WAHA_BASE_URL
+        self.session_name = session_name or Config.WAHA_SESSION_NAME
+        self.session: Optional[aiohttp.ClientSession] = None
         
-        # Session HTTP reutilizável
-        self.http_session: Optional[aiohttp.ClientSession] = None
+        # Cache de status
+        self._session_status = None
+        self._last_status_check = 0
+        self._status_cache_duration = 30  # segundos
         
-        # Callbacks para diferentes tipos de webhook
-        self.webhook_handlers: Dict[str, Callable] = {}
-        
-        # Status da conexão
-        self.connection_status = "disconnected"
-        self.last_health_check = None
-        
-    async def initialize(self):
-        """Inicializar integração com Waha"""
-        try:
-            logger.info("Inicializando WahaIntegration...")
-            
-            # Criar sessão HTTP
+        logger.info(LogCategory.WHATSAPP, f"Waha Integration inicializada - URL: {self.base_url}")
+    
+    async def __aenter__(self):
+        """Context manager entry"""
+        await self.start_session()
+        return self
+    
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        """Context manager exit"""
+        await self.close_session()
+    
+    async def start_session(self):
+        """Inicializar sessão HTTP"""
+        if not self.session:
             timeout = aiohttp.ClientTimeout(total=30)
-            self.http_session = aiohttp.ClientSession(timeout=timeout)
-            
-            # Configurar headers padrão
-            self.default_headers = {
-                "Content-Type": "application/json"
-            }
-            
-            if self.api_key:
-                self.default_headers["Authorization"] = f"Bearer {self.api_key}"
-            
-            # Registrar handlers de webhook
-            self._register_webhook_handlers()
-            
-            # Verificar conexão com Waha (se configurado)
-            if self.base_url:
-                await self._check_waha_connection()
-            
-            self.is_initialized = True
-            logger.info("WahaIntegration inicializada com sucesso!")
-            
-        except Exception as e:
-            logger.error(f"Erro ao inicializar WahaIntegration: {str(e)}")
-            raise
+            self.session = aiohttp.ClientSession(timeout=timeout)
+            logger.debug(LogCategory.WHATSAPP, "Sessão HTTP iniciada")
     
-    async def cleanup(self):
-        """Limpeza da integração"""
-        if self.http_session:
-            await self.http_session.close()
+    async def close_session(self):
+        """Fechar sessão HTTP"""
+        if self.session:
+            await self.session.close()
+            self.session = None
+            logger.debug(LogCategory.WHATSAPP, "Sessão HTTP fechada")
+    
+    async def _make_request(self, method: str, endpoint: str, 
+                          data: Optional[Dict[str, Any]] = None,
+                          params: Optional[Dict[str, Any]] = None) -> Tuple[bool, Optional[Dict[str, Any]]]:
+        """Fazer requisição para a API do Waha"""
+        if not self.session:
+            await self.start_session()
         
-        self.is_initialized = False
-        logger.info("WahaIntegration finalizada")
-    
-    def is_healthy(self) -> bool:
-        """Verificação de saúde"""
-        return self.is_initialized and self.connection_status == "connected"
-    
-    def _register_webhook_handlers(self):
-        """Registrar handlers para diferentes tipos de webhook"""
-        self.webhook_handlers = {
-            "message": self._handle_message_webhook,
-            "message.any": self._handle_message_webhook,
-            "message.text": self._handle_text_message,
-            "session.status": self._handle_session_status,
-            "state.change": self._handle_state_change,
-            "qr": self._handle_qr_code,
-            "ready": self._handle_ready,
-            "auth_failure": self._handle_auth_failure
-        }
-    
-    async def process_webhook(self, webhook_data: Dict[str, Any]) -> Dict[str, Any]:
-        """
-        Processar webhook recebido do Waha
+        url = f"{self.base_url.rstrip('/')}/api/{endpoint.lstrip('/')}"
         
-        Args:
-            webhook_data: Dados do webhook
-            
-        Returns:
-            Resultado do processamento
-        """
         try:
-            # Log do webhook recebido
-            await self.logger_system.log_webhook_received(
-                webhook_data.get("event", "unknown"), 
-                webhook_data
-            )
-            
-            event_type = webhook_data.get("event", "")
-            
-            # Encontrar handler apropriado
-            handler = self.webhook_handlers.get(event_type)
-            if not handler:
-                # Tentar handler genérico para mensagens
-                if "message" in event_type:
-                    handler = self.webhook_handlers.get("message")
-            
-            if handler:
-                result = await handler(webhook_data)
-                return {"success": True, "result": result}
-            else:
-                logger.warning(f"Handler não encontrado para evento: {event_type}")
-                return {"success": False, "error": f"Handler não encontrado: {event_type}"}
-            
-        except Exception as e:
-            logger.error(f"Erro ao processar webhook: {str(e)}")
-            return {"success": False, "error": str(e)}
-    
-    async def _handle_message_webhook(self, webhook_data: Dict[str, Any]) -> Dict[str, Any]:
-        """Handler genérico para mensagens"""
-        try:
-            payload = webhook_data.get("payload", {})
-            
-            # Extrair informações da mensagem
-            from_number = payload.get("from", "")
-            message_body = payload.get("body", "")
-            message_type = payload.get("type", "text")
-            
-            # Ignorar mensagens próprias
-            if payload.get("fromMe", False):
-                return {"ignored": True, "reason": "own_message"}
-            
-            # Processar apenas mensagens de texto por agora
-            if message_type == "text" and message_body:
-                return await self._handle_text_message(webhook_data)
-            
-            return {"processed": False, "reason": f"unsupported_message_type: {message_type}"}
-            
-        except Exception as e:
-            logger.error(f"Erro ao processar mensagem: {str(e)}")
-            return {"error": str(e)}
-    
-    async def _handle_text_message(self, webhook_data: Dict[str, Any]) -> Dict[str, Any]:
-        """Handler específico para mensagens de texto"""
-        try:
-            payload = webhook_data.get("payload", {})
-            
-            from_number = payload.get("from", "")
-            message_body = payload.get("body", "")
-            
-            if not from_number or not message_body:
-                return {"error": "Dados insuficientes na mensagem"}
-            
-            # Limpar número de telefone
-            clean_number = self._clean_phone_number(from_number)
-            
-            # Processar mensagem com o bot
-            bot_response = await self.conversation_bot.process_message(
-                user_phone=clean_number,
-                message=message_body,
-                context={}
-            )
-            
-            # Enviar resposta
-            if bot_response.message:
-                send_result = await self.send_message(clean_number, bot_response.message)
-                
-                return {
-                    "processed": True,
-                    "user_phone": clean_number,
-                    "user_message": message_body,
-                    "bot_response": bot_response.message,
-                    "send_result": send_result,
-                    "requires_human": bot_response.requires_human
-                }
-            
-            return {"processed": False, "reason": "no_bot_response"}
-            
-        except Exception as e:
-            logger.error(f"Erro ao processar mensagem de texto: {str(e)}")
-            return {"error": str(e)}
-    
-    async def _handle_session_status(self, webhook_data: Dict[str, Any]) -> Dict[str, Any]:
-        """Handler para status da sessão"""
-        try:
-            payload = webhook_data.get("payload", {})
-            status = payload.get("status", "")
-            
-            self.connection_status = status
-            
-            logger.info(f"Status da sessão Waha: {status}")
-            
-            return {"status_updated": True, "new_status": status}
-            
-        except Exception as e:
-            logger.error(f"Erro ao processar status da sessão: {str(e)}")
-            return {"error": str(e)}
-    
-    async def _handle_state_change(self, webhook_data: Dict[str, Any]) -> Dict[str, Any]:
-        """Handler para mudança de estado"""
-        try:
-            payload = webhook_data.get("payload", {})
-            state = payload.get("state", "")
-            
-            logger.info(f"Mudança de estado Waha: {state}")
-            
-            if state == "CONNECTED":
-                self.connection_status = "connected"
-            elif state == "DISCONNECTED":
-                self.connection_status = "disconnected"
-            
-            return {"state_changed": True, "new_state": state}
-            
-        except Exception as e:
-            logger.error(f"Erro ao processar mudança de estado: {str(e)}")
-            return {"error": str(e)}
-    
-    async def _handle_qr_code(self, webhook_data: Dict[str, Any]) -> Dict[str, Any]:
-        """Handler para QR Code"""
-        try:
-            payload = webhook_data.get("payload", {})
-            qr_code = payload.get("qr", "")
-            
-            logger.info("QR Code recebido para autenticação WhatsApp")
-            
-            # Aqui você pode implementar lógica para exibir o QR code
-            # Por exemplo, salvar em arquivo ou enviar para frontend
-            
-            return {"qr_received": True, "qr_length": len(qr_code)}
-            
-        except Exception as e:
-            logger.error(f"Erro ao processar QR code: {str(e)}")
-            return {"error": str(e)}
-    
-    async def _handle_ready(self, webhook_data: Dict[str, Any]) -> Dict[str, Any]:
-        """Handler para quando WhatsApp está pronto"""
-        try:
-            self.connection_status = "connected"
-            logger.info("WhatsApp está pronto e conectado!")
-            
-            return {"ready": True}
-            
-        except Exception as e:
-            logger.error(f"Erro ao processar evento ready: {str(e)}")
-            return {"error": str(e)}
-    
-    async def _handle_auth_failure(self, webhook_data: Dict[str, Any]) -> Dict[str, Any]:
-        """Handler para falha de autenticação"""
-        try:
-            self.connection_status = "auth_failed"
-            logger.error("Falha na autenticação do WhatsApp")
-            
-            return {"auth_failed": True}
-            
-        except Exception as e:
-            logger.error(f"Erro ao processar falha de auth: {str(e)}")
-            return {"error": str(e)}
-    
-    async def send_message(self, to_number: str, message: str) -> Dict[str, Any]:
-        """
-        Enviar mensagem via Waha
-        
-        Args:
-            to_number: Número de destino
-            message: Mensagem a ser enviada
-            
-        Returns:
-            Resultado do envio
-        """
-        try:
-            if not self.base_url:
-                # Simular envio para desenvolvimento
-                logger.info(f"Simulando envio para {to_number}: {message[:50]}...")
-                return {
-                    "success": True,
-                    "message_id": f"sim_{datetime.now().timestamp()}",
-                    "simulated": True
-                }
-            
-            # Preparar dados da mensagem
-            clean_number = self._clean_phone_number(to_number)
-            
-            message_data = {
-                "chatId": f"{clean_number}@c.us",
-                "text": message
-            }
-            
-            # URL para envio de mensagem
-            url = urljoin(self.base_url, f"/api/{self.session_name}/sendText")
-            
-            # Enviar mensagem
-            async with self.http_session.post(
-                url,
-                json=message_data,
-                headers=self.default_headers
+            async with self.session.request(
+                method=method,
+                url=url,
+                json=data,
+                params=params
             ) as response:
+                
+                # Log da requisição
+                logger.debug(LogCategory.WHATSAPP, 
+                           f"Waha Request: {method} {url}",
+                           details={
+                               'status': response.status,
+                               'data': data,
+                               'params': params
+                           })
                 
                 if response.status == 200:
                     result = await response.json()
-                    
-                    logger.info(f"Mensagem enviada com sucesso para {clean_number}")
-                    
-                    return {
-                        "success": True,
-                        "message_id": result.get("id"),
-                        "response": result
-                    }
+                    return True, result
                 else:
                     error_text = await response.text()
-                    logger.error(f"Erro ao enviar mensagem: {response.status} - {error_text}")
+                    logger.error(LogCategory.WHATSAPP, 
+                               f"Waha API Error: {response.status}",
+                               details={'error': error_text, 'url': url})
+                    return False, None
                     
-                    return {
-                        "success": False,
-                        "error": f"HTTP {response.status}: {error_text}"
-                    }
-            
         except aiohttp.ClientError as e:
-            logger.error(f"Erro de conexão ao enviar mensagem: {str(e)}")
-            return {
-                "success": False,
-                "error": f"Erro de conexão: {str(e)}"
-            }
+            logger.error(LogCategory.WHATSAPP, f"Erro de conexão com Waha: {e}")
+            return False, None
         except Exception as e:
-            logger.error(f"Erro inesperado ao enviar mensagem: {str(e)}")
-            return {
-                "success": False,
-                "error": str(e)
-            }
+            logger.error(LogCategory.WHATSAPP, f"Erro inesperado na requisição Waha: {e}")
+            return False, None
     
-    async def get_session_status(self) -> Dict[str, Any]:
-        """Obter status da sessão Waha"""
-        try:
-            if not self.base_url:
-                return {
-                    "status": "simulated",
-                    "connected": True,
-                    "session": self.session_name
-                }
-            
-            url = urljoin(self.base_url, f"/api/{self.session_name}/status")
-            
-            async with self.http_session.get(url, headers=self.default_headers) as response:
-                if response.status == 200:
-                    return await response.json()
-                else:
-                    return {
-                        "status": "error",
-                        "error": f"HTTP {response.status}"
+    async def get_session_status(self, force_refresh: bool = False) -> Optional[SessionStatus]:
+        """Obter status da sessão do WhatsApp"""
+        now = time.time()
+        
+        # Usar cache se não forçar refresh e cache válido
+        if not force_refresh and self._session_status and (now - self._last_status_check) < self._status_cache_duration:
+            return self._session_status
+        
+        success, data = await self._make_request('GET', f'/sessions/{self.session_name}')
+        
+        if success and data:
+            status_str = data.get('status', 'FAILED')
+            try:
+                self._session_status = SessionStatus(status_str)
+                self._last_status_check = now
+                
+                logger.debug(LogCategory.WHATSAPP, f"Status da sessão: {status_str}")
+                return self._session_status
+            except ValueError:
+                logger.warning(LogCategory.WHATSAPP, f"Status desconhecido: {status_str}")
+                return SessionStatus.FAILED
+        
+        return None
+    
+    async def start_whatsapp_session(self) -> bool:
+        """Iniciar sessão do WhatsApp"""
+        session_config = {
+            'name': self.session_name,
+            'config': {
+                'webhooks': [
+                    {
+                        'url': Config.WAHA_WEBHOOK_URL,
+                        'events': ['message']
                     }
-            
-        except Exception as e:
-            logger.error(f"Erro ao obter status da sessão: {str(e)}")
-            return {
-                "status": "error",
-                "error": str(e)
+                ] if Config.WAHA_WEBHOOK_URL else []
             }
-    
-    async def _check_waha_connection(self):
-        """Verificar conexão com Waha"""
-        try:
-            status = await self.get_session_status()
-            
-            if status.get("status") == "WORKING":
-                self.connection_status = "connected"
-                logger.info("Conexão com Waha verificada com sucesso")
-            else:
-                self.connection_status = "disconnected"
-                logger.warning(f"Waha não está conectado: {status}")
-            
-            self.last_health_check = datetime.now()
-            
-        except Exception as e:
-            logger.error(f"Erro ao verificar conexão com Waha: {str(e)}")
-            self.connection_status = "error"
-    
-    def _clean_phone_number(self, phone: str) -> str:
-        """Limpar e normalizar número de telefone"""
-        # Remover caracteres especiais
-        clean = "".join(char for char in phone if char.isdigit() or char == "+")
-        
-        # Garantir formato brasileiro
-        if clean.startswith("55") and len(clean) == 13:
-            clean = "+" + clean
-        elif clean.startswith("55") and len(clean) == 12:
-            clean = "+" + clean
-        elif len(clean) == 11 and not clean.startswith("+"):
-            clean = "+55" + clean
-        elif len(clean) == 10 and not clean.startswith("+"):
-            clean = "+55" + clean
-        
-        return clean
-    
-    async def send_bulk_messages(self, messages: List[Dict[str, str]]) -> Dict[str, Any]:
-        """
-        Enviar múltiplas mensagens em lote
-        
-        Args:
-            messages: Lista de {"to": "number", "message": "text"}
-            
-        Returns:
-            Resultado do envio em lote
-        """
-        try:
-            total_messages = len(messages)
-            successful_sends = 0
-            failed_sends = 0
-            results = []
-            
-            # Enviar em lotes para não sobrecarregar
-            batch_size = 5
-            
-            for i in range(0, total_messages, batch_size):
-                batch = messages[i:i + batch_size]
-                
-                # Enviar lote com delay
-                batch_results = await asyncio.gather(
-                    *[self.send_message(msg["to"], msg["message"]) for msg in batch],
-                    return_exceptions=True
-                )
-                
-                for result in batch_results:
-                    if isinstance(result, Exception):
-                        failed_sends += 1
-                        results.append({"success": False, "error": str(result)})
-                    elif result.get("success"):
-                        successful_sends += 1
-                        results.append(result)
-                    else:
-                        failed_sends += 1
-                        results.append(result)
-                
-                # Delay entre lotes para evitar rate limiting
-                if i + batch_size < total_messages:
-                    await asyncio.sleep(1)
-            
-            return {
-                "total_messages": total_messages,
-                "successful_sends": successful_sends,
-                "failed_sends": failed_sends,
-                "results": results
-            }
-            
-        except Exception as e:
-            logger.error(f"Erro no envio em lote: {str(e)}")
-            return {
-                "total_messages": len(messages),
-                "successful_sends": 0,
-                "failed_sends": len(messages),
-                "error": str(e)
-            }
-    
-    async def get_integration_stats(self) -> Dict[str, Any]:
-        """Obter estatísticas da integração"""
-        return {
-            "is_initialized": self.is_initialized,
-            "connection_status": self.connection_status,
-            "base_url": self.base_url,
-            "session_name": self.session_name,
-            "last_health_check": self.last_health_check.isoformat() if self.last_health_check else None,
-            "has_api_key": bool(self.api_key)
         }
+        
+        success, data = await self._make_request('POST', '/sessions/start', session_config)
+        
+        if success:
+            logger.info(LogCategory.WHATSAPP, f"Sessão WhatsApp iniciada: {self.session_name}")
+            return True
+        else:
+            logger.error(LogCategory.WHATSAPP, f"Falha ao iniciar sessão WhatsApp: {self.session_name}")
+            return False
+    
+    async def stop_whatsapp_session(self) -> bool:
+        """Parar sessão do WhatsApp"""
+        success, data = await self._make_request('POST', f'/sessions/{self.session_name}/stop')
+        
+        if success:
+            logger.info(LogCategory.WHATSAPP, f"Sessão WhatsApp parada: {self.session_name}")
+            return True
+        else:
+            logger.error(LogCategory.WHATSAPP, f"Falha ao parar sessão WhatsApp: {self.session_name}")
+            return False
+    
+    async def get_qr_code(self) -> Optional[str]:
+        """Obter QR code para autenticação"""
+        success, data = await self._make_request('GET', f'/sessions/{self.session_name}/auth/qr')
+        
+        if success and data:
+            qr_code = data.get('qr')
+            if qr_code:
+                logger.info(LogCategory.WHATSAPP, "QR Code obtido com sucesso")
+                return qr_code
+        
+        logger.warning(LogCategory.WHATSAPP, "QR Code não disponível")
+        return None
+    
+    async def send_text_message(self, phone: str, text: str, 
+                               reply_to: Optional[str] = None) -> bool:
+        """Enviar mensagem de texto"""
+        # Normalizar número de telefone
+        clean_phone = self._normalize_phone(phone)
+        
+        message_data = {
+            'session': self.session_name,
+            'chatId': clean_phone,
+            'text': text
+        }
+        
+        if reply_to:
+            message_data['reply_to'] = reply_to
+        
+        success, data = await self._make_request('POST', '/sendText', message_data)
+        
+        if success:
+            logger.info(LogCategory.WHATSAPP, 
+                       f"Mensagem enviada para {clean_phone}",
+                       details={
+                           'message_length': len(text),
+                           'reply_to': reply_to
+                       })
+            return True
+        else:
+            logger.error(LogCategory.WHATSAPP, f"Falha ao enviar mensagem para {clean_phone}")
+            return False
+    
+    async def send_image_message(self, phone: str, image_url: str, 
+                                caption: Optional[str] = None) -> bool:
+        """Enviar mensagem com imagem"""
+        clean_phone = self._normalize_phone(phone)
+        
+        message_data = {
+            'session': self.session_name,
+            'chatId': clean_phone,
+            'file': {
+                'url': image_url
+            }
+        }
+        
+        if caption:
+            message_data['file']['caption'] = caption
+        
+        success, data = await self._make_request('POST', '/sendImage', message_data)
+        
+        if success:
+            logger.info(LogCategory.WHATSAPP, f"Imagem enviada para {clean_phone}")
+            return True
+        else:
+            logger.error(LogCategory.WHATSAPP, f"Falha ao enviar imagem para {clean_phone}")
+            return False
+    
+    async def send_document_message(self, phone: str, document_url: str, 
+                                   filename: Optional[str] = None) -> bool:
+        """Enviar documento"""
+        clean_phone = self._normalize_phone(phone)
+        
+        message_data = {
+            'session': self.session_name,
+            'chatId': clean_phone,
+            'file': {
+                'url': document_url
+            }
+        }
+        
+        if filename:
+            message_data['file']['filename'] = filename
+        
+        success, data = await self._make_request('POST', '/sendFile', message_data)
+        
+        if success:
+            logger.info(LogCategory.WHATSAPP, f"Documento enviado para {clean_phone}")
+            return True
+        else:
+            logger.error(LogCategory.WHATSAPP, f"Falha ao enviar documento para {clean_phone}")
+            return False
+    
+    async def get_chats(self) -> List[Dict[str, Any]]:
+        """Obter lista de chats"""
+        success, data = await self._make_request('GET', f'/sessions/{self.session_name}/chats')
+        
+        if success and data:
+            chats = data.get('chats', [])
+            logger.debug(LogCategory.WHATSAPP, f"Chats obtidos: {len(chats)}")
+            return chats
+        
+        logger.warning(LogCategory.WHATSAPP, "Falha ao obter chats")
+        return []
+    
+    async def get_chat_messages(self, chat_id: str, limit: int = 50) -> List[WahaMessage]:
+        """Obter mensagens de um chat"""
+        params = {
+            'chatId': chat_id,
+            'limit': limit
+        }
+        
+        success, data = await self._make_request('GET', f'/sessions/{self.session_name}/chats/{chat_id}/messages', params=params)
+        
+        if success and data:
+            messages = []
+            for msg_data in data.get('messages', []):
+                try:
+                    message = WahaMessage(
+                        id=msg_data.get('id', ''),
+                        timestamp=msg_data.get('timestamp', 0),
+                        from_me=msg_data.get('fromMe', False),
+                        sender=msg_data.get('from', ''),
+                        chat_id=msg_data.get('chatId', ''),
+                        message_type=msg_data.get('type', 'text'),
+                        content=msg_data.get('body', ''),
+                        reply_to=msg_data.get('quotedMsgId')
+                    )
+                    messages.append(message)
+                except Exception as e:
+                    logger.warning(LogCategory.WHATSAPP, f"Erro ao processar mensagem: {e}")
+            
+            logger.debug(LogCategory.WHATSAPP, f"Mensagens obtidas do chat {chat_id}: {len(messages)}")
+            return messages
+        
+        logger.warning(LogCategory.WHATSAPP, f"Falha ao obter mensagens do chat {chat_id}")
+        return []
+    
+    def _normalize_phone(self, phone: str) -> str:
+        """Normalizar número de telefone para formato do WhatsApp"""
+        # Remover caracteres especiais
+        clean = ''.join(filter(str.isdigit, phone))
+        
+        # Adicionar código do país se necessário
+        if len(clean) == 11 and clean.startswith('11'):
+            clean = '55' + clean
+        elif len(clean) == 10:
+            clean = '5511' + clean
+        elif not clean.startswith('55'):
+            clean = '55' + clean
+        
+        # Formato final para WhatsApp
+        return clean + '@c.us'
+    
+    def parse_webhook_message(self, webhook_data: Dict[str, Any]) -> Optional[WahaMessage]:
+        """Parsear mensagem recebida via webhook"""
+        try:
+            payload = webhook_data.get('payload', {})
+            
+            message = WahaMessage(
+                id=payload.get('id', ''),
+                timestamp=payload.get('timestamp', 0),
+                from_me=payload.get('fromMe', False),
+                sender=payload.get('from', ''),
+                chat_id=payload.get('chatId', ''),
+                message_type=payload.get('type', 'text'),
+                content=payload.get('body', ''),
+                reply_to=payload.get('quotedMsgId')
+            )
+            
+            logger.debug(LogCategory.WHATSAPP, 
+                       f"Mensagem webhook parseada: {message.sender}",
+                       details={
+                           'type': message.message_type,
+                           'from_me': message.from_me,
+                           'content_preview': message.content[:50] + '...' if len(message.content) > 50 else message.content
+                       })
+            
+            return message
+            
+        except Exception as e:
+            logger.error(LogCategory.WHATSAPP, f"Erro ao parsear webhook: {e}")
+            return None
+    
+    async def health_check(self) -> bool:
+        """Verificar saúde da conexão com Waha"""
+        success, data = await self._make_request('GET', '/health')
+        
+        if success:
+            logger.debug(LogCategory.WHATSAPP, "Waha health check: OK")
+            return True
+        else:
+            logger.warning(LogCategory.WHATSAPP, "Waha health check: FAILED")
+            return False

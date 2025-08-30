@@ -1,294 +1,440 @@
-# Sistema de Cobrança Avançado 🚀
+# Sistema de Cobrança Inteligente 🤖💰
 
-Sistema modular e escalável para disparo de mensagens de cobrança e conversação inteligente via WhatsApp, desenvolvido especialmente para deploy na Railway.
+Um sistema completo e inteligente para automação de cobrança via WhatsApp, desenvolvido especificamente para hospedagem na Railway.
 
-## 🌟 Características Principais
+![Python](https://img.shields.io/badge/Python-3.11+-blue.svg)
+![Flask](https://img.shields.io/badge/Flask-2.3+-green.svg)
+![JavaScript](https://img.shields.io/badge/JavaScript-ES6+-yellow.svg)
+![Railway](https://img.shields.io/badge/Deploy-Railway-purple.svg)
 
-### 📨 Módulo de Disparo de Mensagens
-- **Leitor JSON Otimizado**: Processamento eficiente de dados de clientes
-- **Sistema de Envio Automatizado**: Envio em lotes com controle de rate limiting
-- **Logging Detalhado**: Registro completo de todas as operações
-- **Validação Rigorosa**: Verificação completa de dados antes do processamento
+## 🎯 Características Principais
 
-### 🤖 Bot de Conversação Avançado (IA Própria)
-- **Processamento de Linguagem Natural**: Sistema próprio comparável ao ChatGPT
-- **Análise de Sentimentos**: Detecção automática do humor do cliente
-- **Contexto Conversacional**: Memória de conversas e histórico
-- **Respostas Inteligentes**: Templates adaptativos baseados na situação
-- **Escalação Inteligente**: Identificação automática quando requer humano
+### 🚀 Sistema de Disparo de Mensagens
+- **Leitor JSON otimizado** para processamento eficiente de dados de clientes
+- **Envio automatizado** com registro detalhado de logs
+- **Validação rigorosa** de dados antes do processamento
+- **Rate limiting** para respeitar limites de API
+- **Sistema de retry** para mensagens falhadas
 
-### 🎨 Frontend Responsivo
-- **Interface Moderna**: Design clean e intuitivo
-- **Responsivo**: Compatível com todos os dispositivos
-- **Dashboard em Tempo Real**: Monitoramento de estatísticas e logs
-- **Upload Drag & Drop**: Interface amigável para arquivos
+### 🧠 Bot de Conversação Avançado
+- **IA própria** com capacidades comparáveis ao ChatGPT
+- **Processamento de linguagem natural** para compreensão contextual
+- **Arquitetura escalável** para alto volume de requisições
+- **Design modular** para fácil expansão
+- **Sistema de aprendizado** baseado em interações
 
-### 🔗 Integração WhatsApp via Waha
-- **Webhooks**: Recebimento automático de mensagens
-- **Envio de Mensagens**: API completa para comunicação
-- **Status em Tempo Real**: Monitoramento da conexão
+### 🎨 Frontend Profissional
+- **JavaScript puro** sem dependências externas
+- **Design responsivo** para todos os dispositivos
+- **Interface intuitiva** e moderna
+- **Experiência otimizada** do usuário
 
-## 🏗️ Arquitetura
+### 🔧 Recursos Técnicos
+- **Padrões de engenharia** de software rigorosos
+- **Segurança robusta** para proteção de dados
+- **APIs bem documentadas** para integração
+- **Testes automatizados** abrangentes
+- **Logs estruturados** para monitoramento
+
+## 📋 Pré-requisitos
+
+- Python 3.11+
+- Node.js (para Waha - deploy separado)
+- Conta Railway
+- Instância Waha configurada
+
+## 🚀 Instalação e Configuração
+
+### 1. Clone o Repositório
+```bash
+git clone <repository-url>
+cd sistema-cobranca-inteligente
+```
+
+### 2. Configuração do Ambiente
+```bash
+# Copiar arquivo de configuração
+cp environment.example .env
+
+# Editar variáveis de ambiente
+nano .env
+```
+
+### 3. Instalar Dependências
+```bash
+pip install -r requirements.txt
+```
+
+### 4. Configurar Variáveis de Ambiente
+```env
+# Configurações da aplicação
+APP_NAME=Sistema de Cobrança Inteligente
+DEBUG=False
+SECRET_KEY=sua_chave_secreta_super_forte_aqui
+
+# Configurações do WhatsApp (Waha)
+WAHA_BASE_URL=https://sua-instancia-waha.com
+WAHA_SESSION_NAME=default
+WAHA_WEBHOOK_URL=https://seu-dominio.railway.app/api/webhook/whatsapp
+
+# Configurações de segurança
+API_KEY=sua_api_key_aqui
+WEBHOOK_SECRET=seu_webhook_secret_aqui
+```
+
+## 🏃‍♂️ Execução Local
+
+### Desenvolvimento
+```bash
+python start.py
+```
+
+### Executar Testes
+```bash
+# Todos os testes
+python run_tests.py
+
+# Testes específicos
+python run_tests.py --unit
+python run_tests.py --api
+python run_tests.py --coverage
+```
+
+## 📚 Estrutura do Projeto
 
 ```
-Sistema de Cobrança Avançado/
-├── backend/                     # Aplicação Python FastAPI
-│   ├── app.py                  # Aplicação principal
-│   ├── config/                 # Configurações
-│   ├── modules/                # Módulos principais
-│   │   ├── billing_dispatcher.py
-│   │   ├── conversation_bot.py
-│   │   ├── waha_integration.py
-│   │   ├── logger_system.py
-│   │   └── validation_engine.py
-│   └── api/                    # Rotas da API
-├── frontend/                   # Interface JavaScript
-│   ├── index.html
-│   ├── styles.css
-│   └── app.js
-├── Dockerfile                  # Container para Railway
-├── requirements.txt            # Dependências Python
-└── railway.json               # Configuração Railway
+sistema-cobranca-inteligente/
+├── backend/
+│   ├── app.py                 # Aplicação Flask principal
+│   ├── config/
+│   │   └── settings.py        # Configurações centralizadas
+│   ├── modules/
+│   │   ├── billing_dispatcher.py    # Sistema de cobrança
+│   │   ├── conversation_bot.py      # Bot de conversação
+│   │   ├── validation_engine.py     # Validação de dados
+│   │   ├── logger_system.py         # Sistema de logs
+│   │   └── waha_integration.py      # Integração WhatsApp
+│   └── api/
+│       └── routes/
+│           ├── billing_routes.py    # Rotas de cobrança
+│           ├── conversation_routes.py # Rotas de conversação
+│           └── webhook_routes.py     # Rotas de webhooks
+├── frontend/
+│   ├── index.html            # Interface principal
+│   ├── styles.css           # Estilos responsivos
+│   └── app.js              # Lógica da aplicação
+├── tests/                  # Testes automatizados
+├── docs/                   # Documentação
+├── start.py               # Script de inicialização
+├── requirements.txt       # Dependências Python
+├── railway.json          # Configuração Railway
+└── README.md             # Esta documentação
 ```
 
-## 🚀 Deploy na Railway
+## 📖 Documentação da API
+
+### Endpoints de Cobrança
+
+#### `POST /api/billing/send-batch`
+Envia lote de mensagens de cobrança.
+
+**Request:**
+```json
+{
+  "clients": [
+    {
+      "name": "João Silva",
+      "phone": "11999999999",
+      "amount": 150.50,
+      "due_date": "2024-12-31",
+      "email": "joao@email.com"
+    }
+  ],
+  "template_id": "initial_br",
+  "schedule_time": "2024-12-25T10:00:00"
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "result": {
+    "total_messages": 1,
+    "successful": 1,
+    "failed": 0,
+    "execution_time": 1.2
+  }
+}
+```
+
+#### `POST /api/billing/validate-clients`
+Valida dados de clientes sem enviar mensagens.
+
+### Endpoints de Conversação
+
+#### `POST /api/conversation/process-message`
+Processa mensagem do usuário com IA.
+
+**Request:**
+```json
+{
+  "phone": "+5511999999999",
+  "message": "Oi, recebi uma cobrança",
+  "user_name": "João Silva",
+  "auto_reply": true
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "response": {
+    "text": "Olá João! Como posso ajudá-lo?",
+    "type": "informative",
+    "confidence": 0.95,
+    "should_escalate": false
+  }
+}
+```
+
+### Webhooks
+
+#### `POST /api/webhook/whatsapp`
+Recebe webhooks do Waha para processar mensagens.
+
+## 🤖 Bot de Conversação
+
+### Intenções Suportadas
+- **Cumprimento**: Detecta saudações e inicia conversa
+- **Confirmação de Pagamento**: Identifica quando cliente confirma pagamento
+- **Perguntas sobre Pagamento**: Responde dúvidas sobre como pagar
+- **Negociação**: Oferece alternativas de pagamento
+- **Reclamações**: Escalona para atendimento humano
+- **Despedida**: Finaliza conversas educadamente
+
+### Análise de Sentimento
+- **Positivo**: Respostas calorosas e agradecimentos
+- **Neutro**: Informações diretas e objetivas
+- **Negativo**: Abordagem empática
+- **Raiva**: Escalação imediata para humano
+
+## 📊 Sistema de Logs
+
+### Categorias de Log
+- **SYSTEM**: Eventos do sistema
+- **BILLING**: Eventos de cobrança
+- **CONVERSATION**: Interações com clientes
+- **WHATSAPP**: Integração WhatsApp
+- **VALIDATION**: Validação de dados
+- **SECURITY**: Eventos de segurança
+
+### Formatos de Saída
+- **JSON estruturado**: Para análise automatizada
+- **Texto legível**: Para desenvolvimento
+- **Console colorido**: Para debugging
+
+## 🔒 Segurança
+
+### Medidas Implementadas
+- **Validação rigorosa** de entrada
+- **Sanitização** de dados
+- **Rate limiting** de APIs
+- **Verificação de assinatura** em webhooks
+- **Logs de segurança** detalhados
+- **Escape** de caracteres especiais
+
+### Configurações Recomendadas
+```env
+# Use senhas fortes
+SECRET_KEY=chave_com_pelo_menos_32_caracteres_aleatorios
+API_KEY=api_key_complexa_e_unica
+WEBHOOK_SECRET=secret_para_validacao_webhooks
+
+# Limite logs em produção
+LOG_LEVEL=INFO
+DEBUG=False
+```
+
+## 🌐 Deploy na Railway
 
 ### 1. Preparação
-
-1. **Clone o repositório**:
-   ```bash
-   git clone <seu-repositorio>
-   cd sistema-cobranca-avancado
-   ```
-
-2. **Configure as variáveis de ambiente**:
-   ```bash
-   cp .env.example .env
-   # Edite o arquivo .env com suas configurações
-   ```
-
-### 2. Deploy Automático
-
-1. **Conecte com Railway**:
-   - Acesse [railway.app](https://railway.app)
-   - Conecte seu repositório GitHub
-   - O deploy será automático usando o Dockerfile
-
-2. **Configurar Variáveis de Ambiente**:
-   No painel da Railway, configure:
-   ```
-   WAHA_BASE_URL=https://sua-instancia-waha.com
-   WAHA_API_KEY=sua-api-key
-   SECRET_KEY=chave-super-secreta
-   WEBHOOK_SECRET=secret-para-webhooks
-   ```
-
-### 3. Deploy Manual (CLI)
-
 ```bash
 # Instalar Railway CLI
 npm install -g @railway/cli
 
 # Login
 railway login
+```
+
+### 2. Deploy
+```bash
+# Criar projeto
+railway init
+
+# Configurar variáveis
+railway variables:set SECRET_KEY=sua_chave_aqui
+railway variables:set WAHA_BASE_URL=https://sua-waha.com
 
 # Deploy
 railway up
 ```
 
-## 🔧 Configuração
+### 3. Configuração de Domínio
+1. Acesse o dashboard Railway
+2. Configure domínio personalizado
+3. Atualize `WAHA_WEBHOOK_URL` com o novo domínio
 
-### Variáveis de Ambiente Obrigatórias
-
-| Variável | Descrição | Exemplo |
-|----------|-----------|---------|
-| `WAHA_BASE_URL` | URL da instância Waha | `https://waha.example.com` |
-| `SECRET_KEY` | Chave secreta da aplicação | `sua-chave-super-segura` |
-
-### Variáveis Opcionais
-
-| Variável | Padrão | Descrição |
-|----------|--------|-----------|
-| `PORT` | `8000` | Porta do servidor |
-| `LOG_LEVEL` | `INFO` | Nível de log |
-| `BATCH_SIZE` | `50` | Tamanho do lote de mensagens |
-| `MAX_CONCURRENT_REQUESTS` | `100` | Máximo de requisições simultâneas |
-
-## 📖 Como Usar
+## 📋 Uso do Sistema
 
 ### 1. Upload de Dados
+- Prepare arquivo JSON com dados dos clientes
+- Use o formato especificado na documentação
+- Faça upload pela interface web
 
-1. Acesse a interface web
-2. Vá para a aba "Cobrança"
-3. Faça upload de um arquivo JSON com os dados dos clientes
+### 2. Validação
+- Clique em "Validar Dados" para verificar
+- Corrija erros se necessário
+- Sistema mostra preview dos dados
 
-**Formato do JSON**:
+### 3. Envio de Mensagens
+- Selecione template apropriado
+- Configure agendamento se necessário
+- Clique em "Enviar Cobranças"
+
+### 4. Monitoramento
+- Acompanhe conversas em tempo real
+- Verifique logs e estatísticas
+- Gerencie escalações quando necessário
+
+## 🧪 Testes
+
+### Estrutura de Testes
+- **Unitários**: Testam componentes isolados
+- **Integração**: Testam fluxos completos
+- **API**: Testam endpoints REST
+- **Cobertura**: Análise de cobertura de código
+
+### Executar Testes
+```bash
+# Todos os testes
+python run_tests.py --all
+
+# Testes específicos
+python run_tests.py --unit
+python run_tests.py --api --coverage
+
+# Módulo específico
+python run_tests.py --module validation_engine
+```
+
+## 📈 Monitoramento
+
+### Métricas Disponíveis
+- **Mensagens enviadas**: Total e taxa de sucesso
+- **Conversas ativas**: Número e duração
+- **Performance**: Tempo de resposta e throughput
+- **Erros**: Taxa e categorização
+
+### Logs Estruturados
 ```json
-[
-  {
-    "nome": "João Silva",
-    "telefone": "+5511999999999",
-    "valor": "150,00",
-    "vencimento": "15/12/2024",
-    "descricao": "Mensalidade dezembro"
+{
+  "timestamp": "2024-01-01T10:00:00Z",
+  "level": "INFO",
+  "category": "billing",
+  "message": "Mensagem enviada com sucesso",
+  "details": {
+    "phone": "+5511999999999",
+    "template": "initial_br"
   }
+}
+```
+
+## 🔧 Personalização
+
+### Templates de Mensagem
+Edite em `backend/modules/billing_dispatcher.py`:
+
+```python
+self.templates['custom_br'] = MessageTemplate(
+    type=MessageType.CUSTOM,
+    subject="Seu Assunto",
+    content="Sua mensagem personalizada com {client_name}",
+    variables=['client_name', 'amount'],
+    priority=1
+)
+```
+
+### Intenções da IA
+Adicione em `backend/modules/conversation_bot.py`:
+
+```python
+IntentType.CUSTOM_INTENT = "custom_intent"
+
+# No método _load_intent_patterns:
+IntentType.CUSTOM_INTENT: [
+    r'\b(palavra-chave|padrão)\b',
+    r'outro padrão de reconhecimento'
 ]
 ```
 
-### 2. Configurar Template
+## 🤝 Contribuição
 
-Personalize a mensagem usando placeholders:
-- `{nome}` - Nome do cliente
-- `{valor}` - Valor a pagar
-- `{vencimento}` - Data de vencimento
-- `{descricao}` - Descrição da cobrança
+### Processo de Desenvolvimento
+1. Fork o repositório
+2. Crie branch para feature (`git checkout -b feature/nova-funcionalidade`)
+3. Commit suas mudanças (`git commit -am 'Add: nova funcionalidade'`)
+4. Push para branch (`git push origin feature/nova-funcionalidade`)
+5. Abra Pull Request
 
-### 3. Processar e Enviar
+### Padrões de Código
+- **PEP 8** para Python
+- **ESLint** para JavaScript
+- **Type hints** obrigatórios
+- **Docstrings** em todas as funções
+- **Testes** para novas funcionalidades
 
-1. Clique em "Validar Dados"
-2. Verifique os resultados da validação
-3. Clique em "Iniciar Envio"
-4. Acompanhe o progresso em tempo real
-
-### 4. Monitorar Conversas
-
-- Acesse a aba "Conversas" para ver interações
-- O bot responderá automaticamente aos clientes
-- Conversas complexas são escaladas para humanos
-
-## 🔍 Monitoramento
-
-### Logs Disponíveis
-
-- **Operações**: Todas as operações do sistema
-- **Mensagens**: Envios e recebimentos
-- **Conversas**: Interações do bot
-- **Erros**: Problemas e falhas
-
-### Estatísticas
-
-- Taxa de sucesso de envios
-- Número de conversas ativas
-- Performance dos módulos
-- Relatórios detalhados
-
-## 🤖 Bot de Conversação
-
-### Funcionalidades da IA Própria
-
-**Análise de Intenções**:
-- Pagamento realizado
-- Solicitação de dados
-- Questionamento de dívida
-- Negociação
-- Dificuldade financeira
-
-**Análise de Sentimentos**:
-- Positivo, negativo, neutro
-- Adaptação do tom de resposta
-- Escalação baseada em frustração
-
-**Contexto Conversacional**:
-- Histórico de mensagens
-- Perfil do usuário
-- Estágio da conversa
-- Memória de interações
-
-## 🔒 Segurança
-
-- **Autenticação**: Tokens seguros para APIs
-- **Validação**: Verificação rigorosa de dados
-- **Sanitização**: Limpeza de inputs
-- **Rate Limiting**: Proteção contra abuso
-- **Logs Auditáveis**: Rastro completo de operações
-
-## 📊 Performance
-
-### Otimizações para Railway
-
-- **Startup rápido**: Inicialização otimizada
-- **Baixo uso de memória**: Gestão eficiente de recursos
-- **Processamento assíncrono**: Operações não bloqueantes
-- **Cache inteligente**: Redução de latência
-
-### Limites Recomendados
-
-- **Arquivo JSON**: Máximo 10MB
-- **Lote de mensagens**: 50 mensagens simultâneas
-- **Sessões ativas**: 1000 conversas
-- **Logs**: 30 dias de retenção
-
-## 🛠️ Desenvolvimento Local
-
-### Requisitos
-
-- Python 3.11+
-- Node.js (para desenvolvimento frontend)
-
-### Instalação
-
-```bash
-# Backend
-pip install -r requirements.txt
-
-# Executar
-cd backend
-python -m uvicorn app:app --reload --host 0.0.0.0 --port 8000
-```
-
-### Estrutura de Desenvolvimento
-
-```bash
-# Instalar dependências de desenvolvimento
-pip install pytest pytest-asyncio httpx
-
-# Executar testes
-pytest
-
-# Executar com reload automático
-uvicorn backend.app:app --reload
-```
-
-## 🐛 Troubleshooting
+## 📞 Suporte
 
 ### Problemas Comuns
 
 **1. Erro de conexão com Waha**
-- Verifique a variável `WAHA_BASE_URL`
-- Confirme se a instância Waha está funcionando
-- Verifique logs de conectividade
-
-**2. Falha no envio de mensagens**
-- Verifique permissões da API
-- Confirme formato dos números de telefone
-- Verifique rate limits
-
-**3. Bot não responde**
-- Verifique configuração de webhooks
-- Confirme se o bot está inicializado
-- Analise logs de conversação
-
-### Logs Úteis
-
 ```bash
-# Visualizar logs no Railway
-railway logs
-
-# Logs específicos
-railway logs --tail
+# Verificar URL e credenciais
+curl -X GET $WAHA_BASE_URL/api/health
 ```
 
-## 📄 Licença
+**2. Mensagens não enviando**
+```bash
+# Verificar logs
+tail -f logs/billing.log
+```
 
-Este projeto foi desenvolvido especificamente para sua empresa. Todos os direitos reservados.
+**3. IA não respondendo corretamente**
+```bash
+# Testar análise NLP
+python run_tests.py --module conversation_bot
+```
 
-## 🤝 Suporte
+### Logs de Debug
+```bash
+# Habilitar debug
+export DEBUG=True
+export LOG_LEVEL=DEBUG
 
-Para suporte técnico, consulte:
-- Logs do sistema na interface web
-- Documentação da API em `/docs`
-- Status dos módulos na aba "Estatísticas"
+# Restart da aplicação
+python start.py
+```
+
+## 📝 Licença
+
+Este projeto está sob licença MIT. Veja o arquivo [LICENSE](LICENSE) para detalhes.
+
+## 🏆 Créditos
+
+Desenvolvido com ❤️ para automação inteligente de cobrança.
 
 ---
 
-**Sistema desenvolvido com ❤️ para transformar a Claudia da Desk em uma IA SUPREMA! 🚀**
+**Sistema de Cobrança Inteligente** - Transformando a gestão de cobranças com IA e automação! 🚀
