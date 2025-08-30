@@ -22,12 +22,18 @@ import numpy as np
 import math
 from dataclasses import dataclass
 from collections import defaultdict, deque
-from transformers import (
-    AutoTokenizer, AutoModel, AutoModelForSequenceClassification,
-    BertTokenizer, BertForSequenceClassification, pipeline,
-    AutoModelForCausalLM, GPT2LMHeadModel
-)
-from sentence_transformers import SentenceTransformer
+try:
+    from transformers import (
+        AutoTokenizer, AutoModel, AutoModelForSequenceClassification,
+        BertTokenizer, BertForSequenceClassification, pipeline,
+        AutoModelForCausalLM, GPT2LMHeadModel
+    )
+    from sentence_transformers import SentenceTransformer
+    TRANSFORMERS_AVAILABLE = True
+except ImportError:
+    TRANSFORMERS_AVAILABLE = False
+    AutoTokenizer = None
+    AutoModel = None
 from backend.config.settings import active_config
 from backend.utils.logger import conversation_logger, app_logger
 from backend.models.conversation import ConversationContext
@@ -221,11 +227,14 @@ class AdvancedMemorySystem:
         self.conversations: Dict[str, ConversationMemory] = {}
         
         # Modelo para embeddings semânticos
-        try:
-            self.sentence_model = SentenceTransformer('neuralmind/bert-base-portuguese-cased')
-        except:
+        if TRANSFORMERS_AVAILABLE:
+            try:
+                self.sentence_model = SentenceTransformer('neuralmind/bert-base-portuguese-cased')
+            except:
+                self.sentence_model = None
+                app_logger.warning("SentenceTransformer não disponível, usando fallback")
+        else:
             self.sentence_model = None
-            app_logger.warning("SentenceTransformer não disponível, usando fallback")
     
     def get_or_create_memory(self, user_id: str) -> ConversationMemory:
         """Obtém ou cria memória para usuário"""
@@ -1363,7 +1372,10 @@ class BillingChatBot:
         self.temperature = self.config.MODEL_TEMPERATURE
         
         # 🔤 TOKENIZER AVANÇADO PARA PORTUGUÊS
-        self.tokenizer = AutoTokenizer.from_pretrained('neuralmind/bert-base-portuguese-cased')
+        if TRANSFORMERS_AVAILABLE:
+            self.tokenizer = AutoTokenizer.from_pretrained('neuralmind/bert-base-portuguese-cased')
+        else:
+            self.tokenizer = None
         
         # 🌟 SISTEMAS DE IA SUPREMOS - AGORA COM FOCO EM COBRANÇAS
         self.text_normalizer = BrazilianTextNormalizer()
