@@ -1,13 +1,38 @@
 [build]
-builder = "dockerfile"
+builder = "NIXPACKS"
 
 [deploy]
-startCommand = "python railway_startup.py"
+# 🚀 DEPLOY OTIMIZADO PARA CLAUDIA SUPREMA
 healthcheckPath = "/health"
-healthcheckTimeout = 600
-restartPolicyType = "on_failure"
-restartPolicyMaxRetries = 20
+healthcheckTimeout = 300
+restartPolicyType = "ON_FAILURE"
+startCommand = "gunicorn --bind 0.0.0.0:$PORT --workers 2 --threads 4 --worker-class gthread --timeout 120 --preload backend.app:app"
+
+# ⚡ VARIÁVEIS OTIMIZADAS PARA RAILWAY
+[variables]
+FLASK_ENV = "production"
+ENABLE_EMOTIONAL_INTELLIGENCE = "true"
+ENABLE_MEMORY_SYSTEM = "true"
+ENABLE_SEMANTIC_ANALYSIS = "true"  
+ENABLE_CONTINUOUS_LEARNING = "true"
+BATCH_PROCESSING = "true"
+ASYNC_PROCESSING = "true"
+CACHE_EMBEDDINGS = "true"
+MODEL_DEVICE = "cpu"
+LOG_LEVEL = "INFO"
+PYTHONPATH = "/app"
+restartPolicyMaxRetries = 10
 
 [env]
 PYTHON_VERSION = "3.11"
 PORT = "8000"
+FLASK_ENV = "production"
+LOG_LEVEL = "INFO"
+
+[services.web]
+startCommand = "gunicorn --bind 0.0.0.0:$PORT --workers 4 --timeout 300 backend.app:app"
+healthcheckPath = "/health"
+
+[services.web.env]
+WEB_CONCURRENCY = "4"
+MAX_WORKERS = "4"
