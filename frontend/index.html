@@ -3,442 +3,324 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Cobrança Inteligente</title>
-    
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Bootstrap Icons -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
-    <!-- Custom CSS -->
-    <link href="css/style.css" rel="stylesheet">
+    <title>Sistema de Cobrança Avançado</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
 <body>
-    <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top">
-        <div class="container">
-            <a class="navbar-brand" href="#home">
-                <i class="bi bi-chat-dots-fill"></i>
-                Cobrança Inteligente
-            </a>
-            
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fas fa-comments-dollar"></i>
+                    <h1>Sistema de Cobrança</h1>
+                </div>
+                <div class="status-indicator">
+                    <span id="connection-status" class="status-dot offline"></span>
+                    <span id="status-text">Desconectado</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Navigation -->
+        <nav class="nav-tabs">
+            <button class="tab-button active" data-tab="billing">
+                <i class="fas fa-file-invoice-dollar"></i>
+                Cobrança
             </button>
-            
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="#dashboard">Dashboard</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#billing">Cobrança</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#conversations">Conversas</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#templates">Templates</a>
-                    </li>
-                </ul>
-                
-                <div class="navbar-nav">
-                    <div class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
-                            <i class="bi bi-person-circle"></i>
-                            <span id="username">Admin</span>
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="#" onclick="logout()">Sair</a></li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </nav>
+            <button class="tab-button" data-tab="conversations">
+                <i class="fas fa-comments"></i>
+                Conversas
+            </button>
+            <button class="tab-button" data-tab="logs">
+                <i class="fas fa-list-alt"></i>
+                Logs
+            </button>
+            <button class="tab-button" data-tab="stats">
+                <i class="fas fa-chart-bar"></i>
+                Estatísticas
+            </button>
+        </nav>
 
-    <!-- Main Content -->
-    <main class="main-content">
-        <!-- Home Section -->
-        <section id="home" class="section active">
-            <div class="container">
-                <div class="row">
-                    <div class="col-lg-8 mx-auto text-center">
-                        <h1 class="display-4 mb-4">Sistema de Cobrança Inteligente</h1>
-                        <p class="lead mb-5">
-                            Automatize suas cobranças com inteligência artificial e integração WhatsApp
-                        </p>
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Billing Tab -->
+            <section id="billing-tab" class="tab-content active">
+                <div class="content-header">
+                    <h2><i class="fas fa-file-invoice-dollar"></i> Disparo de Cobrança</h2>
+                    <p>Upload de arquivo JSON ou inserção manual de dados para envio de mensagens de cobrança</p>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-upload"></i> Upload de Arquivo JSON</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="upload-area" id="upload-area">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <p>Arraste o arquivo JSON aqui ou clique para selecionar</p>
+                            <input type="file" id="file-input" accept=".json" hidden>
+                            <button class="btn btn-primary" onclick="document.getElementById('file-input').click()">
+                                Selecionar Arquivo
+                            </button>
+                        </div>
                         
-                        <div class="row g-4 mt-5">
-                            <div class="col-md-4">
-                                <div class="feature-card">
-                                    <i class="bi bi-robot feature-icon"></i>
-                                    <h4>Bot Inteligente</h4>
-                                    <p>IA avançada para conversas naturais</p>
-                                </div>
+                        <div class="file-info" id="file-info" style="display: none;">
+                            <div class="file-details">
+                                <i class="fas fa-file-alt"></i>
+                                <span id="file-name"></span>
+                                <span id="file-size"></span>
                             </div>
-                            <div class="col-md-4">
-                                <div class="feature-card">
-                                    <i class="bi bi-whatsapp feature-icon"></i>
-                                    <h4>WhatsApp Integration</h4>
-                                    <p>Integração direta via Waha</p>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="feature-card">
-                                    <i class="bi bi-graph-up feature-icon"></i>
-                                    <h4>Analytics</h4>
-                                    <p>Métricas e relatórios em tempo real</p>
-                                </div>
-                            </div>
+                            <button class="btn btn-danger btn-sm" onclick="clearFile()">
+                                <i class="fas fa-times"></i>
+                            </button>
                         </div>
                     </div>
                 </div>
-            </div>
-        </section>
 
-        <!-- Dashboard Section -->
-        <section id="dashboard" class="section">
-            <div class="container">
-                <h2 class="section-title">Dashboard</h2>
-                
-                <!-- Status Cards -->
-                <div class="row g-4 mb-5">
-                    <div class="col-md-3">
-                        <div class="stat-card">
-                            <div class="stat-icon bg-primary">
-                                <i class="bi bi-envelope"></i>
-                            </div>
-                            <div class="stat-content">
-                                <h3 id="totalMessages">0</h3>
-                                <p>Mensagens Enviadas</p>
-                            </div>
+                <div class="card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-edit"></i> Template de Mensagem</h3>
+                    </div>
+                    <div class="card-body">
+                        <textarea id="message-template" placeholder="Digite seu template de mensagem personalizado..." rows="8">
+🔔 *Lembrete de Pagamento*
+
+Olá {nome}!
+
+Identificamos que há uma pendência em sua conta:
+💰 Valor: R$ {valor}
+📅 Vencimento: {vencimento}
+📋 Descrição: {descricao}
+
+Para regularizar sua situação, por favor realize o pagamento o quanto antes.
+
+Se já efetuou o pagamento, desconsidere esta mensagem.
+
+Qualquer dúvida, estou aqui para ajudar! 😊
+                        </textarea>
+                        <div class="template-info">
+                            <small><strong>Placeholders disponíveis:</strong> {nome}, {valor}, {vencimento}, {descricao}</small>
                         </div>
                     </div>
-                    
-                    <div class="col-md-3">
-                        <div class="stat-card">
-                            <div class="stat-icon bg-success">
-                                <i class="bi bi-check-circle"></i>
-                            </div>
-                            <div class="stat-content">
-                                <h3 id="successRate">0%</h3>
-                                <p>Taxa de Sucesso</p>
-                            </div>
-                        </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-cog"></i> Configurações de Envio</h3>
                     </div>
-                    
-                    <div class="col-md-3">
-                        <div class="stat-card">
-                            <div class="stat-icon bg-info">
-                                <i class="bi bi-chat-dots"></i>
+                    <div class="card-body">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="batch-size">Tamanho do Lote</label>
+                                <input type="number" id="batch-size" value="10" min="1" max="50">
+                                <small>Número de mensagens enviadas simultaneamente</small>
                             </div>
-                            <div class="stat-content">
-                                <h3 id="activeConversations">0</h3>
-                                <p>Conversas Ativas</p>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="col-md-3">
-                        <div class="stat-card">
-                            <div class="stat-icon bg-warning">
-                                <i class="bi bi-clock"></i>
-                            </div>
-                            <div class="stat-content">
-                                <h3 id="wahaStatus">Offline</h3>
-                                <p>Status Waha</p>
+                            <div class="form-group">
+                                <label for="delay-between">Delay entre Lotes (seg)</label>
+                                <input type="number" id="delay-between" value="2" min="1" max="10">
+                                <small>Tempo de espera entre lotes</small>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Activity Feed -->
-                <div class="row">
-                    <div class="col-lg-8">
-                        <div class="card">
-                            <div class="card-header">
-                                <h5><i class="bi bi-activity"></i> Atividade Recente</h5>
-                            </div>
-                            <div class="card-body">
-                                <div id="activityFeed" class="activity-feed">
-                                    <!-- Activity items will be loaded here -->
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="col-lg-4">
-                        <div class="card">
-                            <div class="card-header">
-                                <h5><i class="bi bi-gear"></i> Status do Sistema</h5>
-                            </div>
-                            <div class="card-body">
-                                <div class="status-item">
-                                    <span>API Backend</span>
-                                    <span class="badge bg-success">Online</span>
-                                </div>
-                                <div class="status-item">
-                                    <span>WhatsApp (Waha)</span>
-                                    <span id="wahaStatusBadge" class="badge bg-secondary">Verificando...</span>
-                                </div>
-                                <div class="status-item">
-                                    <span>Bot IA</span>
-                                    <span class="badge bg-success">Ativo</span>
-                                </div>
-                                <div class="status-item">
-                                    <span>Logs</span>
-                                    <span class="badge bg-info">Funcionando</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                <div class="action-buttons">
+                    <button class="btn btn-primary btn-lg" id="validate-btn" onclick="validateData()">
+                        <i class="fas fa-check-circle"></i>
+                        Validar Dados
+                    </button>
+                    <button class="btn btn-success btn-lg" id="process-btn" onclick="processData()" disabled>
+                        <i class="fas fa-paper-plane"></i>
+                        Iniciar Envio
+                    </button>
                 </div>
-            </div>
-        </section>
 
-        <!-- Billing Section -->
-        <section id="billing" class="section">
-            <div class="container">
-                <h2 class="section-title">Gestão de Cobrança</h2>
-                
-                <div class="row">
-                    <div class="col-lg-6">
-                        <div class="card">
-                            <div class="card-header">
-                                <h5><i class="bi bi-upload"></i> Upload de Clientes</h5>
-                            </div>
-                            <div class="card-body">
-                                <form id="uploadForm" enctype="multipart/form-data">
-                                    <div class="mb-3">
-                                        <label for="clientsFile" class="form-label">Arquivo JSON de Clientes</label>
-                                        <input type="file" class="form-control" id="clientsFile" accept=".json" required>
-                                        <div class="form-text">
-                                            Faça upload de um arquivo JSON com os dados dos clientes
-                                        </div>
-                                    </div>
-                                    
-                                    <button type="submit" class="btn btn-primary">
-                                        <i class="bi bi-upload"></i> Fazer Upload
-                                    </button>
-                                </form>
-                                
-                                <div id="uploadResult" class="mt-3"></div>
-                            </div>
+                <!-- Progress Section -->
+                <div class="progress-section" id="progress-section" style="display: none;">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3><i class="fas fa-hourglass-half"></i> Progresso do Envio</h3>
                         </div>
-                    </div>
-                    
-                    <div class="col-lg-6">
-                        <div class="card">
-                            <div class="card-header">
-                                <h5><i class="bi bi-send"></i> Enviar Cobrança</h5>
+                        <div class="card-body">
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="progress-fill"></div>
                             </div>
-                            <div class="card-body">
-                                <form id="billingForm">
-                                    <div class="mb-3">
-                                        <label for="selectedFile" class="form-label">Arquivo de Clientes</label>
-                                        <select class="form-select" id="selectedFile" required>
-                                            <option value="">Selecione um arquivo...</option>
-                                        </select>
-                                    </div>
-                                    
-                                    <div class="mb-3">
-                                        <label for="selectedTemplate" class="form-label">Template de Mensagem</label>
-                                        <select class="form-select" id="selectedTemplate" required>
-                                            <option value="">Carregando templates...</option>
-                                        </select>
-                                    </div>
-                                    
-                                    <div class="mb-3">
-                                        <label for="delaySeconds" class="form-label">Delay entre Mensagens (segundos)</label>
-                                        <input type="number" class="form-control" id="delaySeconds" value="2" min="1" max="60">
-                                    </div>
-                                    
-                                    <div class="mb-3">
-                                        <button type="button" class="btn btn-outline-secondary me-2" onclick="validateBilling()">
-                                            <i class="bi bi-check-circle"></i> Validar
-                                        </button>
-                                        <button type="submit" class="btn btn-success">
-                                            <i class="bi bi-send"></i> Enviar Lote
-                                        </button>
-                                    </div>
-                                </form>
-                                
-                                <div id="billingResult" class="mt-3"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Batch Progress -->
-                <div class="row mt-4">
-                    <div class="col-12">
-                        <div id="batchProgress" class="card" style="display: none;">
-                            <div class="card-header">
-                                <h5><i class="bi bi-hourglass-split"></i> Progresso do Lote</h5>
-                            </div>
-                            <div class="card-body">
-                                <div class="progress mb-3">
-                                    <div id="progressBar" class="progress-bar" role="progressbar" style="width: 0%"></div>
+                            <div class="progress-stats">
+                                <div class="stat">
+                                    <span class="stat-label">Total:</span>
+                                    <span id="total-messages">0</span>
                                 </div>
-                                <div id="progressText">Iniciando...</div>
-                                <div class="row text-center mt-3">
-                                    <div class="col-md-3">
-                                        <strong id="totalClients">0</strong>
-                                        <div>Total</div>
-                                    </div>
-                                    <div class="col-md-3">
-                                        <strong id="processedClients">0</strong>
-                                        <div>Processados</div>
-                                    </div>
-                                    <div class="col-md-3">
-                                        <strong id="successfulClients">0</strong>
-                                        <div>Sucesso</div>
-                                    </div>
-                                    <div class="col-md-3">
-                                        <strong id="failedClients">0</strong>
-                                        <div>Falhas</div>
-                                    </div>
+                                <div class="stat">
+                                    <span class="stat-label">Enviadas:</span>
+                                    <span id="sent-messages">0</span>
+                                </div>
+                                <div class="stat">
+                                    <span class="stat-label">Falhas:</span>
+                                    <span id="failed-messages">0</span>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
-        </section>
+            </section>
 
-        <!-- Conversations Section -->
-        <section id="conversations" class="section">
-            <div class="container">
-                <h2 class="section-title">Conversas</h2>
-                
-                <div class="row">
-                    <div class="col-lg-4">
-                        <div class="card">
-                            <div class="card-header">
-                                <h5><i class="bi bi-list"></i> Conversas Ativas</h5>
-                            </div>
-                            <div class="card-body">
-                                <div id="conversationsList" class="conversations-list">
-                                    <!-- Conversations will be loaded here -->
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="col-lg-8">
-                        <div class="card">
-                            <div class="card-header">
-                                <h5><i class="bi bi-chat"></i> <span id="currentConversationTitle">Selecione uma conversa</span></h5>
-                            </div>
-                            <div class="card-body">
-                                <div id="chatMessages" class="chat-messages">
-                                    <div class="text-center text-muted">
-                                        Selecione uma conversa para ver o histórico
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+            <!-- Conversations Tab -->
+            <section id="conversations-tab" class="tab-content">
+                <div class="content-header">
+                    <h2><i class="fas fa-comments"></i> Conversas Ativas</h2>
+                    <p>Monitoramento e gerenciamento de conversas com clientes</p>
                 </div>
-            </div>
-        </section>
 
-        <!-- Templates Section -->
-        <section id="templates" class="section">
-            <div class="container">
-                <h2 class="section-title">Templates de Mensagem</h2>
-                
-                <div class="row">
-                    <div class="col-lg-6">
+                <div class="conversations-container">
+                    <div class="conversations-list">
                         <div class="card">
                             <div class="card-header">
-                                <h5><i class="bi bi-plus-circle"></i> Novo Template</h5>
+                                <h3>Sessões Ativas</h3>
+                                <span class="badge" id="active-sessions-count">0</span>
                             </div>
                             <div class="card-body">
-                                <form id="templateForm">
-                                    <div class="mb-3">
-                                        <label for="templateName" class="form-label">Nome do Template</label>
-                                        <input type="text" class="form-control" id="templateName" required>
-                                    </div>
-                                    
-                                    <div class="mb-3">
-                                        <label for="templateContent" class="form-label">Conteúdo</label>
-                                        <textarea class="form-control" id="templateContent" rows="8" required></textarea>
-                                        <div class="form-text">
-                                            Use variáveis como {name}, {amount}, {due_date}
-                                        </div>
-                                    </div>
-                                    
-                                    <button type="submit" class="btn btn-primary">
-                                        <i class="bi bi-save"></i> Salvar Template
-                                    </button>
-                                </form>
+                                <div id="conversations-list-content">
+                                    <!-- Conversas serão carregadas aqui -->
+                                </div>
                             </div>
                         </div>
                     </div>
-                    
-                    <div class="col-lg-6">
+
+                    <div class="conversation-detail">
                         <div class="card">
                             <div class="card-header">
-                                <h5><i class="bi bi-file-text"></i> Templates Existentes</h5>
+                                <h3 id="conversation-title">Selecione uma conversa</h3>
                             </div>
                             <div class="card-body">
-                                <div id="templatesList">
-                                    <!-- Templates will be loaded here -->
+                                <div class="chat-messages" id="chat-messages">
+                                    <div class="no-conversation">
+                                        <i class="fas fa-comments"></i>
+                                        <p>Selecione uma conversa para ver os detalhes</p>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
-        </section>
-    </main>
+            </section>
 
-    <!-- Login Modal -->
-    <div class="modal fade" id="loginModal" tabindex="-1" data-bs-backdrop="static">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Login</h5>
+            <!-- Logs Tab -->
+            <section id="logs-tab" class="tab-content">
+                <div class="content-header">
+                    <h2><i class="fas fa-list-alt"></i> Logs do Sistema</h2>
+                    <p>Registro detalhado de todas as operações</p>
                 </div>
-                <div class="modal-body">
-                    <form id="loginForm">
-                        <div class="mb-3">
-                            <label for="loginUsername" class="form-label">Usuário</label>
-                            <input type="text" class="form-control" id="loginUsername" value="admin" required>
+
+                <div class="logs-controls">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="log-type">Tipo de Log</label>
+                            <select id="log-type">
+                                <option value="all">Todos</option>
+                                <option value="operations">Operações</option>
+                                <option value="messages">Mensagens</option>
+                                <option value="conversations">Conversas</option>
+                                <option value="errors">Erros</option>
+                            </select>
                         </div>
-                        <div class="mb-3">
-                            <label for="loginPassword" class="form-label">Senha</label>
-                            <input type="password" class="form-control" id="loginPassword" value="admin123" required>
+                        <div class="form-group">
+                            <label for="log-limit">Limite</label>
+                            <input type="number" id="log-limit" value="100" min="10" max="1000">
                         </div>
-                        <button type="submit" class="btn btn-primary w-100">Entrar</button>
-                    </form>
+                        <div class="form-group">
+                            <button class="btn btn-primary" onclick="loadLogs()">
+                                <i class="fas fa-sync"></i>
+                                Atualizar
+                            </button>
+                        </div>
+                    </div>
                 </div>
+
+                <div class="card">
+                    <div class="card-body">
+                        <div class="logs-container" id="logs-container">
+                            <!-- Logs serão carregados aqui -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Stats Tab -->
+            <section id="stats-tab" class="tab-content">
+                <div class="content-header">
+                    <h2><i class="fas fa-chart-bar"></i> Estatísticas</h2>
+                    <p>Métricas e relatórios do sistema</p>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-envelope"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3 id="total-messages-stat">0</h3>
+                            <p>Mensagens Enviadas</p>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3 id="success-rate-stat">0%</h3>
+                            <p>Taxa de Sucesso</p>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3 id="active-conversations-stat">0</h3>
+                            <p>Conversas Ativas</p>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3 id="errors-count-stat">0</h3>
+                            <p>Erros Hoje</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Status dos Módulos</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="modules-status" id="modules-status">
+                            <!-- Status dos módulos será carregado aqui -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Toast Notifications -->
+        <div class="toast-container" id="toast-container"></div>
+
+        <!-- Loading Overlay -->
+        <div class="loading-overlay" id="loading-overlay" style="display: none;">
+            <div class="loading-spinner">
+                <i class="fas fa-spinner fa-spin"></i>
+                <p>Processando...</p>
             </div>
         </div>
     </div>
 
-    <!-- Toast Container -->
-    <div class="toast-container position-fixed bottom-0 end-0 p-3">
-        <div id="toastTemplate" class="toast" role="alert">
-            <div class="toast-header">
-                <strong class="me-auto">Sistema</strong>
-                <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
-            </div>
-            <div class="toast-body"></div>
-        </div>
-    </div>
-
-    <!-- Scripts -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="js/config.js"></script>
-    <script src="js/auth.js"></script>
-    <script src="js/api.js"></script>
-    <script src="js/dashboard.js"></script>
-    <script src="js/billing.js"></script>
-    <script src="js/conversations.js"></script>
-    <script src="js/templates.js"></script>
-    <script src="js/app.js"></script>
+    <script src="app.js"></script>
 </body>
 </html>
-

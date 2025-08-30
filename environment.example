@@ -1,0 +1,32 @@
+# Configurações da Aplicação
+APP_NAME=Sistema de Cobrança Avançado
+DEBUG=false
+ENVIRONMENT=production
+
+# Configurações do Servidor
+HOST=0.0.0.0
+PORT=8000
+
+# Configurações do Waha (WhatsApp API)
+WAHA_BASE_URL=https://seu-waha-instance.com
+WAHA_API_KEY=seu-api-key-aqui
+WAHA_SESSION=default
+
+# Configurações de Segurança
+SECRET_KEY=sua-chave-secreta-super-segura-aqui
+WEBHOOK_SECRET=seu-webhook-secret-aqui
+
+# Configurações de Performance
+MAX_CONCURRENT_REQUESTS=100
+REQUEST_TIMEOUT=30
+BATCH_SIZE=50
+
+# Configurações de Logging
+LOG_LEVEL=INFO
+
+# Template padrão de cobrança (opcional)
+DEFAULT_BILLING_TEMPLATE="🔔 *Lembrete de Pagamento*\n\nOlá {nome}!\n\nIdentificamos que há uma pendência em sua conta:\n💰 Valor: R$ {valor}\n📅 Vencimento: {vencimento}\n📋 Descrição: {descricao}\n\nPara regularizar sua situação, por favor realize o pagamento o quanto antes.\n\nSe já efetuou o pagamento, desconsidere esta mensagem.\n\nQualquer dúvida, estou aqui para ajudar! 😊"
+
+# Configurações de Arquivos
+JSON_UPLOAD_PATH=uploads/
+MAX_FILE_SIZE=10485760
