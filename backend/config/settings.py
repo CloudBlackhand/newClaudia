@@ -3,7 +3,8 @@ Configurações do Sistema - Otimizado para Railway
 """
 import os
 from typing import Optional
-from pydantic import BaseSettings, Field
+from pydantic import Field
+from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
     """Configurações centralizadas do sistema"""
@@ -63,10 +64,11 @@ Qualquer dúvida, estou aqui para ajudar! 😊
     json_upload_path: str = Field(default="uploads/", env="JSON_UPLOAD_PATH")
     max_file_size: int = Field(default=10 * 1024 * 1024, env="MAX_FILE_SIZE")  # 10MB
     
-    class Config:
-        env_file = ".env"
-        env_file_encoding = 'utf-8'
-        case_sensitive = False
+    model_config = {
+        "env_file": ".env",
+        "env_file_encoding": "utf-8",
+        "case_sensitive": False
+    }
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
