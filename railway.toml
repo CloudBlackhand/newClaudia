@@ -1,12 +1,13 @@
 [build]
-builder = "NIXPACKS"
+builder = "DOCKERFILE"
 
 [deploy]
 # 🚀 DEPLOY OTIMIZADO PARA CLAUDIA SUPREMA
 healthcheckPath = "/health"
 healthcheckTimeout = 300
 restartPolicyType = "ON_FAILURE"
-startCommand = "gunicorn --bind 0.0.0.0:$PORT --workers 2 --threads 4 --worker-class gthread --timeout 120 --preload backend.app:app"
+restartPolicyMaxRetries = 3
+startCommand = "gunicorn --bind 0.0.0.0:$PORT --workers 1 --threads 2 --worker-class gthread --timeout 120 --max-requests 1000 --preload backend.app:app"
 
 # ⚡ VARIÁVEIS OTIMIZADAS PARA RAILWAY
 [variables]
@@ -15,12 +16,15 @@ ENABLE_EMOTIONAL_INTELLIGENCE = "true"
 ENABLE_MEMORY_SYSTEM = "true"
 ENABLE_SEMANTIC_ANALYSIS = "true"  
 ENABLE_CONTINUOUS_LEARNING = "true"
-BATCH_PROCESSING = "true"
+BATCH_PROCESSING = "false"
 ASYNC_PROCESSING = "true"
-CACHE_EMBEDDINGS = "true"
+CACHE_EMBEDDINGS = "false"
 MODEL_DEVICE = "cpu"
 LOG_LEVEL = "INFO"
 PYTHONPATH = "/app"
+PYTHONUNBUFFERED = "1"
+PIP_NO_CACHE_DIR = "1"
+PIP_DISABLE_PIP_VERSION_CHECK = "1"
 restartPolicyMaxRetries = 10
 
 [env]

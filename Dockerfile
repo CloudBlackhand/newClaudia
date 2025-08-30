@@ -12,11 +12,11 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements first for better caching
-COPY requirements.txt .
+COPY requirements-railway.txt requirements.txt ./
 
-# Install Python dependencies
+# Install Python dependencies optimized for Railway
 RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt
+    pip install --no-cache-dir --no-warn-script-location -r requirements-railway.txt
 
 # Copy application code
 COPY . .

@@ -1,0 +1,36 @@
+# 🚀 REQUIREMENTS OTIMIZADO PARA RAILWAY DEPLOYMENT
+
+# Backend Core - Versões estáveis
+Flask==2.3.3
+Flask-CORS==4.0.0
+Flask-JWT-Extended==4.5.3
+gunicorn==21.2.0
+
+# 🤖 MACHINE LEARNING OTIMIZADO PARA CPU
+torch==2.0.1+cpu --find-links https://download.pytorch.org/whl/torch_stable.html
+transformers==4.30.2
+sentence-transformers==2.2.2
+numpy==1.24.3
+scikit-learn==1.2.2
+
+# HTTP & API - Versões leves
+requests==2.31.0
+httpx==0.24.1
+
+# Data Processing - Essencial
+pydantic==2.0.3
+python-dotenv==1.0.0
+
+# Security - Mínimo necessário
+bcrypt==4.0.1
+python-jose[cryptography]==3.3.0
+
+# Logging - Simples
+loguru==0.7.0
+
+# Utils - Básico
+python-dateutil==2.8.2
+validators==0.20.0
+
+# Development - Mínimo para produção
+black==23.3.0
