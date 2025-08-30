@@ -29,6 +29,14 @@ class IntentType(Enum):
     COMPLAINT = "complaint"
     INFORMATION_REQUEST = "information_request"
     GOODBYE = "goodbye"
+    URGENCY = "urgency"
+    DISCOUNT_REQUEST = "discount_request"
+    INTEREST_QUESTION = "interest_question"
+    FINANCIAL_DIFFICULTY = "financial_difficulty"
+    PAYMENT_PROOF = "payment_proof"
+    INSTALLMENT_REQUEST = "installment_request"
+    DEADLINE_EXTENSION = "deadline_extension"
+    CONTACT_REQUEST = "contact_request"
     UNKNOWN = "unknown"
 
 class SentimentType(Enum):
@@ -37,6 +45,11 @@ class SentimentType(Enum):
     NEUTRAL = "neutral"
     NEGATIVE = "negative"
     ANGRY = "angry"
+    ANXIOUS = "anxious"
+    FRUSTRATED = "frustrated"
+    RELIEVED = "relieved"
+    CONFUSED = "confused"
+    URGENT = "urgent"
 
 class ResponseType(Enum):
     """Tipos de resposta do bot"""
@@ -61,6 +74,15 @@ class ConversationContext:
     sentiment_history: List[SentimentType] = None
     intent_history: List[IntentType] = None
     
+    # Novos campos para análise avançada
+    frustration_level: int = 0  # 0-10 escala de frustração
+    urgency_level: int = 0      # 0-10 escala de urgência
+    payment_capacity: Optional[str] = None  # 'high', 'medium', 'low', 'none'
+    preferred_solution: Optional[str] = None  # Solução preferida do cliente
+    escalation_reasons: List[str] = None     # Motivos para escalação
+    conversation_tone: str = 'neutral'       # Tom geral da conversa
+    last_sentiment_change: Optional[str] = None  # Última mudança de sentimento
+    
     def __post_init__(self):
         if self.topics_discussed is None:
             self.topics_discussed = set()
@@ -68,6 +90,8 @@ class ConversationContext:
             self.sentiment_history = []
         if self.intent_history is None:
             self.intent_history = []
+        if self.escalation_reasons is None:
+            self.escalation_reasons = []
 
 @dataclass
 class AnalysisResult:
@@ -108,41 +132,99 @@ class NLPProcessor:
                 r'\b(oi|olá|bom dia|boa tarde|boa noite|e aí|salve)\b',
                 r'\b(tudo bem|como vai|beleza)\b',
                 r'^(oi|olá|bom\s+dia|boa\s+tarde|boa\s+noite)',
+                r'\b(eae|opa|fala|hey|hello)\b',
             ],
             IntentType.PAYMENT_CONFIRMATION: [
                 r'\b(já paguei|paguei|efetuei o pagamento|quitei|pix feito)\b',
                 r'\b(comprovante|recibo|transferência realizada)\b',
                 r'\b(pagamento efetuado|conta quitada|valor pago)\b',
                 r'\b(enviei o pix|mandei o dinheiro|transferi)\b',
+                r'\b(depositei|depositado|ted feito|doc feito)\b',
+                r'\b(boleto pago|cartão processado|débito autorizado)\b',
             ],
             IntentType.PAYMENT_QUESTION: [
                 r'\b(como pagar|onde pagar|forma de pagamento|chave pix)\b',
                 r'\b(dados bancários|conta para depósito|qr code)\b',
                 r'\b(valor|quanto|qual o valor|valor correto)\b',
                 r'\b(vencimento|quando vence|prazo)\b',
+                r'\b(aceita cartão|aceita pix|como depositar)\b',
+                r'\b(banco|agência|conta corrente|dados da conta)\b',
             ],
             IntentType.NEGOTIATION: [
                 r'\b(negociar|parcelar|dividir|desconto|abatimento)\b',
                 r'\b(condições|facilitar|reduzir|diminuir)\b',
                 r'\b(não consigo pagar|difícil situação|sem condições)\b',
                 r'\b(proposta|acordo|acerto|combinar)\b',
+                r'\b(renegociar|refinanciar|rever condições)\b',
             ],
             IntentType.COMPLAINT: [
                 r'\b(reclamação|problema|erro|não concordo|injusto)\b',
                 r'\b(absurdo|revoltante|inadmissível|inaceitável)\b',
                 r'\b(não devo|não é meu|cobrança indevida)\b',
                 r'\b(advogado|procon|justiça|processo)\b',
+                r'\b(irregularidade|fraude|golpe|enganação)\b',
+            ],
+            IntentType.URGENCY: [
+                r'\b(urgente|emergência|preciso urgente|é urgente)\b',
+                r'\b(hoje mesmo|agora|imediatamente|já)\b',
+                r'\b(problema sério|situação crítica|emergencial)\b',
+                r'\b(prazo acabando|último dia|vence hoje)\b',
+            ],
+            IntentType.DISCOUNT_REQUEST: [
+                r'\b(desconto|redução|abatimento|diminuir valor)\b',
+                r'\b(preço menor|valor menor|pode baixar)\b',
+                r'\b(promoção|oferta|condição especial)\b',
+                r'\b(tem desconto|fazem desconto|dão desconto)\b',
+            ],
+            IntentType.INTEREST_QUESTION: [
+                r'\b(juros|multa|correção|atualização monetária)\b',
+                r'\b(taxa|porcentagem|percentual|acréscimo)\b',
+                r'\b(valor original|valor inicial|sem juros)\b',
+                r'\b(incidência|cobrança de juros|juros sobre)\b',
+            ],
+            IntentType.FINANCIAL_DIFFICULTY: [
+                r'\b(desempregado|sem trabalho|sem renda|aposentado)\b',
+                r'\b(dificuldade financeira|crise|sem dinheiro)\b',
+                r'\b(não tenho como|impossível|fora das condições)\b',
+                r'\b(situação difícil|momento difícil|período ruim)\b',
+                r'\b(auxílio|benefício|pensão|bolsa família)\b',
+            ],
+            IntentType.PAYMENT_PROOF: [
+                r'\b(comprovante|recibo|extrato|print)\b',
+                r'\b(foto do pagamento|imagem|screenshot)\b',
+                r'\b(documento|evidência|prova de pagamento)\b',
+                r'\b(confirmação|validação|verificação)\b',
+            ],
+            IntentType.INSTALLMENT_REQUEST: [
+                r'\b(parcelar|parcelas|dividir|fatiar)\b',
+                r'\b(em vez|vezes|prestações|mensalidades)\b',
+                r'\b(pagar em partes|pagar aos poucos)\b',
+                r'\b(entrada|sinal|primeira parcela)\b',
+            ],
+            IntentType.DEADLINE_EXTENSION: [
+                r'\b(prorrogar|estender|adiar|postergar)\b',
+                r'\b(mais tempo|prazo maior|prazo adicional)\b',
+                r'\b(próxima semana|mês que vem|depois)\b',
+                r'\b(aguardar|esperar|dar um tempo)\b',
+            ],
+            IntentType.CONTACT_REQUEST: [
+                r'\b(falar com|conversar com|contato com)\b',
+                r'\b(supervisor|gerente|responsável|chefe)\b',
+                r'\b(humano|pessoa|gente|atendente)\b',
+                r'\b(telefone|whatsapp|email|endereço)\b',
             ],
             IntentType.INFORMATION_REQUEST: [
                 r'\b(informação|detalhe|esclarecimento|dúvida)\b',
                 r'\b(referente a|sobre|relativo|concernente)\b',
                 r'\b(o que é|do que se trata|qual o motivo)\b',
                 r'\b(histórico|extrato|demonstrativo)\b',
+                r'\b(origem|procedência|de onde vem)\b',
             ],
             IntentType.GOODBYE: [
                 r'\b(tchau|até|obrigad|valeu|flw|falou)\b',
                 r'\b(até logo|até mais|nos falamos)\b',
                 r'^(ok|certo|entendi|beleza)$',
+                r'\b(xau|bye|adeus|fui)\b',
             ]
         }
     
@@ -152,30 +234,64 @@ class NLPProcessor:
             SentimentType.POSITIVE: [
                 'obrigado', 'grato', 'excelente', 'ótimo', 'bom', 'legal', 'show',
                 'perfeito', 'maravilhoso', 'agradável', 'satisfeito', 'feliz',
-                'positivo', 'correto', 'certo', 'bem', 'melhor', 'sucesso'
+                'positivo', 'correto', 'certo', 'bem', 'melhor', 'sucesso',
+                'adorei', 'amei', 'fantástico', 'incrível', 'top', 'massa',
+                'bacana', 'sensacional', 'espetacular', 'aprovado', 'concordo'
             ],
             SentimentType.NEGATIVE: [
                 'ruim', 'péssimo', 'horrível', 'terrível', 'difícil', 'complicado',
                 'problema', 'erro', 'falha', 'insatisfeito', 'chateado', 'triste',
-                'preocupado', 'nervoso', 'estressado', 'desempregado'
+                'preocupado', 'nervoso', 'estressado', 'desempregado', 'apertado',
+                'complicada', 'deteriorado', 'prejudicado', 'desfavorável'
             ],
             SentimentType.ANGRY: [
                 'raiva', 'irritado', 'furioso', 'revoltado', 'indignado', 'bravo',
                 'absurdo', 'inadmissível', 'inaceitável', 'ridículo', 'vergonha',
                 'escândalo', 'safado', 'ladrão', 'roubo', 'enganação', 'palhaçada',
-                'filho da puta', 'desgraçado', 'merda', 'porra'
+                'revoltante', 'injusto', 'injustiça', 'exploração', 'abuso'
+            ],
+            SentimentType.ANXIOUS: [
+                'ansioso', 'ansiosa', 'preocupado', 'preocupada', 'aflito', 'aflita',
+                'desesperado', 'desesperada', 'angustiado', 'tenso', 'nervoso',
+                'apreensivo', 'inquieto', 'agitado', 'estressado', 'pressão'
+            ],
+            SentimentType.FRUSTRATED: [
+                'frustrado', 'frustrada', 'irritado', 'chateado', 'aborrecido',
+                'impaciente', 'cansado', 'farto', 'saturado', 'desgostoso',
+                'contrariado', 'descontente', 'incomodado', 'perturbado'
+            ],
+            SentimentType.RELIEVED: [
+                'aliviado', 'aliviada', 'tranquilo', 'tranquila', 'calmo', 'calma',
+                'relaxado', 'despreocupado', 'sereno', 'sossegado', 'descansado',
+                'reconfortado', 'consolado', 'satisfeito', 'contente'
+            ],
+            SentimentType.CONFUSED: [
+                'confuso', 'confusa', 'perdido', 'perdida', 'sem entender',
+                'não compreendo', 'não entendi', 'como assim', 'que isso',
+                'não sei', 'dúvida', 'incerto', 'indefinido', 'indeciso'
+            ],
+            SentimentType.URGENT: [
+                'urgente', 'emergência', 'emergencial', 'pressa', 'rápido',
+                'imediato', 'já', 'agora', 'hoje', 'inadiável', 'crítico',
+                'prioritário', 'importante', 'sério', 'grave'
             ]
         }
     
     def _load_entity_patterns(self) -> Dict[str, str]:
         """Carregar padrões de entidades"""
         return {
-            'money': r'(?:R\$\s*)?(\d{1,3}(?:\.\d{3})*(?:,\d{2})?)',
+            'money': r'(?:R\$\s*)?(\d{1,3}(?:\.\d{3})*(?:,\d{2})?)|(\d+(?:,\d+)?\s*(?:reais?|real))',
+            'money_written': r'\b(um|dois|três|quatro|cinco|seis|sete|oito|nove|dez|vinte|trinta|quarenta|cinquenta|sessenta|setenta|oitenta|noventa|cem|mil)\s*(?:reais?|real)\b',
             'date': r'(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})',
+            'date_relative': r'\b(hoje|amanhã|ontem|semana que vem|mês que vem|próximo mês|próxima semana|final do mês)\b',
             'phone': r'(\d{2}\s*\d{4,5}\-?\d{4})',
             'pix_key': r'([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}|\d{11}|\d{14})',
+            'bank_details': r'\b(banco\s+\w+|agência\s+\d+|conta\s+\d+|op\s+\d+)\b',
             'time': r'(\d{1,2}:\d{2})',
-            'percentage': r'(\d+(?:,\d+)?%)'
+            'percentage': r'(\d+(?:,\d+)?%)',
+            'installments': r'\b(\d+)\s*(?:x|vezes|parcelas?)\b',
+            'documents': r'\b(cpf|rg|cnpj)\s*:?\s*(\d{3}\.?\d{3}\.?\d{3}\-?\d{2}|\d{2}\.?\d{3}\.?\d{3}\/?\d{4}\-?\d{2})\b',
+            'urgency_level': r'\b(muito urgente|super urgente|emergencial|crítico|importante)\b'
         }
     
     def analyze_message(self, message: str) -> AnalysisResult:
@@ -260,13 +376,9 @@ class NLPProcessor:
         return best_intent, confidence
     
     def _analyze_sentiment(self, message: str) -> SentimentType:
-        """Analisar sentimento da mensagem"""
+        """Analisar sentimento da mensagem com múltiplas emoções"""
         words = message.split()
-        sentiment_scores = {
-            SentimentType.POSITIVE: 0,
-            SentimentType.NEGATIVE: 0,
-            SentimentType.ANGRY: 0
-        }
+        sentiment_scores = {sentiment: 0 for sentiment in SentimentType}
         
         # Contar palavras de cada sentimento
         for word in words:
@@ -274,8 +386,26 @@ class NLPProcessor:
                 if any(sentiment_word in word for sentiment_word in word_list):
                     sentiment_scores[sentiment] += 1
         
-        # Peso extra para palavras de raiva
-        sentiment_scores[SentimentType.ANGRY] *= 2
+        # Aplicar pesos especiais
+        sentiment_scores[SentimentType.ANGRY] *= 2.5      # Raiva tem prioridade
+        sentiment_scores[SentimentType.URGENT] *= 2.0     # Urgência é importante
+        sentiment_scores[SentimentType.FRUSTRATED] *= 1.5 # Frustração precisa atenção
+        
+        # Verificar padrões especiais
+        message_lower = message.lower()
+        
+        # Detectar sarcasmo/ironia (sentimento negativo disfarçado)
+        if any(word in message_lower for word in ['né', 'claro', 'obvio', 'lógico']) and '?' in message:
+            sentiment_scores[SentimentType.FRUSTRATED] += 2
+        
+        # Detectar desespero
+        if any(phrase in message_lower for phrase in ['não sei mais', 'não aguento', 'to desesperado']):
+            sentiment_scores[SentimentType.ANXIOUS] += 3
+        
+        # Detectar múltiplas exclamações (emoção intensa)
+        exclamation_count = message.count('!')
+        if exclamation_count > 1:
+            sentiment_scores[SentimentType.URGENT] += exclamation_count
         
         # Determinar sentimento dominante
         max_sentiment = max(sentiment_scores, key=sentiment_scores.get)
@@ -407,6 +537,53 @@ class ResponseGenerator:
                     "Até logo! Qualquer dúvida, estarei disponível.",
                     "Tchau! Fico à disposição para futuras questões.",
                     "Até mais! Obrigado pelo contato."
+                ]
+            },
+            'urgency': {
+                'urgent': [
+                    "Entendo a urgência da sua situação! 🚨 Vou priorizar seu atendimento.",
+                    "Situação urgente identificada! Vou encaminhar para resolução imediata.",
+                    "Compreendo que é urgente! Vamos resolver isso o mais rápido possível."
+                ],
+                'empathetic': [
+                    "Percebo que é uma situação urgente para você. Como posso ajudar?",
+                    "Entendo sua pressa. Vamos ver como resolver isso rapidamente.",
+                    "Situação urgente compreendida. Qual a melhor forma de te ajudar?"
+                ]
+            },
+            'discount_request': {
+                'neutral': [
+                    "Entendo seu interesse em desconto. Vou verificar as opções disponíveis para seu caso.",
+                    "Sobre desconto, preciso consultar as políticas. Vou verificar o que é possível.",
+                    "Vou analisar as possibilidades de desconto baseado na sua situação."
+                ]
+            },
+            'financial_difficulty': {
+                'empathetic': [
+                    "Compreendo sua situação financeira difícil. 💙 Vamos encontrar uma solução juntos.",
+                    "Entendo que está passando por dificuldades. Vou buscar a melhor alternativa para você.",
+                    "Situação difícil compreendida. Vamos trabalhar uma solução que caiba no seu orçamento."
+                ]
+            },
+            'installment_request': {
+                'positive': [
+                    "Claro! Vamos verificar as opções de parcelamento disponíveis para você. 💳",
+                    "Parcelamento é uma ótima opção! Vou consultar as condições disponíveis.",
+                    "Perfeito! Vou verificar quantas parcelas podemos oferecer para seu caso."
+                ]
+            },
+            'deadline_extension': {
+                'empathetic': [
+                    "Entendo que precisa de mais tempo. Vou verificar a possibilidade de prorrogação.",
+                    "Compreendo sua necessidade de mais prazo. Vamos ver o que é possível fazer.",
+                    "Situação compreendida. Vou consultar sobre extensão de prazo para você."
+                ]
+            },
+            'contact_request': {
+                'informative': [
+                    "Claro! Vou te passar os dados de contato adequados para sua situação.",
+                    "Sem problemas! Aqui estão as informações de contato que precisa.",
+                    "Perfeitamente! Vou te direcionar para o contato correto."
                 ]
             },
             'unknown': {
@@ -619,13 +796,30 @@ class ConversationBot:
         return self.active_contexts[phone]
     
     def _update_context(self, context: ConversationContext, analysis: AnalysisResult):
-        """Atualizar contexto da conversa"""
+        """Atualizar contexto da conversa com análise avançada"""
         context.last_activity = datetime.now().isoformat()
         context.message_count += 1
         
         # Adicionar ao histórico
+        previous_sentiment = context.sentiment_history[-1] if context.sentiment_history else None
         context.intent_history.append(analysis.intent)
         context.sentiment_history.append(analysis.sentiment)
+        
+        # Detectar mudança de sentimento
+        if previous_sentiment and previous_sentiment != analysis.sentiment:
+            context.last_sentiment_change = f"{previous_sentiment.value} -> {analysis.sentiment.value}"
+        
+        # Atualizar níveis de frustração e urgência
+        self._update_emotion_levels(context, analysis)
+        
+        # Analisar capacidade de pagamento baseada no histórico
+        self._analyze_payment_capacity(context, analysis)
+        
+        # Identificar solução preferida
+        self._identify_preferred_solution(context, analysis)
+        
+        # Verificar motivos de escalação
+        self._check_escalation_reasons(context, analysis)
         
         # Limitar histórico
         if len(context.intent_history) > 20:
@@ -634,23 +828,96 @@ class ConversationBot:
             context.sentiment_history = context.sentiment_history[-20:]
         
         # Extrair e armazenar informações relevantes
+        self._extract_context_entities(context, analysis)
+        
+        # Adicionar tópicos discutidos
+        context.topics_discussed.add(analysis.intent.value)
+        
+    def _update_emotion_levels(self, context: ConversationContext, analysis: AnalysisResult):
+        """Atualizar níveis emocionais do contexto"""
+        # Atualizar frustração
+        if analysis.sentiment in [SentimentType.ANGRY, SentimentType.FRUSTRATED]:
+            context.frustration_level = min(10, context.frustration_level + 2)
+        elif analysis.sentiment == SentimentType.POSITIVE:
+            context.frustration_level = max(0, context.frustration_level - 1)
+        
+        # Atualizar urgência
+        if analysis.sentiment == SentimentType.URGENT or analysis.intent == IntentType.URGENCY:
+            context.urgency_level = min(10, context.urgency_level + 3)
+        elif analysis.sentiment == SentimentType.RELIEVED:
+            context.urgency_level = max(0, context.urgency_level - 2)
+    
+    def _analyze_payment_capacity(self, context: ConversationContext, analysis: AnalysisResult):
+        """Analisar capacidade de pagamento do cliente"""
+        if analysis.intent == IntentType.FINANCIAL_DIFFICULTY:
+            context.payment_capacity = 'low'
+        elif analysis.intent == IntentType.PAYMENT_CONFIRMATION:
+            context.payment_capacity = 'high'
+        elif analysis.intent == IntentType.INSTALLMENT_REQUEST:
+            if not context.payment_capacity:
+                context.payment_capacity = 'medium'
+        elif analysis.intent == IntentType.DISCOUNT_REQUEST:
+            if not context.payment_capacity:
+                context.payment_capacity = 'medium'
+    
+    def _identify_preferred_solution(self, context: ConversationContext, analysis: AnalysisResult):
+        """Identificar solução preferida do cliente"""
+        if analysis.intent == IntentType.INSTALLMENT_REQUEST:
+            context.preferred_solution = 'installments'
+        elif analysis.intent == IntentType.DISCOUNT_REQUEST:
+            context.preferred_solution = 'discount'
+        elif analysis.intent == IntentType.DEADLINE_EXTENSION:
+            context.preferred_solution = 'extension'
+        elif analysis.intent == IntentType.NEGOTIATION:
+            if not context.preferred_solution:
+                context.preferred_solution = 'negotiation'
+    
+    def _check_escalation_reasons(self, context: ConversationContext, analysis: AnalysisResult):
+        """Verificar motivos para escalação"""
+        if context.frustration_level >= 7:
+            context.escalation_reasons.append('High frustration level')
+        
+        if context.message_count > 15:
+            context.escalation_reasons.append('Long conversation')
+        
+        if analysis.sentiment == SentimentType.ANGRY and context.message_count > 3:
+            context.escalation_reasons.append('Persistent anger')
+        
+        if analysis.intent == IntentType.COMPLAINT:
+            context.escalation_reasons.append('Formal complaint')
+        
+        if analysis.intent == IntentType.CONTACT_REQUEST:
+            context.escalation_reasons.append('Human contact requested')
+    
+    def _extract_context_entities(self, context: ConversationContext, analysis: AnalysisResult):
+        """Extrair entidades e atualizar contexto"""
+        # Valores monetários
         if 'money' in analysis.entities:
             amounts = analysis.entities['money']
             if amounts:
                 try:
-                    # Converter primeiro valor encontrado
                     amount_str = amounts[0].replace('.', '').replace(',', '.')
                     context.payment_amount = float(amount_str)
                 except ValueError:
                     pass
         
+        # Datas
         if 'date' in analysis.entities:
             dates = analysis.entities['date']
             if dates:
                 context.due_date = dates[0]
         
-        # Adicionar tópicos discutidos
-        context.topics_discussed.add(analysis.intent.value)
+        # Datas relativas
+        if 'date_relative' in analysis.entities:
+            relative_dates = analysis.entities['date_relative']
+            if relative_dates:
+                context.due_date = relative_dates[0]  # Processamento adicional seria feito aqui
+        
+        # Parcelas
+        if 'installments' in analysis.entities:
+            installments = analysis.entities['installments']
+            if installments and not context.preferred_solution:
+                context.preferred_solution = f'installments_{installments[0]}'
     
     def get_context_stats(self) -> Dict[str, Any]:
         """Obter estatísticas dos contextos ativos"""
