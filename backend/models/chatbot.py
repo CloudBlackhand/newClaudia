@@ -1408,7 +1408,7 @@ class BillingChatBot:
         
         # 🚀 CARREGAMENTO AVANÇADO
         self._load_or_initialize_model()
-        self.patterns = self._compile_advanced_patterns()
+        self.patterns = self._compile_patterns()
         
         # 💾 SISTEMA DE APRENDIZADO CONTÍNUO
         self.conversation_learning = ConversationLearning()
