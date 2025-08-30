@@ -4,9 +4,14 @@ Sistema de IA Conversacional de Última Geração - Nível ChatGPT++
 Processamento de Linguagem Natural Supremo para Português Brasileiro
 Inteligência Emocional, Memória Contextual e Compreensão Semântica Avançada
 """
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
+try:
+    import torch
+    import torch.nn as nn
+    import torch.nn.functional as F
+    TORCH_AVAILABLE = True
+except ImportError:
+    TORCH_AVAILABLE = False
+    torch = None
 import json
 import re
 import pickle
@@ -1324,9 +1329,14 @@ class IntentClassifier(nn.Module):
     
     def __init__(self, num_intents: int, hidden_size: int = 768, dropout: float = 0.3):
         super().__init__()
-        self.bert = AutoModel.from_pretrained('neuralmind/bert-base-portuguese-cased')
-        self.dropout = nn.Dropout(dropout)
-        self.classifier = nn.Linear(hidden_size, num_intents)
+        if TORCH_AVAILABLE:
+            self.bert = AutoModel.from_pretrained('neuralmind/bert-base-portuguese-cased')
+            self.dropout = nn.Dropout(dropout)
+            self.classifier = nn.Linear(hidden_size, num_intents)
+        else:
+            self.bert = None
+            self.dropout = None
+            self.classifier = None
         
     def forward(self, input_ids, attention_mask):
         outputs = self.bert(input_ids=input_ids, attention_mask=attention_mask)
@@ -1346,7 +1356,7 @@ class BillingChatBot:
     
     def __init__(self):
         self.config = active_config
-        self.device = torch.device(self.config.MODEL_DEVICE)
+        self.device = torch.device(self.config.MODEL_DEVICE) if TORCH_AVAILABLE else None
         
         # 🧠 CONFIGURAÇÕES SUPREMAS DO MODELO
         self.max_length = self.config.MODEL_MAX_LENGTH

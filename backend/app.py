@@ -15,14 +15,7 @@ from pathlib import Path
 from backend.config.settings import active_config
 from backend.services.billing import BillingService
 from backend.services.waha_client import WahaClient, WahaWebhookHandler
-# Import chatbot com fallback para versão simples
-try:
-    from backend.models.chatbot import chatbot
-    app_logger.info("CHATBOT_LOADED", {"version": "full"})
-except ImportError as e:
-    app_logger.warning("FULL_CHATBOT_UNAVAILABLE", {"error": str(e)})
-    from backend.models.chatbot_simple import simple_chatbot as chatbot
-    app_logger.info("CHATBOT_LOADED", {"version": "simple"})
+from backend.models.chatbot import chatbot
 from backend.models.conversation import conversation_manager, ConversationContext
 from backend.utils.logger import app_logger, billing_logger, conversation_logger, waha_logger
 from backend.utils.validators import SecurityValidator

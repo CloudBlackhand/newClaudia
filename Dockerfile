@@ -4,17 +4,19 @@ FROM python:3.11-slim
 # Set working directory
 WORKDIR /app
 
-# Install minimal system dependencies
+# Install system dependencies
 RUN apt-get update && apt-get install -y \
+    gcc \
+    g++ \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements first for better caching
-COPY requirements-minimal.txt requirements.txt
+COPY requirements-railway.txt requirements.txt ./
 
-# Install Python dependencies - minimal and stable
+# Install Python dependencies optimized for Railway
 RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -r requirements-minimal.txt
+    pip install --no-cache-dir --no-warn-script-location -r requirements-railway.txt
 
 # Copy application code
 COPY . .
