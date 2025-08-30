@@ -37,6 +37,24 @@ class IntentType(Enum):
     INSTALLMENT_REQUEST = "installment_request"
     DEADLINE_EXTENSION = "deadline_extension"
     CONTACT_REQUEST = "contact_request"
+    
+    # Queixas específicas de serviço
+    NETWORK_COMPLAINT = "network_complaint"
+    SERVICE_CANCELLATION = "service_cancellation"
+    INVALID_CHARGE = "invalid_charge"
+    TECHNICAL_PROBLEM = "technical_problem"
+    BILLING_ERROR = "billing_error"
+    DATA_CHANGE_REQUEST = "data_change_request"
+    SERVICE_NOT_USED = "service_not_used"
+    DUPLICATE_CHARGE = "duplicate_charge"
+    WRONG_PLAN = "wrong_plan"
+    POOR_SIGNAL = "poor_signal"
+    EQUIPMENT_PROBLEM = "equipment_problem"
+    CUSTOMER_NOT_REGISTERED = "customer_not_registered"
+    MOVED_ADDRESS = "moved_address"
+    WRONG_PERSON = "wrong_person"
+    FRAUD_CLAIM = "fraud_claim"
+    
     UNKNOWN = "unknown"
 
 class SentimentType(Enum):
@@ -261,6 +279,113 @@ class NLPProcessor:
                 r'\b(até logo|até mais|nos falamos)\b',
                 r'^(ok|certo|entendi|beleza)$',
                 r'\b(xau|bye|adeus|fui)\b',
+            ],
+            
+            # QUEIXAS ESPECÍFICAS DE SERVIÇO
+            IntentType.NETWORK_COMPLAINT: [
+                r'\b(não tenho rede|sem rede|rede caiu|internet não funciona)\b',
+                r'\b(sem sinal|signal ruim|conexão ruim|não conecta)\b',
+                r'\b(wi-fi não funciona|wifi ruim|internet lenta|net caiu)\b',
+                r'\b(fibra não funciona|cabo cortado|modem com problema)\b',
+                r'\b(não consigo navegar|não abre site|sem acesso)\b'
+            ],
+            IntentType.SERVICE_CANCELLATION: [
+                r'\b(cancelei o serviço|cancelei a assinatura|não uso mais)\b',
+                r'\b(pedi cancelamento|solicitei cancelamento|não quero mais)\b',
+                r'\b(rescindi contrato|encerrei|dei baixa no serviço)\b',
+                r'\b(não sou mais cliente|ex-cliente|já cancelei)\b',
+                r'\b(não tenho mais o serviço|não uso há meses)\b'
+            ],
+            IntentType.INVALID_CHARGE: [
+                r'\b(cobrança indevida|não devo|cobrança errada)\b',
+                r'\b(nunca contratei|não assinei|não autorizei)\b',
+                r'\b(cobrança irregular|não reconheço|não é meu)\b',
+                r'\b(jamais contratei|nunca usei|não solicitei)\b',
+                r'\b(golpe|fraude|me cobrando indevidamente)\b'
+            ],
+            IntentType.TECHNICAL_PROBLEM: [
+                r'\b(problema técnico|defeito|não funciona direito)\b',
+                r'\b(instabilidade|oscilação|cai direto|intermitente)\b',
+                r'\b(lentidão|travando|congelando|com bug)\b',
+                r'\b(erro no sistema|falha técnica|mal funcionamento)\b',
+                r'\b(precisa de manutenção|reparo|conserto)\b'
+            ],
+            IntentType.BILLING_ERROR: [
+                r'\b(erro na fatura|cobrança duplicada|valor errado)\b',
+                r'\b(fatura incorreta|conta com erro|valor a mais)\b',
+                r'\b(cobraram dobrado|valor diferente|preço errado)\b',
+                r'\b(desconto não aplicado|promoção não aplicada)\b',
+                r'\b(plano errado na fatura|valor não confere)\b'
+            ],
+            IntentType.DATA_CHANGE_REQUEST: [
+                r'\b(mudei de endereço|novo endereço|endereço diferente)\b',
+                r'\b(mudança de dados|atualizar dados|dados incorretos)\b',
+                r'\b(telefone novo|celular novo|email novo)\b',
+                r'\b(transferir titularidade|mudar titular|novo responsável)\b',
+                r'\b(dados desatualizados|informações antigas)\b'
+            ],
+            IntentType.SERVICE_NOT_USED: [
+                r'\b(nunca usei|não uso|não utilizo)\b',
+                r'\b(não instalaram|não ativaram|não liberaram)\b',
+                r'\b(está desligado|não ativo|inativo)\b',
+                r'\b(não tem instalação|sem instalação|pendente)\b',
+                r'\b(não chegou técnico|não visitaram|aguardando)\b'
+            ],
+            IntentType.DUPLICATE_CHARGE: [
+                r'\b(cobrança duplicada|cobraram duas vezes|em dobro)\b',
+                r'\b(fatura repetida|conta dupla|pagamento duplo)\b',
+                r'\b(mesmo valor duas vezes|cobraram novamente)\b',
+                r'\b(já paguei mas cobraram de novo|re-cobrança)\b',
+                r'\b(apareceu duas vezes|duplicidade)\b'
+            ],
+            IntentType.WRONG_PLAN: [
+                r'\b(plano errado|não é meu plano|plano diferente)\b',
+                r'\b(não contratei esse plano|outro plano|mudaram meu plano)\b',
+                r'\b(velocidade errada|megas errados|gb errado)\b',
+                r'\b(não autorizei mudança|alteraram sem avisar)\b',
+                r'\b(plano mais caro|upgrade não autorizado)\b'
+            ],
+            IntentType.POOR_SIGNAL: [
+                r'\b(sinal fraco|signal ruim|baixo sinal)\b',
+                r'\b(não pega bem|oscila muito|instável)\b',
+                r'\b(área sem cobertura|local sem sinal)\b',
+                r'\b(antena com problema|torre com defeito)\b',
+                r'\b(qualidade ruim|conexão instável)\b'
+            ],
+            IntentType.EQUIPMENT_PROBLEM: [
+                r'\b(modem com problema|roteador defeituoso|aparelho ruim)\b',
+                r'\b(equipamento queimou|cabo com defeito|fonte queimada)\b',
+                r'\b(wi-fi router com problema|antena quebrada)\b',
+                r'\b(preciso trocar equipamento|aparelho velho)\b',
+                r'\b(instalação mal feita|fiação com problema)\b'
+            ],
+            IntentType.CUSTOMER_NOT_REGISTERED: [
+                r'\b(não sou cliente|nunca fui cliente|não tenho cadastro)\b',
+                r'\b(não consta no sistema|não estou registrado)\b',
+                r'\b(engano de pessoa|pessoa errada|não é comigo)\b',
+                r'\b(nunca me cadastrei|não fiz inscrição)\b',
+                r'\b(deve ser outro cliente|confundiram)\b'
+            ],
+            IntentType.MOVED_ADDRESS: [
+                r'\b(me mudei|mudança|novo endereço|endereço diferente)\b',
+                r'\b(não moro mais|mudei de casa|nova residência)\b',
+                r'\b(outro local|local diferente|endereço antigo)\b',
+                r'\b(transferir endereço|mudar localização)\b',
+                r'\b(saí de lá|não fico mais lá)\b'
+            ],
+            IntentType.WRONG_PERSON: [
+                r'\b(não é comigo|pessoa errada|nome errado)\b',
+                r'\b(confundiram|engano|mix-up|trocaram)\b',
+                r'\b(outro fulano|não sou eu|homônimo)\b',
+                r'\b(mesmo nome diferente pessoa|xará)\b',
+                r'\b(número errado|telefone de outra pessoa)\b'
+            ],
+            IntentType.FRAUD_CLAIM: [
+                r'\b(fraude|golpe|clonaram|falsificação)\b',
+                r'\b(usaram meus dados|identidade roubada)\b',
+                r'\b(alguém se passou por mim|terceiros)\b',
+                r'\b(não autorizei|sem meu conhecimento)\b',
+                r'\b(crime|estelionato|falsidade ideológica)\b'
             ]
         }
     
@@ -660,6 +785,24 @@ class NLPProcessor:
         
         # Priorizar por confiança e tipo de intenção
         priority_weights = {
+            # Queixas específicas têm prioridade MÁXIMA
+            IntentType.FRAUD_CLAIM: 5.0,
+            IntentType.INVALID_CHARGE: 4.5,
+            IntentType.CUSTOMER_NOT_REGISTERED: 4.0,
+            IntentType.SERVICE_CANCELLATION: 3.8,
+            IntentType.WRONG_PERSON: 3.6,
+            IntentType.BILLING_ERROR: 3.4,
+            IntentType.DUPLICATE_CHARGE: 3.2,
+            IntentType.MOVED_ADDRESS: 3.0,
+            IntentType.DATA_CHANGE_REQUEST: 2.8,
+            IntentType.NETWORK_COMPLAINT: 2.6,
+            IntentType.TECHNICAL_PROBLEM: 2.4,
+            IntentType.POOR_SIGNAL: 2.2,
+            IntentType.EQUIPMENT_PROBLEM: 2.0,
+            IntentType.SERVICE_NOT_USED: 1.9,
+            IntentType.WRONG_PLAN: 1.8,
+            
+            # Intenções gerais
             IntentType.URGENCY: 3.0,
             IntentType.PAYMENT_CONFIRMATION: 2.5,
             IntentType.COMPLAINT: 2.0,
@@ -1138,11 +1281,117 @@ class ResponseGenerator:
                     "Perfeitamente! Vou te direcionar para o contato correto."
                 ]
             },
+            # RESPOSTAS PARA QUEIXAS ESPECÍFICAS
+            'network_complaint': {
+                'informative': [
+                    "Seu número está cadastrado no nosso banco de dados para cobrança de serviços de internet. Mesmo com problemas técnicos, a cobrança permanece ativa conforme contrato.",
+                    "Entendo o problema de rede. Seu cadastro consta em nosso sistema para cobrança do serviço contratado, independente de instabilidades técnicas.",
+                    "Problemas de conexão não suspendem automaticamente a cobrança. Seu número está registrado em nossa base para cobrança mensal do plano contratado."
+                ]
+            },
+            'service_cancellation': {
+                'informative': [
+                    "Seu número está cadastrado no nosso banco de dados para cobrança. Para confirmar cancelamento, preciso verificar se o processo foi finalizado corretamente.",
+                    "Consta em nosso sistema seu cadastro ativo para cobrança. Vou verificar o status do seu pedido de cancelamento.",
+                    "Seu registro está em nossa base de cobrança. É necessário confirmar se o cancelamento foi processado adequadamente."
+                ]
+            },
+            'invalid_charge': {
+                'informative': [
+                    "Seu número está cadastrado no nosso banco de dados para cobrança de serviços contratados. Vou verificar a origem da cobrança em questão.",
+                    "Consta seu cadastro em nosso sistema de cobrança. Preciso analisar os detalhes da contratação para esclarecer a situação.",
+                    "Seu registro está em nossa base de dados para cobrança. Vou consultar o histórico da contratação do serviço."
+                ]
+            },
+            'technical_problem': {
+                'informative': [
+                    "Seu número está cadastrado no nosso banco de dados para cobrança. Problemas técnicos não impedem a cobrança do serviço contratado.",
+                    "Entendo o problema técnico. Seu cadastro permanece ativo em nosso sistema de cobrança conforme termos contratuais.",
+                    "Seu registro consta em nossa base para cobrança mensal. Questões técnicas são tratadas separadamente da cobrança do plano."
+                ]
+            },
+            'billing_error': {
+                'informative': [
+                    "Seu número está cadastrado no nosso banco de dados para cobrança. Vou verificar se há inconsistências no valor cobrado.",
+                    "Consta seu cadastro em nosso sistema de cobrança. Preciso analisar os detalhes da fatura para identificar possíveis erros.",
+                    "Seu registro está em nossa base de dados. Vou revisar os valores para confirmar se estão corretos conforme contrato."
+                ]
+            },
+            'data_change_request': {
+                'informative': [
+                    "Seu número está cadastrado no nosso banco de dados para cobrança. Para atualizar dados, preciso confirmar sua identidade primeiro.",
+                    "Consta seu registro em nosso sistema de cobrança. Mudanças de dados devem ser validadas para manter a cobrança atualizada.",
+                    "Seu cadastro está em nossa base de cobrança. Vou verificar como proceder com a atualização dos seus dados."
+                ]
+            },
+            'service_not_used': {
+                'informative': [
+                    "Seu número está cadastrado no nosso banco de dados para cobrança do serviço contratado, independente do uso efetivo.",
+                    "Consta em nosso sistema seu cadastro ativo para cobrança. A disponibilização do serviço gera cobrança conforme contrato.",
+                    "Seu registro está em nossa base de cobrança. O não uso não suspende automaticamente a cobrança mensal do plano."
+                ]
+            },
+            'duplicate_charge': {
+                'informative': [
+                    "Seu número está cadastrado no nosso banco de dados para cobrança. Vou verificar se houve duplicidade na cobrança.",
+                    "Consta seu cadastro em nosso sistema. Preciso analisar se realmente ocorreu cobrança em duplicata.",
+                    "Seu registro está em nossa base de dados. Vou revisar o histórico para identificar possível duplicação."
+                ]
+            },
+            'wrong_plan': {
+                'informative': [
+                    "Seu número está cadastrado no nosso banco de dados para cobrança. Vou verificar qual plano está ativo em seu nome.",
+                    "Consta seu cadastro em nosso sistema de cobrança. Preciso confirmar os detalhes do plano contratado.",
+                    "Seu registro está em nossa base para cobrança. Vou consultar qual modalidade de serviço foi ativada."
+                ]
+            },
+            'poor_signal': {
+                'informative': [
+                    "Seu número está cadastrado no nosso banco de dados para cobrança. Problemas de sinal não afetam a cobrança do serviço contratado.",
+                    "Entendo a questão do sinal. Seu cadastro permanece em nosso sistema de cobrança conforme contrato firmado.",
+                    "Seu registro consta em nossa base de cobrança. Qualidade do sinal é tratada separadamente da cobrança mensal."
+                ]
+            },
+            'equipment_problem': {
+                'informative': [
+                    "Seu número está cadastrado no nosso banco de dados para cobrança. Problemas de equipamento não suspendem a cobrança do plano.",
+                    "Consta seu cadastro em nosso sistema de cobrança. Defeitos em equipamentos são resolvidos sem afetar a cobrança mensal.",
+                    "Seu registro está em nossa base para cobrança. Questões de equipamento são tratadas pelo suporte técnico."
+                ]
+            },
+            'customer_not_registered': {
+                'informative': [
+                    "Realizei a consulta e seu número está cadastrado no nosso banco de dados para cobrança de serviços contratados.",
+                    "Verifiquei em nosso sistema e consta seu cadastro ativo para cobrança. Os dados foram confirmados em nossa base.",
+                    "Consultei nossa base de dados e seu número está devidamente registrado para cobrança de serviços."
+                ]
+            },
+            'moved_address': {
+                'informative': [
+                    "Seu número está cadastrado no nosso banco de dados para cobrança. Mudança de endereço não cancela automaticamente o serviço.",
+                    "Consta seu cadastro em nosso sistema de cobrança. É necessário formalizar a transferência ou cancelamento por mudança.",
+                    "Seu registro permanece em nossa base de cobrança. Mudanças de endereço devem ser comunicadas formalmente."
+                ]
+            },
+            'wrong_person': {
+                'informative': [
+                    "Verifiquei e seu número está cadastrado no nosso banco de dados para cobrança. Os dados conferem com nossos registros.",
+                    "Consultei o sistema e consta seu cadastro para cobrança dos serviços. As informações estão corretas em nossa base.",
+                    "Confirmei em nossa base de dados: seu número está devidamente registrado para cobrança conforme contratação."
+                ]
+            },
+            'fraud_claim': {
+                'informative': [
+                    "Seu número está cadastrado no nosso banco de dados para cobrança. Casos de fraude devem ser formalizados com documentação.",
+                    "Consta seu cadastro em nosso sistema para cobrança. Alegações de fraude requerem investigação e comprovação oficial.",
+                    "Seu registro está em nossa base de cobrança. Para casos de fraude, é necessário apresentar boletim de ocorrência."
+                ]
+            },
             'unknown': {
                 'neutral': [
-                    "Desculpe, não entendi completamente sua mensagem. Pode reformular sua pergunta?",
-                    "Não consegui compreender exatamente o que precisa. Pode ser mais específico?",
-                    "Perdão, mas não ficou claro. Pode explicar melhor sua dúvida?"
+                    "Seu número está cadastrado no nosso banco de dados para cobrança. Pode me explicar melhor sua situação?",
+                    "Consta seu cadastro em nosso sistema de cobrança. Preciso entender melhor sua questão para ajudá-lo.",
+                    "Seu registro está em nossa base de dados. Pode detalhar qual é sua dúvida ou problema?"
                 ]
             }
         }
