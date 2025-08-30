@@ -7,7 +7,6 @@ Inteligência Emocional, Memória Contextual e Compreensão Semântica Avançada
 try:
     import torch
     import torch.nn as nn
-    import torch.nn.functional as F
     TORCH_AVAILABLE = True
 except ImportError:
     TORCH_AVAILABLE = False
@@ -1333,25 +1332,37 @@ class BillingContextEnforcer:
         
         return None
 
-class IntentClassifier(nn.Module):
-    """Classificador de intenções usando BERT"""
-    
-    def __init__(self, num_intents: int, hidden_size: int = 768, dropout: float = 0.3):
-        super().__init__()
-        if TORCH_AVAILABLE:
-            self.bert = AutoModel.from_pretrained('neuralmind/bert-base-portuguese-cased')
-            self.dropout = nn.Dropout(dropout)
-            self.classifier = nn.Linear(hidden_size, num_intents)
-        else:
-            self.bert = None
-            self.dropout = None
-            self.classifier = None
+# Classe IntentClassifier só é criada se PyTorch estiver disponível
+if TORCH_AVAILABLE:
+    class IntentClassifier(torch.nn.Module):
+        """Classificador de intenções usando BERT"""
         
-    def forward(self, input_ids, attention_mask):
-        outputs = self.bert(input_ids=input_ids, attention_mask=attention_mask)
-        pooled_output = outputs.pooler_output
-        output = self.dropout(pooled_output)
-        return self.classifier(output)
+        def __init__(self, num_intents: int, hidden_size: int = 768, dropout: float = 0.3):
+            super().__init__()
+            if TRANSFORMERS_AVAILABLE:
+                self.bert = AutoModel.from_pretrained('neuralmind/bert-base-portuguese-cased')
+                self.dropout = torch.nn.Dropout(dropout)
+                self.classifier = torch.nn.Linear(hidden_size, num_intents)
+            else:
+                self.bert = None
+                self.dropout = None
+                self.classifier = None
+            
+        def forward(self, input_ids, attention_mask):
+            outputs = self.bert(input_ids=input_ids, attention_mask=attention_mask)
+            pooled_output = outputs.pooler_output
+            output = self.dropout(pooled_output)
+            return self.classifier(output)
+else:
+    # Fallback quando PyTorch não está disponível
+    class IntentClassifier:
+        """Classificador de intenções simples (fallback sem PyTorch)"""
+        
+        def __init__(self, *args, **kwargs):
+            self.available = False
+            
+        def forward(self, *args, **kwargs):
+            return None
 
 class BillingChatBot:
     """🤖 CLAUDIA DA DESK - BOT CONVERSACIONAL SUPREMO 🚀
@@ -2220,7 +2231,7 @@ class BillingChatBot:
             # Faz predição
             with torch.no_grad():
                 outputs = self.intent_model(input_ids, attention_mask)
-                probabilities = F.softmax(outputs, dim=-1)
+                probabilities = torch.nn.functional.softmax(outputs, dim=-1)
                 
                 # Obtém melhor predição
                 predicted_class = torch.argmax(probabilities, dim=-1).item()
