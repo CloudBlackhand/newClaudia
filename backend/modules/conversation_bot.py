@@ -146,6 +146,16 @@ class AnalysisResult:
     decision_readiness: float = 0.0                    # Prontidão para tomar decisão
     relationship_quality: str = 'neutral'              # Qualidade do relacionamento
     
+    # 🌟 ANÁLISES INCLUSIVAS
+    education_level: str = 'unknown'                   # Nível educacional detectado
+    original_message: str = ''                         # Mensagem original antes das correções
+    corrected_message: str = ''                        # Mensagem após correções
+    spelling_errors: List[Dict[str, str]] = None       # Erros de grafia detectados
+    phonetic_corrections: List[Dict[str, str]] = None  # Correções fonéticas aplicadas
+    colloquial_translations: List[Dict[str, str]] = None # Traduções de gírias
+    informal_grammar_score: float = 0.0               # Score de informalidade (0-1)
+    communication_barriers: List[str] = None          # Barreiras de comunicação detectadas
+    
     def __post_init__(self):
         if self.multiple_intents is None:
             self.multiple_intents = []
@@ -175,6 +185,16 @@ class AnalysisResult:
             self.hidden_objections = []
         if self.social_proof_needs is None:
             self.social_proof_needs = []
+        
+        # Inicializar campos inclusivos
+        if self.spelling_errors is None:
+            self.spelling_errors = []
+        if self.phonetic_corrections is None:
+            self.phonetic_corrections = []
+        if self.colloquial_translations is None:
+            self.colloquial_translations = []
+        if self.communication_barriers is None:
+            self.communication_barriers = []
 
 @dataclass
 class BotResponse:
@@ -221,7 +241,17 @@ class NLPProcessor:
         self.financial_stress_indicators = self._load_financial_stress_patterns()
         self.time_sensitivity_calculators = self._load_time_sensitivity_patterns()
         
-        logger.info(LogCategory.CONVERSATION, "NLP Processor ULTRA SUPREMO++ inicializado com 20+ sistemas de análise")
+        # 🌟 SISTEMAS ULTRA INCLUSIVOS
+        self.phonetic_corrections = self._load_phonetic_corrections()
+        self.spelling_corrections = self._load_spelling_corrections()
+        self.colloquial_translations = self._load_colloquial_translations()
+        self.education_level_detectors = self._load_education_patterns()
+        self.informal_grammar_patterns = self._load_informal_grammar()
+        self.abbreviation_expanders = self._load_abbreviation_expanders()
+        self.emotion_sounds = self._load_emotion_sounds()
+        self.repetition_patterns = self._load_repetition_patterns()
+        
+        logger.info(LogCategory.CONVERSATION, "NLP Processor ULTRA SUPREMO++ inicializado com 28+ sistemas inclusivos")
     
     def _load_intent_patterns(self) -> Dict[IntentType, List[str]]:
         """Carregar padrões de intenção"""
@@ -1002,9 +1032,377 @@ class NLPProcessor:
             'futuro': 0.5
         }
     
+    def _load_phonetic_corrections(self) -> Dict[str, str]:
+        """Correções fonéticas para erros comuns de escrita"""
+        return {
+            # Pronomes e artigos
+            'vuce': 'vocês',
+            'vcs': 'vocês',
+            'vc': 'você',
+            'voce': 'você',
+            'vose': 'vocês',
+            'voses': 'vocês',
+            
+            # Verbos comuns
+            'tao': 'estão',
+            'ta': 'está',
+            'to': 'estou',
+            'faiz': 'faz',
+            'fais': 'faz',
+            'tem': 'têm',
+            'vao': 'vão',
+            'sao': 'são',
+            'eh': 'é',
+            'nao': 'não',
+            'naum': 'não',
+            'num': 'não',
+            
+            # Palavras comuns
+            'pra': 'para',
+            'pro': 'para o',
+            'pq': 'porque',
+            'pork': 'porque',
+            'porq': 'porque',
+            'tbm': 'também',
+            'tbn': 'também',
+            'qnd': 'quando',
+            'qdo': 'quando',
+            'aki': 'aqui',
+            'ai': 'aí',
+            'oi': 'oi',
+            'oie': 'oi',
+            
+            # Dinheiro e números
+            'dinheiru': 'dinheiro',
+            'dinheru': 'dinheiro',
+            'rial': 'real',
+            'reau': 'real',
+            'reais': 'reais',
+            'centavu': 'centavo',
+            
+            # Expressões
+            'naum sei': 'não sei',
+            'naum tenhu': 'não tenho',
+            'naum possu': 'não posso',
+            'naum da': 'não dá',
+            'naum tem': 'não tem',
+            
+            # Gírias regionais
+            'oxe': 'nossa',
+            'eita': 'nossa',
+            'vixe': 'nossa',
+            'rapaz': 'cara',
+            'cabra': 'cara',
+            'mermao': 'cara',
+            'veio': 'cara',
+            'vei': 'cara',
+            'mano': 'cara',
+            'brother': 'cara',
+            'bro': 'cara',
+            'parça': 'parceiro',
+            'truta': 'cara',
+            
+            # Questões financeiras
+            'quebrado': 'sem dinheiro',
+            'liso': 'sem dinheiro',
+            'duro': 'sem dinheiro',
+            'apertiado': 'apertado',
+            'apertadu': 'apertado',
+            
+            # Tempo
+            'oje': 'hoje',
+            'onti': 'ontem',
+            'amanha': 'amanhã',
+            'despois': 'depois',
+            'antis': 'antes',
+            
+            # Números escritos errado
+            'um': '1',
+            'dois': '2',
+            'tres': '3',
+            'quatro': '4',
+            'cinco': '5',
+            'seis': '6',
+            'sete': '7',
+            'oito': '8',
+            'nove': '9',
+            'dez': '10'
+        }
+    
+    def _load_spelling_corrections(self) -> Dict[str, str]:
+        """Correções de erros de grafia comuns"""
+        return {
+            # Erros de acentuação
+            'voce': 'você',
+            'voces': 'vocês',
+            'esta': 'está',
+            'estao': 'estão',
+            'tambem': 'também',
+            'so': 'só',
+            'la': 'lá',
+            'ja': 'já',
+            'nao': 'não',
+            'ate': 'até',
+            'apos': 'após',
+            
+            # Erros de ortografia
+            'maz': 'mas',
+            'mais': 'mas',  # quando usado como conjunção
+            'derrepente': 'de repente',
+            'denovo': 'de novo',
+            'davez': 'da vez',
+            'porfavor': 'por favor',
+            'obrigadu': 'obrigado',
+            'brigadu': 'obrigado',
+            'valeu': 'valeu',
+            'falou': 'falou',
+            
+            # Contrações informais
+            'tava': 'estava',
+            'tavo': 'estava',
+            'tiver': 'tiver',
+            'tivesse': 'tivesse',
+            'fosse': 'fosse',
+            'fizesse': 'fizesse',
+            
+            # Plurais errados
+            'real': 'reais',  # quando no contexto de dinheiro
+            'centavo': 'centavos',
+            
+            # Gênero errado
+            'uma dinheiru': 'um dinheiro',
+            'uma problema': 'um problema'
+        }
+    
+    def _load_colloquial_translations(self) -> Dict[str, str]:
+        """Traduções de linguagem coloquial para formal"""
+        return {
+            # Expressões de concordância
+            'beleza': 'está bem',
+            'blz': 'está bem',
+            'sussa': 'está bem',
+            'tranquilo': 'está bem',
+            'firmeza': 'está bem',
+            'de boa': 'está bem',
+            'show': 'ótimo',
+            'massa': 'ótimo',
+            'dahora': 'ótimo',
+            'legal': 'ótimo',
+            'bacana': 'ótimo',
+            
+            # Expressões de negação
+            'nada haver': 'não tem nada a ver',
+            'nada ve': 'não tem nada a ver',
+            'nem': 'não',
+            'nem a pau': 'de jeito nenhum',
+            'nem fodendo': 'de jeito nenhum',
+            'nem pensar': 'de jeito nenhum',
+            
+            # Expressões de surpresa
+            'caraca': 'nossa',
+            'caralho': 'nossa',
+            'porra': 'nossa',
+            'nossa senhora': 'nossa',
+            'meu deus': 'nossa',
+            'jesus': 'nossa',
+            
+            # Expressões de dificuldade
+            'osso': 'difícil',
+            'tenso': 'difícil',
+            'pesado': 'difícil',
+            'punk': 'difícil',
+            'foda': 'difícil',
+            'complicado': 'difícil',
+            'treta': 'problema',
+            'rolê': 'situação',
+            'parada': 'situação',
+            'bagulho': 'coisa',
+            'trem': 'coisa',
+            'negócio': 'coisa',
+            
+            # Expressões sobre dinheiro
+            'grana': 'dinheiro',
+            'bufunfa': 'dinheiro',
+            'dim': 'dinheiro',
+            'tutu': 'dinheiro',
+            'pila': 'dinheiro',
+            'verba': 'dinheiro',
+            'cash': 'dinheiro',
+            'money': 'dinheiro',
+            
+            # Expressões de trabalho
+            'trampo': 'trabalho',
+            'job': 'trabalho',
+            'serviço': 'trabalho',
+            'labuta': 'trabalho',
+            
+            # Expressões temporais
+            'rolando': 'acontecendo',
+            'pintou': 'apareceu',
+            'surgiu': 'apareceu',
+            'deu ruim': 'deu problema',
+            'deu merda': 'deu problema',
+            'deu bosta': 'deu problema'
+        }
+    
+    def _load_education_patterns(self) -> Dict[str, List[str]]:
+        """Padrões para detectar nível educacional"""
+        return {
+            'baixa_escolaridade': [
+                r'\b(naum|nau|num|naun)\b',  # Erros de 'não'
+                r'\b(maz|mais)\b.*\b(porem|entao)\b',  # Confusão mas/mais
+                r'\b(derrepenti|derrepente)\b',  # 'de repente'
+                r'\b(concerteza|concertesa)\b',  # 'com certeza'
+                r'\b(enves|em ves)\b',  # 'em vez'
+                r'\b(aver|a ver)\b.*\b(com)\b',  # 'a ver com'
+                r'\b(vuce|voces|vcs)\b',  # Erros de 'vocês'
+                r'\b(faiz|fais|fas)\b',  # Erros de 'faz'
+                r'\b(tem)\b.*\b(que)\b.*\b(tiver)\b'  # Confusão verbal
+            ],
+            'media_escolaridade': [
+                r'\b(porque|pq|pork)\b',  # Abreviações
+                r'\b(tambem|tbm)\b',  # Sem acentos
+                r'\b(voce|vc)\b',  # Abreviações comuns
+                r'\b(esta|estao)\b',  # Sem acentos
+                r'\b(ja|la|so)\b'  # Monosílabos sem acento
+            ],
+            'alta_escolaridade': [
+                r'\b(portanto|contudo|entretanto|todavia)\b',
+                r'\b(solicito|gostaria|cordialmente)\b',
+                r'\b(mediante|conforme|através)\b',
+                r'\b(referente|concernente|pertinente)\b'
+            ]
+        }
+    
+    def _load_informal_grammar(self) -> Dict[str, List[str]]:
+        """Padrões de gramática informal"""
+        return {
+            'double_negative': [
+                r'\b(não|naum|num)\b.*\b(nada|ninguém|nunca|nem)\b'
+            ],
+            'verb_agreement_errors': [
+                r'\b(nós vai|nós faz|nós tem)\b',
+                r'\b(eles faz|eles tem|eles vai)\b'
+            ],
+            'pronoun_placement': [
+                r'\b(me|te|se|nos|vos)\b.*\b(falou|disse|contou)\b'
+            ],
+            'colloquial_contractions': [
+                r'\b(pro|pra|dum|duma|numa|numa)\b'
+            ]
+        }
+    
+    def _load_abbreviation_expanders(self) -> Dict[str, str]:
+        """Expansões de abreviações e internetês"""
+        return {
+            # Internetês
+            'kk': 'risos',
+            'kkk': 'risos',
+            'kkkk': 'muitos risos',
+            'rs': 'risos',
+            'rsrs': 'risos',
+            'haha': 'risos',
+            'hehe': 'risos',
+            'lol': 'risos',
+            'omg': 'meu deus',
+            'wtf': 'que isso',
+            'plz': 'por favor',
+            'thx': 'obrigado',
+            'ty': 'obrigado',
+            
+            # Abreviações comuns
+            'bj': 'beijo',
+            'bjs': 'beijos',
+            'abs': 'abraços',
+            'flw': 'falou',
+            'vlw': 'valeu',
+            'tmj': 'estamos juntos',
+            'pdc': 'pode crer',
+            'blz': 'beleza',
+            'msg': 'mensagem',
+            'tel': 'telefone',
+            'cel': 'celular',
+            
+            # Números e tempo
+            '1': 'um',
+            '2': 'dois',
+            '3': 'três',
+            'hj': 'hoje',
+            'amnh': 'amanhã',
+            'ontem': 'ontem',
+            'agr': 'agora',
+            'dps': 'depois',
+            'ant': 'antes'
+        }
+    
+    def _load_emotion_sounds(self) -> Dict[str, str]:
+        """Sons e expressões emocionais"""
+        return {
+            # Tristeza/Frustração
+            'aff': 'expressão de frustração',
+            'aff': 'descontentamento',
+            'afe': 'expressão de desgosto',
+            'puts': 'expressão de frustração',
+            'putz': 'expressão de frustração',
+            'nossa': 'expressão de surpresa',
+            
+            # Alegria/Aprovação
+            'oba': 'expressão de alegria',
+            'eba': 'expressão de alegria',
+            'ihuuu': 'expressão de comemoração',
+            'uhul': 'expressão de comemoração',
+            
+            # Dúvida/Pensamento
+            'hmm': 'expressão de dúvida',
+            'hum': 'expressão de reflexão',
+            'ahn': 'expressão de dúvida',
+            'né': 'confirmação',
+            'ne': 'confirmação',
+            
+            # Interjeições regionais
+            'oxe': 'expressão de surpresa nordestina',
+            'oxente': 'expressão de surpresa nordestina',
+            'eita': 'expressão de surpresa',
+            'vixe': 'expressão de surpresa',
+            'bah': 'expressão gaúcha',
+            'tchê': 'expressão gaúcha'
+        }
+    
+    def _load_repetition_patterns(self) -> Dict[str, str]:
+        """Padrões de repetição para ênfase"""
+        return {
+            # Letras repetidas para ênfase
+            r'(.)\1{2,}': r'\1',  # 'nãoooo' -> 'não'
+            r'([aeiou])\1+': r'\1',  # 'siiiim' -> 'sim'
+            r'([!?])\1+': r'\1',  # '!!!' -> '!'
+            
+            # Palavras repetidas
+            r'\b(\w+)\s+\1\b': r'\1',  # 'não não' -> 'não'
+            
+            # Padrões específicos
+            'kkkkkk+': 'risos',
+            'hahaha+': 'risos',
+            'rsrsrs+': 'risos'
+        }
+    
     def analyze_message(self, message: str) -> AnalysisResult:
-        """Analisar mensagem do usuário com ULTRA SUPREMA++ compreensão"""
-        message_clean = self._clean_text(message)
+        """Analisar mensagem do usuário com ULTRA SUPREMA++ compreensão INCLUSIVA"""
+        # 🌟 ETAPA 0: Pré-processamento inclusivo
+        original_message = message
+        
+        # Aplicar correções fonéticas e ortográficas
+        corrected_message, corrections_applied = self._apply_inclusive_corrections(message)
+        
+        # Detectar nível educacional
+        education_level = self._detect_education_level(original_message)
+        
+        # Analisar barreiras de comunicação
+        communication_barriers = self._detect_communication_barriers(original_message)
+        
+        # Calcular score de informalidade
+        informal_grammar_score = self._calculate_informal_grammar_score(original_message)
+        
+        message_clean = self._clean_text(corrected_message)
         
         # ETAPA 1: Expansão semântica (sinônimos e gírias)
         expanded_message, semantic_expansion = self._expand_semantics(message_clean)
@@ -1116,7 +1514,17 @@ class NLPProcessor:
             hidden_objections=hidden_objections,
             social_proof_needs=social_proof_needs,
             decision_readiness=decision_readiness,
-            relationship_quality=relationship_quality
+            relationship_quality=relationship_quality,
+            
+            # 🌟 Campos inclusivos
+            education_level=education_level,
+            original_message=original_message,
+            corrected_message=corrected_message,
+            spelling_errors=corrections_applied.get('spelling', []),
+            phonetic_corrections=corrections_applied.get('phonetic', []),
+            colloquial_translations=corrections_applied.get('colloquial', []),
+            informal_grammar_score=informal_grammar_score,
+            communication_barriers=communication_barriers
         )
         
         logger.debug(LogCategory.CONVERSATION, 
@@ -1660,6 +2068,177 @@ class NLPProcessor:
             return 'deteriorated'
         else:
             return 'neutral'
+    
+    # 🌟 MÉTODOS ULTRA INCLUSIVOS
+    
+    def _apply_inclusive_corrections(self, message: str) -> tuple[str, Dict[str, List[Dict[str, str]]]]:
+        """Aplicar correções fonéticas, ortográficas e coloquiais"""
+        corrected = message.lower()
+        corrections_applied = {
+            'phonetic': [],
+            'spelling': [],
+            'colloquial': []
+        }
+        
+        # 1. Correções fonéticas (vuce -> vocês)
+        for wrong, correct in self.phonetic_corrections.items():
+            if wrong in corrected:
+                corrections_applied['phonetic'].append({
+                    'original': wrong,
+                    'corrected': correct,
+                    'type': 'phonetic'
+                })
+                corrected = corrected.replace(wrong, correct)
+        
+        # 2. Correções ortográficas
+        for wrong, correct in self.spelling_corrections.items():
+            if wrong in corrected:
+                corrections_applied['spelling'].append({
+                    'original': wrong,
+                    'corrected': correct,
+                    'type': 'spelling'
+                })
+                corrected = corrected.replace(wrong, correct)
+        
+        # 3. Traduções coloquiais
+        for colloquial, formal in self.colloquial_translations.items():
+            if colloquial in corrected:
+                corrections_applied['colloquial'].append({
+                    'original': colloquial,
+                    'corrected': formal,
+                    'type': 'colloquial'
+                })
+                corrected = corrected.replace(colloquial, formal)
+        
+        # 4. Expandir abreviações
+        for abbrev, expansion in self.abbreviation_expanders.items():
+            pattern = r'\b' + re.escape(abbrev) + r'\b'
+            if re.search(pattern, corrected, re.IGNORECASE):
+                corrections_applied['spelling'].append({
+                    'original': abbrev,
+                    'corrected': expansion,
+                    'type': 'abbreviation'
+                })
+                corrected = re.sub(pattern, expansion, corrected, flags=re.IGNORECASE)
+        
+        # 5. Limpar repetições excessivas
+        for pattern, replacement in self.repetition_patterns.items():
+            corrected = re.sub(pattern, replacement, corrected)
+        
+        return corrected, corrections_applied
+    
+    def _detect_education_level(self, message: str) -> str:
+        """Detectar nível educacional baseado na linguagem"""
+        scores = {
+            'baixa_escolaridade': 0,
+            'media_escolaridade': 0,
+            'alta_escolaridade': 0
+        }
+        
+        for level, patterns in self.education_level_detectors.items():
+            for pattern in patterns:
+                matches = len(re.findall(pattern, message, re.IGNORECASE))
+                scores[level] += matches
+        
+        # Fatores adicionais
+        # Muitos erros de grafia = baixa escolaridade
+        spelling_errors = sum(1 for word in self.spelling_corrections.keys() 
+                            if word in message.lower())
+        if spelling_errors > 3:
+            scores['baixa_escolaridade'] += 2
+        
+        # Uso de gírias excessivas = escolaridade média/baixa
+        slang_count = sum(1 for slang in self.colloquial_translations.keys() 
+                         if slang in message.lower())
+        if slang_count > 2:
+            scores['media_escolaridade'] += 1
+        
+        # Palavras complexas = alta escolaridade
+        complex_words = ['mediante', 'todavia', 'portanto', 'outrossim']
+        complex_count = sum(1 for word in complex_words if word in message.lower())
+        if complex_count > 0:
+            scores['alta_escolaridade'] += complex_count * 2
+        
+        # Retornar nível com maior score
+        max_level = max(scores, key=scores.get)
+        max_score = scores[max_level]
+        
+        if max_score == 0:
+            return 'unknown'
+        
+        return max_level
+    
+    def _detect_communication_barriers(self, message: str) -> List[str]:
+        """Detectar barreiras de comunicação"""
+        barriers = []
+        
+        # Analfabetismo funcional
+        phonetic_errors = sum(1 for error in self.phonetic_corrections.keys() 
+                            if error in message.lower())
+        if phonetic_errors > 2:
+            barriers.append('analfabetismo_funcional')
+        
+        # Dificuldade de expressão
+        if len(message.split()) < 3:
+            barriers.append('expressao_limitada')
+        
+        # Uso excessivo de gírias
+        slang_count = sum(1 for slang in self.colloquial_translations.keys() 
+                         if slang in message.lower())
+        if slang_count > 3:
+            barriers.append('linguagem_muito_informal')
+        
+        # Problemas de concordância
+        for error_type, patterns in self.informal_grammar_patterns.items():
+            for pattern in patterns:
+                if re.search(pattern, message, re.IGNORECASE):
+                    barriers.append('problemas_gramaticais')
+                    break
+        
+        # Comunicação emocional (só emoticons/sons)
+        emotion_sounds = sum(1 for sound in self.emotion_sounds.keys() 
+                           if sound in message.lower())
+        total_words = len(message.split())
+        if emotion_sounds > 0 and total_words <= emotion_sounds + 2:
+            barriers.append('comunicacao_emocional')
+        
+        # Repetição excessiva (ênfase por repetição)
+        if re.search(r'(.)\1{3,}', message):
+            barriers.append('enfase_por_repeticao')
+        
+        return list(set(barriers))
+    
+    def _calculate_informal_grammar_score(self, message: str) -> float:
+        """Calcular score de informalidade gramatical (0-1)"""
+        informal_indicators = 0
+        total_possible = 10  # Máximo de indicadores
+        
+        # Erros de concordância
+        for error_type, patterns in self.informal_grammar_patterns.items():
+            for pattern in patterns:
+                if re.search(pattern, message, re.IGNORECASE):
+                    informal_indicators += 1
+        
+        # Uso de contrações informais
+        contractions = ['pro', 'pra', 'dum', 'duma', 'numa']
+        informal_indicators += sum(1 for contraction in contractions 
+                                 if contraction in message.lower())
+        
+        # Falta de pontuação
+        if not re.search(r'[.!?]', message):
+            informal_indicators += 1
+        
+        # Uso de internetês
+        internet_slang = ['kk', 'rs', 'kkk', 'haha', 'lol']
+        informal_indicators += sum(1 for slang in internet_slang 
+                                 if slang in message.lower())
+        
+        # Abreviações excessivas
+        abbreviations = sum(1 for abbrev in self.abbreviation_expanders.keys() 
+                          if abbrev in message.lower())
+        informal_indicators += min(abbreviations, 3)
+        
+        return min(informal_indicators / total_possible, 1.0)
     
     def _detect_communication_style(self, message: str) -> str:
         """Detectar estilo comunicativo"""
