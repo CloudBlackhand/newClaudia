@@ -1284,114 +1284,114 @@ class ResponseGenerator:
             # RESPOSTAS PARA QUEIXAS ESPECÍFICAS
             'network_complaint': {
                 'informative': [
-                    "Seu número está cadastrado no nosso banco de dados para cobrança de serviços de internet. Mesmo com problemas técnicos, a cobrança permanece ativa conforme contrato.",
-                    "Entendo o problema de rede. Seu cadastro consta em nosso sistema para cobrança do serviço contratado, independente de instabilidades técnicas.",
-                    "Problemas de conexão não suspendem automaticamente a cobrança. Seu número está registrado em nossa base para cobrança mensal do plano contratado."
+                    "Seu número está cadastrado no nosso banco de dados para cobrança referente aos seus débitos a Desktop. Mesmo com problemas técnicos, a cobrança permanece ativa conforme contrato.",
+                    "Entendo o problema de rede. Seu cadastro consta em nosso sistema para cobrança dos débitos a Desktop, independente de instabilidades técnicas.",
+                    "Problemas de conexão não suspendem automaticamente a cobrança. Seu número está registrado em nossa base para cobrança dos débitos a Desktop."
                 ]
             },
             'service_cancellation': {
                 'informative': [
-                    "Seu número está cadastrado no nosso banco de dados para cobrança. Para confirmar cancelamento, preciso verificar se o processo foi finalizado corretamente.",
-                    "Consta em nosso sistema seu cadastro ativo para cobrança. Vou verificar o status do seu pedido de cancelamento.",
-                    "Seu registro está em nossa base de cobrança. É necessário confirmar se o cancelamento foi processado adequadamente."
+                    "Seu número está cadastrado no nosso banco de dados para cobrança referente aos seus débitos a Desktop. Para confirmar cancelamento, preciso verificar se o processo foi finalizado corretamente.",
+                    "Consta em nosso sistema seu cadastro ativo para cobrança dos débitos a Desktop. Vou verificar o status do seu pedido de cancelamento.",
+                    "Seu registro está em nossa base de cobrança dos débitos a Desktop. É necessário confirmar se o cancelamento foi processado adequadamente."
                 ]
             },
             'invalid_charge': {
                 'informative': [
-                    "Seu número está cadastrado no nosso banco de dados para cobrança de serviços contratados. Vou verificar a origem da cobrança em questão.",
-                    "Consta seu cadastro em nosso sistema de cobrança. Preciso analisar os detalhes da contratação para esclarecer a situação.",
-                    "Seu registro está em nossa base de dados para cobrança. Vou consultar o histórico da contratação do serviço."
+                    "Seu número está cadastrado no nosso banco de dados para cobrança referente aos seus débitos a Desktop. Vou verificar a origem da cobrança em questão.",
+                    "Consta seu cadastro em nosso sistema para cobrança dos débitos a Desktop. Preciso analisar os detalhes da contratação para esclarecer a situação.",
+                    "Seu registro está em nossa base de dados para cobrança dos débitos a Desktop. Vou consultar o histórico da contratação do serviço."
                 ]
             },
             'technical_problem': {
                 'informative': [
-                    "Seu número está cadastrado no nosso banco de dados para cobrança. Problemas técnicos não impedem a cobrança do serviço contratado.",
-                    "Entendo o problema técnico. Seu cadastro permanece ativo em nosso sistema de cobrança conforme termos contratuais.",
-                    "Seu registro consta em nossa base para cobrança mensal. Questões técnicas são tratadas separadamente da cobrança do plano."
+                    "Seu número está cadastrado no nosso banco de dados para cobrança referente aos seus débitos a Desktop. Problemas técnicos não impedem a cobrança do serviço contratado.",
+                    "Entendo o problema técnico. Seu cadastro permanece ativo em nosso sistema para cobrança dos débitos a Desktop conforme termos contratuais.",
+                    "Seu registro consta em nossa base para cobrança dos débitos a Desktop. Questões técnicas são tratadas separadamente da cobrança do plano."
                 ]
             },
             'billing_error': {
                 'informative': [
-                    "Seu número está cadastrado no nosso banco de dados para cobrança. Vou verificar se há inconsistências no valor cobrado.",
-                    "Consta seu cadastro em nosso sistema de cobrança. Preciso analisar os detalhes da fatura para identificar possíveis erros.",
-                    "Seu registro está em nossa base de dados. Vou revisar os valores para confirmar se estão corretos conforme contrato."
+                    "Seu número está cadastrado no nosso banco de dados para cobrança referente aos seus débitos a Desktop. Vou verificar se há inconsistências no valor cobrado.",
+                    "Consta seu cadastro em nosso sistema para cobrança dos débitos a Desktop. Preciso analisar os detalhes da fatura para identificar possíveis erros.",
+                    "Seu registro está em nossa base de dados para cobrança dos débitos a Desktop. Vou revisar os valores para confirmar se estão corretos conforme contrato."
                 ]
             },
             'data_change_request': {
                 'informative': [
-                    "Seu número está cadastrado no nosso banco de dados para cobrança. Para atualizar dados, preciso confirmar sua identidade primeiro.",
-                    "Consta seu registro em nosso sistema de cobrança. Mudanças de dados devem ser validadas para manter a cobrança atualizada.",
-                    "Seu cadastro está em nossa base de cobrança. Vou verificar como proceder com a atualização dos seus dados."
+                    "Seu número está cadastrado no nosso banco de dados para cobrança referente aos seus débitos a Desktop. Para atualizar dados, preciso confirmar sua identidade primeiro.",
+                    "Consta seu registro em nosso sistema para cobrança dos débitos a Desktop. Mudanças de dados devem ser validadas para manter a cobrança atualizada.",
+                    "Seu cadastro está em nossa base para cobrança dos débitos a Desktop. Vou verificar como proceder com a atualização dos seus dados."
                 ]
             },
             'service_not_used': {
                 'informative': [
-                    "Seu número está cadastrado no nosso banco de dados para cobrança do serviço contratado, independente do uso efetivo.",
-                    "Consta em nosso sistema seu cadastro ativo para cobrança. A disponibilização do serviço gera cobrança conforme contrato.",
-                    "Seu registro está em nossa base de cobrança. O não uso não suspende automaticamente a cobrança mensal do plano."
+                    "Seu número está cadastrado no nosso banco de dados para cobrança referente aos seus débitos a Desktop, independente do uso efetivo.",
+                    "Consta em nosso sistema seu cadastro ativo para cobrança dos débitos a Desktop. A disponibilização do serviço gera cobrança conforme contrato.",
+                    "Seu registro está em nossa base para cobrança dos débitos a Desktop. O não uso não suspende automaticamente a cobrança mensal."
                 ]
             },
             'duplicate_charge': {
                 'informative': [
-                    "Seu número está cadastrado no nosso banco de dados para cobrança. Vou verificar se houve duplicidade na cobrança.",
-                    "Consta seu cadastro em nosso sistema. Preciso analisar se realmente ocorreu cobrança em duplicata.",
-                    "Seu registro está em nossa base de dados. Vou revisar o histórico para identificar possível duplicação."
+                    "Seu número está cadastrado no nosso banco de dados para cobrança referente aos seus débitos a Desktop. Vou verificar se houve duplicidade na cobrança.",
+                    "Consta seu cadastro em nosso sistema para cobrança dos débitos a Desktop. Preciso analisar se realmente ocorreu cobrança em duplicata.",
+                    "Seu registro está em nossa base de dados para cobrança dos débitos a Desktop. Vou revisar o histórico para identificar possível duplicação."
                 ]
             },
             'wrong_plan': {
                 'informative': [
-                    "Seu número está cadastrado no nosso banco de dados para cobrança. Vou verificar qual plano está ativo em seu nome.",
-                    "Consta seu cadastro em nosso sistema de cobrança. Preciso confirmar os detalhes do plano contratado.",
-                    "Seu registro está em nossa base para cobrança. Vou consultar qual modalidade de serviço foi ativada."
+                    "Seu número está cadastrado no nosso banco de dados para cobrança referente aos seus débitos a Desktop. Vou verificar qual plano está ativo em seu nome.",
+                    "Consta seu cadastro em nosso sistema para cobrança dos débitos a Desktop. Preciso confirmar os detalhes do plano contratado.",
+                    "Seu registro está em nossa base para cobrança dos débitos a Desktop. Vou consultar qual modalidade de serviço foi ativada."
                 ]
             },
             'poor_signal': {
                 'informative': [
-                    "Seu número está cadastrado no nosso banco de dados para cobrança. Problemas de sinal não afetam a cobrança do serviço contratado.",
-                    "Entendo a questão do sinal. Seu cadastro permanece em nosso sistema de cobrança conforme contrato firmado.",
-                    "Seu registro consta em nossa base de cobrança. Qualidade do sinal é tratada separadamente da cobrança mensal."
+                    "Seu número está cadastrado no nosso banco de dados para cobrança referente aos seus débitos a Desktop. Problemas de sinal não afetam a cobrança do serviço contratado.",
+                    "Entendo a questão do sinal. Seu cadastro permanece em nosso sistema para cobrança dos débitos a Desktop conforme contrato firmado.",
+                    "Seu registro consta em nossa base para cobrança dos débitos a Desktop. Qualidade do sinal é tratada separadamente da cobrança mensal."
                 ]
             },
             'equipment_problem': {
                 'informative': [
-                    "Seu número está cadastrado no nosso banco de dados para cobrança. Problemas de equipamento não suspendem a cobrança do plano.",
-                    "Consta seu cadastro em nosso sistema de cobrança. Defeitos em equipamentos são resolvidos sem afetar a cobrança mensal.",
-                    "Seu registro está em nossa base para cobrança. Questões de equipamento são tratadas pelo suporte técnico."
+                    "Seu número está cadastrado no nosso banco de dados para cobrança referente aos seus débitos a Desktop. Problemas de equipamento não suspendem a cobrança do plano.",
+                    "Consta seu cadastro em nosso sistema para cobrança dos débitos a Desktop. Defeitos em equipamentos são resolvidos sem afetar a cobrança mensal.",
+                    "Seu registro está em nossa base para cobrança dos débitos a Desktop. Questões de equipamento são tratadas pelo suporte técnico."
                 ]
             },
             'customer_not_registered': {
                 'informative': [
-                    "Realizei a consulta e seu número está cadastrado no nosso banco de dados para cobrança de serviços contratados.",
-                    "Verifiquei em nosso sistema e consta seu cadastro ativo para cobrança. Os dados foram confirmados em nossa base.",
-                    "Consultei nossa base de dados e seu número está devidamente registrado para cobrança de serviços."
+                    "Realizei a consulta e seu número está cadastrado no nosso banco de dados para cobrança referente aos seus débitos a Desktop.",
+                    "Verifiquei em nosso sistema e consta seu cadastro ativo para cobrança dos débitos a Desktop. Os dados foram confirmados em nossa base.",
+                    "Consultei nossa base de dados e seu número está devidamente registrado para cobrança dos débitos a Desktop."
                 ]
             },
             'moved_address': {
                 'informative': [
-                    "Seu número está cadastrado no nosso banco de dados para cobrança. Mudança de endereço não cancela automaticamente o serviço.",
-                    "Consta seu cadastro em nosso sistema de cobrança. É necessário formalizar a transferência ou cancelamento por mudança.",
-                    "Seu registro permanece em nossa base de cobrança. Mudanças de endereço devem ser comunicadas formalmente."
+                    "Seu número está cadastrado no nosso banco de dados para cobrança referente aos seus débitos a Desktop. Mudança de endereço não cancela automaticamente o serviço.",
+                    "Consta seu cadastro em nosso sistema para cobrança dos débitos a Desktop. É necessário formalizar a transferência ou cancelamento por mudança.",
+                    "Seu registro permanece em nossa base para cobrança dos débitos a Desktop. Mudanças de endereço devem ser comunicadas formalmente."
                 ]
             },
             'wrong_person': {
                 'informative': [
-                    "Verifiquei e seu número está cadastrado no nosso banco de dados para cobrança. Os dados conferem com nossos registros.",
-                    "Consultei o sistema e consta seu cadastro para cobrança dos serviços. As informações estão corretas em nossa base.",
-                    "Confirmei em nossa base de dados: seu número está devidamente registrado para cobrança conforme contratação."
+                    "Verifiquei e seu número está cadastrado no nosso banco de dados para cobrança referente aos seus débitos a Desktop. Os dados conferem com nossos registros.",
+                    "Consultei o sistema e consta seu cadastro para cobrança dos débitos a Desktop. As informações estão corretas em nossa base.",
+                    "Confirmei em nossa base de dados: seu número está devidamente registrado para cobrança dos débitos a Desktop conforme contratação."
                 ]
             },
             'fraud_claim': {
                 'informative': [
-                    "Seu número está cadastrado no nosso banco de dados para cobrança. Casos de fraude devem ser formalizados com documentação.",
-                    "Consta seu cadastro em nosso sistema para cobrança. Alegações de fraude requerem investigação e comprovação oficial.",
-                    "Seu registro está em nossa base de cobrança. Para casos de fraude, é necessário apresentar boletim de ocorrência."
+                    "Seu número está cadastrado no nosso banco de dados para cobrança referente aos seus débitos a Desktop. Casos de fraude devem ser formalizados com documentação.",
+                    "Consta seu cadastro em nosso sistema para cobrança dos débitos a Desktop. Alegações de fraude requerem investigação e comprovação oficial.",
+                    "Seu registro está em nossa base para cobrança dos débitos a Desktop. Para casos de fraude, é necessário apresentar boletim de ocorrência."
                 ]
             },
             'unknown': {
                 'neutral': [
-                    "Seu número está cadastrado no nosso banco de dados para cobrança. Pode me explicar melhor sua situação?",
-                    "Consta seu cadastro em nosso sistema de cobrança. Preciso entender melhor sua questão para ajudá-lo.",
-                    "Seu registro está em nossa base de dados. Pode detalhar qual é sua dúvida ou problema?"
+                    "Seu número está cadastrado no nosso banco de dados para cobrança referente aos seus débitos a Desktop. Pode me explicar melhor sua situação?",
+                    "Consta seu cadastro em nosso sistema para cobrança dos débitos a Desktop. Preciso entender melhor sua questão para ajudá-lo.",
+                    "Seu registro está em nossa base de dados para cobrança dos débitos a Desktop. Pode detalhar qual é sua dúvida ou problema?"
                 ]
             }
         }
