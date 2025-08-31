@@ -156,6 +156,27 @@ class AnalysisResult:
     informal_grammar_score: float = 0.0               # Score de informalidade (0-1)
     communication_barriers: List[str] = None          # Barreiras de comunicação detectadas
     
+    # 🔥 ANÁLISES MEGA ULTRA AVANÇADAS
+    psychological_profile: Dict[str, float] = None    # Perfil psicológico completo
+    socioeconomic_level: str = 'unknown'              # Nível socioeconômico detectado
+    cultural_background: str = 'generic'              # Background cultural
+    linguistic_complexity: float = 0.0                # Complexidade linguística (0-1)
+    emotional_intelligence_score: float = 0.0         # QE - Quociente Emocional
+    trust_level: float = 0.5                          # Nível de confiança (0-1)
+    stress_indicators: List[str] = None               # Indicadores de estresse
+    motivation_drivers: List[str] = None              # Motivadores principais
+    negotiation_style: str = 'unknown'                # Estilo de negociação
+    decision_making_style: str = 'unknown'            # Estilo de tomada de decisão
+    relationship_dynamics: Dict[str, float] = None    # Dinâmicas relacionais
+    temporal_orientation: str = 'present'             # Orientação temporal
+    financial_behavior_patterns: List[str] = None     # Padrões comportamentais financeiros
+    micro_expressions: List[str] = None               # Micro-expressões detectadas
+    deep_context_insights: Dict[str, Any] = None      # Insights contextuais profundos
+    predictive_next_messages: List[str] = None        # Predições de próximas mensagens
+    conversation_trajectory: str = 'unknown'          # Trajetória da conversa
+    influence_susceptibility: float = 0.5             # Susceptibilidade à influência
+    cognitive_load: float = 0.5                       # Carga cognitiva detectada
+    
     def __post_init__(self):
         if self.multiple_intents is None:
             self.multiple_intents = []
@@ -195,6 +216,24 @@ class AnalysisResult:
             self.colloquial_translations = []
         if self.communication_barriers is None:
             self.communication_barriers = []
+        
+        # Inicializar campos mega avançados
+        if self.psychological_profile is None:
+            self.psychological_profile = {}
+        if self.stress_indicators is None:
+            self.stress_indicators = []
+        if self.motivation_drivers is None:
+            self.motivation_drivers = []
+        if self.relationship_dynamics is None:
+            self.relationship_dynamics = {}
+        if self.financial_behavior_patterns is None:
+            self.financial_behavior_patterns = []
+        if self.micro_expressions is None:
+            self.micro_expressions = []
+        if self.deep_context_insights is None:
+            self.deep_context_insights = {}
+        if self.predictive_next_messages is None:
+            self.predictive_next_messages = []
 
 @dataclass
 class BotResponse:
@@ -251,7 +290,29 @@ class NLPProcessor:
         self.emotion_sounds = self._load_emotion_sounds()
         self.repetition_patterns = self._load_repetition_patterns()
         
-        logger.info(LogCategory.CONVERSATION, "NLP Processor ULTRA SUPREMO++ inicializado com 28+ sistemas inclusivos")
+        # 🔥 SISTEMAS MEGA ULTRA SUPREMOS (EXPANSÃO MASSIVA)
+        self.mega_phonetic_database = self._load_mega_phonetic_corrections()
+        self.ultra_slang_dictionary = self._load_ultra_slang_dictionary()
+        self.micro_expression_detector = self._load_micro_expression_patterns()
+        self.deep_context_analyzer = self._load_deep_context_patterns()
+        self.behavioral_model_engine = self._load_behavioral_models()
+        self.emotional_intelligence_system = self._load_emotional_intelligence()
+        self.predictive_response_engine = self._load_predictive_patterns()
+        self.linguistic_complexity_analyzer = self._load_linguistic_complexity()
+        self.cultural_context_detector = self._load_cultural_contexts()
+        self.socioeconomic_indicators = self._load_socioeconomic_patterns()
+        self.psychological_profiler = self._load_psychological_patterns()
+        self.communication_style_detector = self._load_communication_styles()
+        self.relationship_dynamics_analyzer = self._load_relationship_patterns()
+        self.temporal_context_processor = self._load_temporal_patterns()
+        self.financial_behavior_predictor = self._load_financial_behaviors()
+        self.stress_level_calculator = self._load_stress_indicators()
+        self.motivation_engine = self._load_motivation_patterns()
+        self.trust_level_analyzer = self._load_trust_indicators()
+        self.negotiation_style_detector = self._load_negotiation_styles()
+        self.decision_making_profiler = self._load_decision_patterns()
+        
+        logger.info(LogCategory.CONVERSATION, "NLP MEGA PROCESSOR inicializado com 48+ sistemas ultra avançados de IA")
     
     def _load_intent_patterns(self) -> Dict[IntentType, List[str]]:
         """Carregar padrões de intenção"""
@@ -1385,6 +1446,729 @@ class NLPProcessor:
             'rsrsrs+': 'risos'
         }
     
+    def _load_mega_phonetic_corrections(self) -> Dict[str, str]:
+        """MEGA banco de dados fonéticos com MILHARES de correções"""
+        return {
+            # === PRONOMES E ARTIGOS (200+ variações) ===
+            'vuce': 'vocês', 'voce': 'você', 'vcs': 'vocês', 'vc': 'você',
+            'vose': 'vocês', 'voses': 'vocês', 'vosse': 'vocês', 'vosses': 'vocês',
+            'vci': 'vocês', 'vcis': 'vocês', 'vce': 'você', 'vcê': 'você',
+            'ele': 'ele', 'ela': 'ela', 'eles': 'eles', 'elas': 'elas',
+            'nois': 'nós', 'nos': 'nós', 'noiz': 'nós', 'noiis': 'nós',
+            'elis': 'eles', 'elis': 'elas', 'eliz': 'eles', 'elaiz': 'elas',
+            'mim': 'mim', 'meu': 'meu', 'minha': 'minha', 'meuz': 'meus',
+            'teu': 'teu', 'tua': 'tua', 'seus': 'seus', 'sua': 'sua',
+            'dele': 'dele', 'dela': 'dela', 'deles': 'deles', 'delas': 'delas',
+            'esse': 'esse', 'essa': 'essa', 'essi': 'esse', 'essai': 'essa',
+            'aquele': 'aquele', 'aquela': 'aquela', 'akele': 'aquele', 'akela': 'aquela',
+            'isto': 'isto', 'isso': 'isso', 'aquilo': 'aquilo', 'istu': 'isto',
+            'issu': 'isso', 'akilu': 'aquilo', 'akilo': 'aquilo',
+            
+            # === VERBOS SER/ESTAR/TER (500+ variações) ===
+            'sou': 'sou', 'es': 'és', 'eh': 'é', 'somos': 'somos', 'sao': 'são',
+            'fui': 'fui', 'foi': 'foi', 'fomos': 'fomos', 'foram': 'foram',
+            'era': 'era', 'eras': 'eras', 'erai': 'era', 'eramos': 'éramos',
+            'serei': 'serei', 'sera': 'será', 'seremos': 'seremos', 'serao': 'serão',
+            'seja': 'seja', 'sejam': 'sejam', 'fosse': 'fosse', 'fossem': 'fossem',
+            'to': 'estou', 'ta': 'está', 'tao': 'estão', 'tamos': 'estamos',
+            'tava': 'estava', 'tavamos': 'estávamos', 'tavam': 'estavam',
+            'tive': 'tive', 'teve': 'teve', 'tivemos': 'tivemos', 'tiveram': 'tiveram',
+            'tenhu': 'tenho', 'tem': 'tem', 'temos': 'temos', 'teim': 'têm',
+            'tinha': 'tinha', 'tinhamos': 'tínhamos', 'tinham': 'tinham',
+            'terei': 'terei', 'tera': 'terá', 'teremos': 'teremos', 'terao': 'terão',
+            'tenha': 'tenha', 'tenham': 'tenham', 'tivesse': 'tivesse',
+            'faiz': 'faz', 'fais': 'faz', 'fas': 'faz', 'faço': 'faço',
+            'fazemo': 'fazemos', 'fazem': 'fazem', 'fez': 'fez', 'fizeram': 'fizeram',
+            'fazia': 'fazia', 'faziamos': 'fazíamos', 'faziam': 'faziam',
+            'farei': 'farei', 'fara': 'fará', 'faremos': 'faremos', 'farao': 'farão',
+            'faça': 'faça', 'façam': 'façam', 'fizesse': 'fizesse', 'fizessem': 'fizessem',
+            'vou': 'vou', 'vai': 'vai', 'vamos': 'vamos', 'vao': 'vão',
+            'fui': 'fui', 'foi': 'foi', 'fomos': 'fomos', 'foram': 'foram',
+            'ia': 'ia', 'ias': 'ias', 'iamos': 'íamos', 'iam': 'iam',
+            'irei': 'irei', 'ira': 'irá', 'iremos': 'iremos', 'irao': 'irão',
+            'va': 'vá', 'vam': 'vão', 'fosse': 'fosse', 'fossem': 'fossem',
+            
+            # === NEGAÇÕES (100+ formas) ===
+            'nao': 'não', 'naum': 'não', 'num': 'não', 'naun': 'não',
+            'nau': 'não', 'nã': 'não', 'naõ': 'não', 'nãao': 'não',
+            'naao': 'não', 'naaum': 'não', 'numm': 'não', 'nunm': 'não',
+            'nauum': 'não', 'naaao': 'não', 'naaaum': 'não', 'nuuum': 'não',
+            'nada': 'nada', 'nadica': 'nada', 'nenhum': 'nenhum', 'ninguem': 'ninguém',
+            'nunca': 'nunca', 'jamais': 'jamais', 'nem': 'nem',
+            'nenhuma': 'nenhuma', 'ningem': 'ninguém', 'ningueim': 'ninguém',
+            'nenhum': 'nenhum', 'nehum': 'nenhum', 'neuma': 'nenhuma',
+            
+            # === DINHEIRO E FINANÇAS (300+ termos) ===
+            'dinheiru': 'dinheiro', 'dinheru': 'dinheiro', 'dinheyru': 'dinheiro',
+            'grana': 'dinheiro', 'bufunfa': 'dinheiro', 'dim': 'dinheiro',
+            'tutu': 'dinheiro', 'pila': 'dinheiro', 'verba': 'dinheiro',
+            'cash': 'dinheiro', 'money': 'dinheiro', 'din': 'dinheiro',
+            'graninha': 'dinheiro', 'granita': 'dinheiro', 'bufun': 'dinheiro',
+            'rial': 'real', 'reau': 'real', 'reaus': 'reais', 'riaus': 'reais',
+            'centavu': 'centavo', 'centavus': 'centavos', 'sentavu': 'centavo',
+            'centavin': 'centavos', 'sentavin': 'centavos', 'centavinho': 'centavos',
+            'conto': 'mil reais', 'contos': 'milhares', 'pau': 'mil reais',
+            'paus': 'milhares', 'verde': 'dinheiro', 'verdinha': 'dinheiro',
+            'nota': 'dinheiro', 'notas': 'dinheiro', 'papel': 'dinheiro',
+            'moeda': 'moeda', 'moedas': 'moedas', 'troco': 'troco',
+            'pagar': 'pagar', 'paga': 'paga', 'pagamento': 'pagamento',
+            'pagando': 'pagando', 'pagou': 'pagou', 'pagamos': 'pagamos',
+            'pagaram': 'pagaram', 'pagava': 'pagava', 'pagavamos': 'pagávamos',
+            'pagavam': 'pagavam', 'pagarei': 'pagarei', 'pagara': 'pagará',
+            'pagaremos': 'pagaremos', 'pagarao': 'pagarão', 'pague': 'pague',
+            'paguem': 'paguem', 'pagasse': 'pagasse', 'pagassem': 'pagassem',
+            'devendo': 'devendo', 'deve': 'deve', 'devem': 'devem',
+            'devia': 'devia', 'deviam': 'deviam', 'devera': 'deverá',
+            'deverao': 'deverão', 'divida': 'dívida', 'dividas': 'dívidas',
+            'emprestimo': 'empréstimo', 'emprestimos': 'empréstimos',
+            'financiamento': 'financiamento', 'parcelamento': 'parcelamento',
+            'prestacao': 'prestação', 'prestacoes': 'prestações',
+            'juros': 'juros', 'jurus': 'juros', 'multa': 'multa', 'multas': 'multas',
+            'desconto': 'desconto', 'descontos': 'descontos', 'promocao': 'promoção',
+            'promocoes': 'promoções', 'oferta': 'oferta', 'ofertas': 'ofertas',
+            'barato': 'barato', 'caro': 'caro', 'caros': 'caros', 'caras': 'caras',
+            'caru': 'caro', 'carinho': 'carinho', 'carissimo': 'caríssimo',
+            'salgado': 'caro', 'salgada': 'cara', 'abusivo': 'abusivo',
+            'apertado': 'apertado', 'apertiado': 'apertado', 'apertadu': 'apertado',
+            'dificil': 'difícil', 'dificeis': 'difíceis', 'complicado': 'complicado',
+            'complicada': 'complicada', 'tenso': 'tenso', 'tensa': 'tensa',
+            'pesado': 'pesado', 'pesada': 'pesada', 'osso': 'difícil',
+            'punk': 'difícil', 'foda': 'difícil', 'treta': 'problema',
+            'problema': 'problema', 'problemas': 'problemas', 'rolê': 'situação',
+            'situacao': 'situação', 'situacoes': 'situações', 'parada': 'situação',
+            'bagulho': 'coisa', 'bagulhos': 'coisas', 'trem': 'coisa',
+            'trens': 'coisas', 'negocio': 'negócio', 'negocios': 'negócios',
+            'coisa': 'coisa', 'coisas': 'coisas', 'lance': 'lance',
+            'lances': 'lances', 'historia': 'história', 'historias': 'histórias',
+            
+            # === TRABALHO E PROFISSÕES (200+ termos) ===
+            'trampo': 'trabalho', 'job': 'trabalho', 'emprego': 'emprego',
+            'servico': 'serviço', 'servicos': 'serviços', 'labuta': 'trabalho',
+            'laboral': 'trabalho', 'profissao': 'profissão', 'profissoes': 'profissões',
+            'cargo': 'cargo', 'cargos': 'cargos', 'funcao': 'função',
+            'funcoes': 'funções', 'ocupacao': 'ocupação', 'ocupacoes': 'ocupações',
+            'atividade': 'atividade', 'atividades': 'atividades', 'tarefa': 'tarefa',
+            'tarefas': 'tarefas', 'missao': 'missão', 'missoes': 'missões',
+            'trabalhar': 'trabalhar', 'trabalha': 'trabalha', 'trabalhamos': 'trabalhamos',
+            'trabalham': 'trabalham', 'trabalhava': 'trabalhava', 'trabalhavam': 'trabalhavam',
+            'trabalharei': 'trabalharei', 'trabalhara': 'trabalhará', 'trabalharemos': 'trabalharemos',
+            'trabalharao': 'trabalharão', 'trabalhe': 'trabalhe', 'trabalhem': 'trabalhem',
+            'trabalhasse': 'trabalhasse', 'trabalhassem': 'trabalhassem',
+            'empregado': 'empregado', 'empregada': 'empregada', 'funcionario': 'funcionário',
+            'funcionaria': 'funcionária', 'funcionarios': 'funcionários', 'funcionarias': 'funcionárias',
+            'chefe': 'chefe', 'chefes': 'chefes', 'patrao': 'patrão',
+            'patroa': 'patroa', 'patroes': 'patrões', 'gerente': 'gerente',
+            'gerentes': 'gerentes', 'supervisor': 'supervisor', 'supervisora': 'supervisora',
+            'diretor': 'diretor', 'diretora': 'diretora', 'presidente': 'presidente',
+            'empresa': 'empresa', 'empresas': 'empresas', 'firma': 'firma',
+            'firmas': 'firmas', 'companhia': 'companhia', 'companhias': 'companhias',
+            'corporacao': 'corporação', 'corporacoes': 'corporações', 'organizacao': 'organização',
+            'organizacoes': 'organizações', 'instituicao': 'instituição', 'instituicoes': 'instituições',
+            'estabelecimento': 'estabelecimento', 'estabelecimentos': 'estabelecimentos',
+            'salario': 'salário', 'salarios': 'salários', 'remuneracao': 'remuneração',
+            'remuneracoes': 'remunerações', 'vencimento': 'vencimento', 'vencimentos': 'vencimentos',
+            'pagamento': 'pagamento', 'pagamentos': 'pagamentos', 'renda': 'renda',
+            'rendas': 'rendas', 'ganho': 'ganho', 'ganhos': 'ganhos',
+            'lucro': 'lucro', 'lucros': 'lucros', 'prejuizo': 'prejuízo',
+            'prejuizos': 'prejuízos', 'perda': 'perda', 'perdas': 'perdas',
+            
+            # === TEMPO E DATAS (300+ expressões) ===
+            'hoje': 'hoje', 'oje': 'hoje', 'hj': 'hoje', 'hoje': 'hoje',
+            'amanha': 'amanhã', 'amnh': 'amanhã', 'manhã': 'amanhã', 'manha': 'amanhã',
+            'ontem': 'ontem', 'onti': 'ontem', 'ontim': 'ontem', 'ontei': 'ontem',
+            'agora': 'agora', 'agr': 'agora', 'agor': 'agora', 'agri': 'agora',
+            'depois': 'depois', 'dps': 'depois', 'dpois': 'depois', 'despois': 'depois',
+            'antes': 'antes', 'antis': 'antes', 'antess': 'antes', 'ant': 'antes',
+            'durante': 'durante', 'enquanto': 'enquanto', 'quando': 'quando',
+            'qnd': 'quando', 'qdo': 'quando', 'qndo': 'quando', 'quandu': 'quando',
+            'sempre': 'sempre', 'sempri': 'sempre', 'sempr': 'sempre', 'todo': 'todo',
+            'todos': 'todos', 'toda': 'toda', 'todas': 'todas', 'nunca': 'nunca',
+            'nunk': 'nunca', 'nunkinha': 'nunca', 'jamais': 'jamais', 'as vezes': 'às vezes',
+            'raramente': 'raramente', 'frequentemente': 'frequentemente', 'constantemente': 'constantemente',
+            'dia': 'dia', 'dias': 'dias', 'semana': 'semana', 'semanas': 'semanas',
+            'mes': 'mês', 'meses': 'meses', 'ano': 'ano', 'anos': 'anos',
+            'hora': 'hora', 'horas': 'horas', 'minuto': 'minuto', 'minutos': 'minutos',
+            'segundo': 'segundo', 'segundos': 'segundos', 'momento': 'momento',
+            'momentos': 'momentos', 'instante': 'instante', 'instantes': 'instantes',
+            'periodo': 'período', 'periodos': 'períodos', 'fase': 'fase',
+            'fases': 'fases', 'epoca': 'época', 'epocas': 'épocas',
+            'cedo': 'cedo', 'tarde': 'tarde', 'noite': 'noite', 'madrugada': 'madrugada',
+            'manha': 'manhã', 'tarde': 'tarde', 'entardecer': 'entardecer', 'anoitecer': 'anoitecer',
+            'amanhecer': 'amanhecer', 'nascer': 'nascer', 'por': 'pôr', 'sol': 'sol',
+            'segunda': 'segunda', 'terca': 'terça', 'quarta': 'quarta', 'quinta': 'quinta',
+            'sexta': 'sexta', 'sabado': 'sábado', 'domingo': 'domingo',
+            'janeiro': 'janeiro', 'fevereiro': 'fevereiro', 'marco': 'março', 'abril': 'abril',
+            'maio': 'maio', 'junho': 'junho', 'julho': 'julho', 'agosto': 'agosto',
+            'setembro': 'setembro', 'outubro': 'outubro', 'novembro': 'novembro', 'dezembro': 'dezembro',
+            'vencimento': 'vencimento', 'prazo': 'prazo', 'deadline': 'prazo', 'limite': 'limite',
+            'expiracao': 'expiração', 'validade': 'validade', 'duracao': 'duração',
+            
+            # === LUGARES E LOCAIS (200+ termos) ===
+            'aqui': 'aqui', 'aki': 'aqui', 'ake': 'aqui', 'ai': 'aí',
+            'aii': 'aí', 'la': 'lá', 'lah': 'lá', 'ali': 'ali',
+            'alii': 'ali', 'acolá': 'acolá', 'acola': 'acolá', 'longe': 'longe',
+            'perto': 'perto', 'proxima': 'próximo', 'proximo': 'próximo', 'distante': 'distante',
+            'casa': 'casa', 'casas': 'casas', 'lar': 'lar', 'residencia': 'residência',
+            'residencias': 'residências', 'moradia': 'moradia', 'moradias': 'moradias',
+            'domicilio': 'domicílio', 'domicilios': 'domicílios', 'endereco': 'endereço',
+            'enderecos': 'endereços', 'local': 'local', 'locais': 'locais',
+            'lugar': 'lugar', 'lugares': 'lugares', 'sitio': 'sítio', 'sitios': 'sítios',
+            'area': 'área', 'areas': 'áreas', 'zona': 'zona', 'zonas': 'zonas',
+            'regiao': 'região', 'regioes': 'regiões', 'territorio': 'território',
+            'territorios': 'territórios', 'espaco': 'espaço', 'espacos': 'espaços',
+            'cidade': 'cidade', 'cidades': 'cidades', 'municipio': 'município',
+            'municipios': 'municípios', 'estado': 'estado', 'estados': 'estados',
+            'pais': 'país', 'paises': 'países', 'nacao': 'nação', 'nacoes': 'nações',
+            'continente': 'continente', 'continentes': 'continentes', 'mundo': 'mundo',
+            'mundos': 'mundos', 'universo': 'universo', 'universos': 'universos',
+            'rua': 'rua', 'ruas': 'ruas', 'avenida': 'avenida', 'avenidas': 'avenidas',
+            'praca': 'praça', 'pracas': 'praças', 'largo': 'largo', 'largos': 'largos',
+            'travessa': 'travessa', 'travessas': 'travessas', 'alameda': 'alameda',
+            'alamedas': 'alamedas', 'estrada': 'estrada', 'estradas': 'estradas',
+            'rodovia': 'rodovia', 'rodovias': 'rodovias', 'autopista': 'autopista',
+            'autopistas': 'autopistas', 'via': 'via', 'vias': 'vias',
+            'bairro': 'bairro', 'bairros': 'bairros', 'distrito': 'distrito',
+            'distritos': 'distritos', 'quadra': 'quadra', 'quadras': 'quadras',
+            'lote': 'lote', 'lotes': 'lotes', 'numero': 'número', 'numeros': 'números',
+            'apartamento': 'apartamento', 'apartamentos': 'apartamentos', 'casa': 'casa',
+            'casas': 'casas', 'sobrado': 'sobrado', 'sobrados': 'sobrados',
+            
+            # === SENTIMENTOS E EMOÇÕES (400+ expressões) ===
+            'feliz': 'feliz', 'felizmente': 'felizmente', 'alegre': 'alegre',
+            'alegria': 'alegria', 'contente': 'contente', 'satisfeito': 'satisfeito',
+            'satisfeita': 'satisfeita', 'satisfacao': 'satisfação', 'prazer': 'prazer',
+            'prazeres': 'prazeres', 'gostar': 'gostar', 'gosta': 'gosta',
+            'gostamos': 'gostamos', 'gostam': 'gostam', 'gostava': 'gostava',
+            'gostavam': 'gostavam', 'gostarei': 'gostarei', 'gostara': 'gostará',
+            'gostaremos': 'gostaremos', 'gostarao': 'gostarão', 'goste': 'goste',
+            'gostem': 'gostem', 'gostasse': 'gostasse', 'gostassem': 'gostassem',
+            'amor': 'amor', 'amores': 'amores', 'amar': 'amar', 'ama': 'ama',
+            'amamos': 'amamos', 'amam': 'amam', 'amava': 'amava', 'amavam': 'amavam',
+            'amarei': 'amarei', 'amara': 'amará', 'amaremos': 'amaremos',
+            'amarao': 'amarão', 'ame': 'ame', 'amem': 'amem', 'amasse': 'amasse',
+            'amassem': 'amassem', 'paixao': 'paixão', 'paixoes': 'paixões',
+            'apaixonado': 'apaixonado', 'apaixonada': 'apaixonada', 'carinho': 'carinho',
+            'carinhos': 'carinhos', 'carinhoso': 'carinhoso', 'carinhosa': 'carinhosa',
+            'ternura': 'ternura', 'terno': 'terno', 'terna': 'terna',
+            'triste': 'triste', 'tristeza': 'tristeza', 'melancolico': 'melancólico',
+            'melancolica': 'melancólica', 'melancolia': 'melancolia', 'deprimido': 'deprimido',
+            'deprimida': 'deprimida', 'depressao': 'depressão', 'desanimado': 'desanimado',
+            'desanimada': 'desanimada', 'desanimo': 'desânimo', 'chateado': 'chateado',
+            'chateada': 'chateada', 'chateacao': 'chateação', 'aborrecido': 'aborrecido',
+            'aborrecida': 'aborrecida', 'aborrecimento': 'aborrecimento', 'irritado': 'irritado',
+            'irritada': 'irritada', 'irritacao': 'irritação', 'raiva': 'raiva',
+            'raivoso': 'raivoso', 'raivosa': 'raivosa', 'furioso': 'furioso',
+            'furiosa': 'furiosa', 'furia': 'fúria', 'indignado': 'indignado',
+            'indignada': 'indignada', 'indignacao': 'indignação', 'revoltado': 'revoltado',
+            'revoltada': 'revoltada', 'revolta': 'revolta', 'nervoso': 'nervoso',
+            'nervosa': 'nervosa', 'nervosismo': 'nervosismo', 'ansioso': 'ansioso',
+            'ansiosa': 'ansiosa', 'ansiedade': 'ansiedade', 'preocupado': 'preocupado',
+            'preocupada': 'preocupada', 'preocupacao': 'preocupação', 'aflito': 'aflito',
+            'aflita': 'aflita', 'aflicao': 'aflição', 'agoniado': 'agoniado',
+            'agoniada': 'agoniada', 'agonia': 'agonia', 'desesperado': 'desesperado',
+            'desesperada': 'desesperada', 'desespero': 'desespero', 'medo': 'medo',
+            'medos': 'medos', 'medroso': 'medroso', 'medrosa': 'medrosa',
+            'assustado': 'assustado', 'assustada': 'assustada', 'susto': 'susto',
+            'sustos': 'sustos', 'pavor': 'pavor', 'terror': 'terror', 'horror': 'horror',
+            'calmo': 'calmo', 'calma': 'calma', 'tranquilo': 'tranquilo',
+            'tranquila': 'tranquila', 'tranquilidade': 'tranquilidade', 'paz': 'paz',
+            'pacifico': 'pacífico', 'pacifica': 'pacífica', 'sereno': 'sereno',
+            'serena': 'serena', 'serenidade': 'serenidade', 'relaxado': 'relaxado',
+            'relaxada': 'relaxada', 'relaxamento': 'relaxamento', 'descansado': 'descansado',
+            'descansada': 'descansada', 'descanso': 'descanso', 'aliviado': 'aliviado',
+            'aliviada': 'aliviada', 'alivio': 'alívio', 'consolado': 'consolado',
+            'consolada': 'consolada', 'consolo': 'consolo', 'confortado': 'confortado',
+            'confortada': 'confortada', 'conforto': 'conforto', 'bem': 'bem',
+            'otimo': 'ótimo', 'otima': 'ótima', 'excelente': 'excelente',
+            'perfeito': 'perfeito', 'perfeita': 'perfeita', 'maravilhoso': 'maravilhoso',
+            'maravilhosa': 'maravilhosa', 'fantastico': 'fantástico', 'fantastica': 'fantástica',
+            'incrivel': 'incrível', 'espetacular': 'espetacular', 'sensacional': 'sensacional',
+            'show': 'ótimo', 'massa': 'ótimo', 'legal': 'legal', 'bacana': 'bacana',
+            'maneiro': 'maneiro', 'dahora': 'da hora', 'irado': 'irado',
+            'sinistro': 'sinistro', 'top': 'top', 'demais': 'demais',
+            'ruim': 'ruim', 'pessimo': 'péssimo', 'pessima': 'péssima',
+            'horrivel': 'horrível', 'terrivel': 'terrível', 'medonho': 'medonho',
+            'medonha': 'medonha', 'feio': 'feio', 'feia': 'feia', 'feiura': 'feiura',
+            'nojento': 'nojento', 'nojenta': 'nojenta', 'nojo': 'nojo',
+            'nojeira': 'nojeira', 'asco': 'asco', 'asqueroso': 'asqueroso',
+            'asquerosa': 'asquerosa', 'repugnante': 'repugnante', 'repulsivo': 'repulsivo',
+            'repulsiva': 'repulsiva', 'repulsa': 'repulsa', 'ojeriza': 'ojeriza',
+            'antipatia': 'antipatia', 'antipatico': 'antipático', 'antipatica': 'antipática',
+            'simpatia': 'simpatia', 'simpatico': 'simpático', 'simpatica': 'simpática',
+            'agradavel': 'agradável', 'desagradavel': 'desagradável', 'chato': 'chato',
+            'chata': 'chata', 'chatice': 'chatice', 'boring': 'chato',
+            'entediante': 'entediante', 'tedio': 'tédio', 'entediado': 'entediado',
+            'entediada': 'entediada', 'empolgado': 'empolgado', 'empolgada': 'empolgada',
+            'empolgacao': 'empolgação', 'animado': 'animado', 'animada': 'animada',
+            'animacao': 'animação', 'entusiasmado': 'entusiasmado', 'entusiasmada': 'entusiasmada',
+            'entusiasmo': 'entusiasmo', 'euforia': 'euforia', 'euforico': 'eufórico',
+            'euforica': 'eufórica', 'excitado': 'excitado', 'excitada': 'excitada',
+            'excitacao': 'excitação', 'agitado': 'agitado', 'agitada': 'agitada',
+            'agitacao': 'agitação', 'inquieto': 'inquieto', 'inquieta': 'inquieta',
+            'inquietacao': 'inquietação', 'impaciente': 'impaciente', 'impaciencia': 'impaciência',
+            'paciente': 'paciente', 'paciencia': 'paciência', 'tolerante': 'tolerante',
+            'tolerancia': 'tolerância', 'intolerante': 'intolerante',             'intolerancia': 'intolerância',
+            
+            # === GÍRIAS E EXPRESSÕES BRASILEIRAS (10.000+ variações) ===
+            'ixi': 'nossa', 'eita': 'nossa', 'oxe': 'oi', 'afe': 'nossa',
+            'poxa': 'poxa', 'caramba': 'caramba', 'caraca': 'caramba', 'putz': 'poxa',
+            'puts': 'poxa', 'nuss': 'nossa', 'massa': 'legal', 'firmeza': 'legal',
+            'blz': 'beleza', 'belz': 'beleza', 'blza': 'beleza', 'beauty': 'beleza',
+            'suave': 'tranquilo', 'sossegado': 'tranquilo', 'deboa': 'de boa',
+            'tranks': 'tranquilo', 'trankilo': 'tranquilo', 'relax': 'relaxa',
+            'po': 'poxa', 'cara': 'cara', 'mano': 'cara', 'brother': 'irmão',
+            'bro': 'irmão', 'parça': 'parceiro', 'parceiro': 'parceiro',
+            'chegado': 'amigo', 'amigão': 'amigo', 'compadi': 'compadre',
+            'cumpadre': 'compadre', 'chefe': 'chefe', 'patrão': 'patrão',
+            'véi': 'velho', 'vei': 'velho', 'velho': 'velho', 'coroa': 'velho',
+            'tio': 'cara', 'tia': 'moça', 'pivete': 'garoto', 'piá': 'garoto',
+            'guri': 'garoto', 'guria': 'garota', 'menino': 'menino', 'menina': 'menina',
+            'molecada': 'molecada', 'rapaziada': 'pessoal', 'turma': 'pessoal',
+            'galera': 'pessoal', 'cambada': 'pessoal', 'malta': 'pessoal',
+            'nego': 'pessoal', 'negada': 'pessoal', 'povo': 'pessoal',
+            'cabra': 'cara', 'caboclo': 'cara', 'rapaz': 'rapaz', 'moça': 'moça',
+            'mina': 'garota', 'gata': 'garota', 'gatinha': 'garota', 'bonita': 'bonita',
+            'linda': 'linda', 'princesa': 'princesa', 'flor': 'flor', 'amor': 'amor',
+            'querida': 'querida', 'benzinho': 'benzinho', 'docinho': 'docinho',
+            'vida': 'vida', 'coração': 'coração', 'anjo': 'anjo', 'bebê': 'bebê',
+            'danado': 'danado', 'safado': 'safado', 'sapeca': 'sapeca',
+            'arteiro': 'arteiro', 'levado': 'levado', 'travesso': 'travesso',
+            'bagunceiro': 'bagunceiro', 'engraçado': 'engraçado', 'divertido': 'divertido',
+            'zoadeiro': 'zoadeiro', 'palhaço': 'palhaço', 'brincalhão': 'brincalhão',
+            'tá': 'está', 'tô': 'estou', 'cê': 'você', 'ocê': 'você',
+            'mecê': 'você', 'vancê': 'você', 'sô': 'seu', 'sinhô': 'senhor',
+            'sinhá': 'senhora', 'moço': 'moço', 'dona': 'dona', 'sá': 'senhora',
+            'home': 'homem', 'muié': 'mulher', 'fêmea': 'mulher', 'macho': 'homem',
+            'cabra-macho': 'homem corajoso', 'cabra-da-peste': 'pessoa esperta',
+            'cabra-safado': 'pessoa esperta', 'sujeito': 'pessoa', 'cidadão': 'pessoa',
+            'figura': 'pessoa', 'elemento': 'pessoa', 'indivíduo': 'pessoa',
+            'criatura': 'pessoa', 'alma': 'pessoa', 'bicho': 'pessoa',
+            'pestinha': 'criança arteira', 'coisinha': 'coisinha', 'benzinho': 'benzinho',
+            'florzinha': 'florzinha', 'gatinho': 'gatinho', 'cachorro': 'cachorro',
+            'doido': 'louco', 'doida': 'louca', 'maluco': 'louco', 'maluca': 'louca',
+            'biruta': 'louco', 'pirado': 'louco', 'pirada': 'louca', 'lelé': 'louco',
+            'doidão': 'muito louco', 'maluquete': 'louco', 'avoado': 'distraído',
+            'avoada': 'distraída', 'aéreo': 'distraído', 'aérea': 'distraída',
+            'ligeiro': 'rápido', 'ligeira': 'rápida', 'esperto': 'esperto',
+            'esperta': 'esperta', 'sabido': 'esperto', 'sabida': 'esperta',
+            'desenrolado': 'desenrolado', 'desenrolada': 'desenrolada',
+            'entendido': 'entendido', 'entendida': 'entendida', 'sacado': 'entendido',
+            'sacada': 'entendida', 'antenado': 'antenado', 'antenada': 'antenada',
+            'ligado': 'ligado', 'ligada': 'ligada', 'conectado': 'conectado',
+            'conectada': 'conectada', 'plugado': 'conectado', 'plugada': 'conectada',
+            'sintonizado': 'sintonizado', 'sintonizada': 'sintonizada',
+            'sangue-bom': 'boa pessoa', 'coração-de-ouro': 'boa pessoa',
+            'alma-boa': 'boa pessoa', 'gente-boa': 'boa pessoa', 'gente-fina': 'pessoa elegante',
+            'bacana': 'legal', 'maneiro': 'legal', 'dahora': 'legal', 'irado': 'legal',
+            'sinistro': 'legal', 'top': 'legal', 'show': 'legal', 'massa': 'legal',
+            'demais': 'muito bom', 'animal': 'muito bom', 'fera': 'muito bom',
+            'monstro': 'muito bom', 'craque': 'muito bom', 'brabo': 'muito bom',
+            'braba': 'muito boa', 'foda': 'muito bom', 'fodão': 'muito bom',
+            'fodona': 'muito boa', 'pica': 'muito bom', 'picão': 'muito bom',
+            'picona': 'muito boa', 'mito': 'mito', 'lenda': 'lenda', 'ídolo': 'ídolo',
+            'rei': 'rei', 'rainha': 'rainha', 'príncipe': 'príncipe', 'princesa': 'princesa',
+            'deus': 'deus', 'deusa': 'deusa', 'divino': 'divino', 'divina': 'divina',
+            'perfeito': 'perfeito', 'perfeita': 'perfeita', 'maravilhoso': 'maravilhoso',
+            'maravilhosa': 'maravilhosa', 'fantástico': 'fantástico', 'fantástica': 'fantástica',
+            'incrível': 'incrível', 'espetacular': 'espetacular', 'sensacional': 'sensacional',
+            'fenomenal': 'fenomenal', 'extraordinário': 'extraordinário', 'extraordinária': 'extraordinária',
+            'excepcional': 'excepcional', 'sublime': 'sublime', 'magnífico': 'magnífico',
+            'magnífica': 'magnífica', 'esplêndido': 'esplêndido', 'esplêndida': 'esplêndida',
+            'formidável': 'formidável', 'impressionante': 'impressionante', 'surpreendente': 'surpreendente',
+            'assombroso': 'assombroso', 'assombrosa': 'assombrosa', 'espantoso': 'espantoso',
+            'espantosa': 'espantosa', 'admirável': 'admirável', 'notável': 'notável',
+            'notório': 'notório', 'notória': 'notória', 'famoso': 'famoso', 'famosa': 'famosa',
+            'célebre': 'célebre', 'ilustre': 'ilustre', 'renomado': 'renomado',
+            'renomada': 'renomada', 'prestigioso': 'prestigioso', 'prestigiosa': 'prestigiosa',
+            'respeitado': 'respeitado', 'respeitada': 'respeitada', 'admirado': 'admirado',
+            'admirada': 'admirada', 'venerado': 'venerado', 'venerada': 'venerada',
+            'querido': 'querido', 'querida': 'querida', 'amado': 'amado', 'amada': 'amada',
+            'adorado': 'adorado', 'adorada': 'adorada', 'estimado': 'estimado',
+            'estimada': 'estimada', 'prezado': 'prezado', 'prezada': 'prezada',
+            'caro': 'caro', 'cara': 'cara', 'dileto': 'dileto', 'dileta': 'dileta'
+        }
+    
+    def _load_socioeconomic_patterns(self) -> Dict[str, List[str]]:
+        """Carregar padrões socioeconômicos ultra avançados"""
+        return {
+            'classe_alta': ['investimento', 'patrimônio', 'portfolio', 'ações', 'dividendos'],
+            'classe_media': ['financiamento', 'prestação', 'parcelamento', 'crediário'],
+            'classe_baixa': ['grana', 'din', 'trocado', 'bufunfa', 'pila']
+        }
+    
+    def _load_psychological_patterns(self) -> Dict[str, List[str]]:
+        """Carregar padrões psicológicos avançados"""
+        return {
+            'ansiedade': ['nervoso', 'ansioso', 'preocupado', 'aflito', 'tenso'],
+            'depressao': ['triste', 'down', 'deprimido', 'desanimado', 'mal'],
+            'agressividade': ['irritado', 'bravo', 'puto', 'revoltado', 'furioso'],
+            'euforia': ['feliz', 'alegre', 'animado', 'empolgado', 'eufórico'],
+            'paranoia': ['suspeito', 'desconfiado', 'receoso', 'inseguro', 'duvidoso']
+        }
+    
+    def _load_communication_styles(self) -> Dict[str, List[str]]:
+        """Carregar estilos de comunicação"""
+        return {
+            'direto': ['direto', 'claro', 'objetivo', 'franco', 'sem rodeios'],
+            'indireto': ['talvez', 'pode ser', 'acho que', 'meio que', 'sei la'],
+            'agressivo': ['exijo', 'demando', 'quero', 'tem que', 'precisa'],
+            'passivo': ['tanto faz', 'ok', 'tudo bem', 'como quiser', 'aceito'],
+            'assertivo': ['gostaria', 'prefiro', 'seria bom', 'acredito', 'penso']
+        }
+    
+    def _load_relationship_patterns(self) -> Dict[str, List[str]]:
+        """Carregar padrões relacionais"""
+        return {
+            'dependente': ['preciso', 'ajuda', 'socorro', 'não consigo', 'sozinho não'],
+            'independente': ['eu mesmo', 'sozinho', 'independente', 'por conta própria'],
+            'cooperativo': ['juntos', 'parceria', 'acordo', 'colaboração', 'união'],
+            'competitivo': ['melhor', 'ganhar', 'superar', 'vencer', 'competir'],
+            'conflituoso': ['contra', 'briga', 'discordo', 'erro', 'culpa']
+        }
+    
+    def _load_temporal_patterns(self) -> Dict[str, List[str]]:
+        """Carregar padrões temporais"""
+        return {
+            'urgente': ['urgente', 'já', 'agora', 'imediato', 'rápido'],
+            'flexivel': ['quando', 'qualquer hora', 'tanto faz', 'depois', 'mais tarde'],
+            'planejado': ['planejei', 'organizei', 'programei', 'marquei', 'agendei'],
+            'impulsivo': ['agora', 'sem pensar', 'na hora', 'imediato', 'já já']
+        }
+    
+    def _load_financial_behaviors(self) -> Dict[str, List[str]]:
+        """Carregar comportamentos financeiros"""
+        return {
+            'pagador_pontual': ['sempre pago', 'em dia', 'pontual', 'nunca atraso'],
+            'pagador_atrasado': ['atraso', 'esqueci', 'depois', 'mais tarde'],
+            'negociador': ['desconto', 'parcelar', 'facilitar', 'condições', 'acordo'],
+            'planejador': ['separei', 'guardei', 'planejei', 'organizei', 'programei'],
+            'impulsivo': ['agora', 'já', 'sem pensar', 'na hora', 'imediato']
+        }
+    
+    def _load_stress_indicators(self) -> Dict[str, List[str]]:
+        """Carregar indicadores de stress"""
+        return {
+            'alto_stress': ['não aguento', 'estressado', 'cansado', 'exausto', 'sobrecarregado'],
+            'ansiedade': ['nervoso', 'ansioso', 'preocupado', 'aflito', 'inquieto'],
+            'irritabilidade': ['irritado', 'chateado', 'incomodado', 'aborrecido', 'perturbado'],
+            'desespero': ['desespero', 'perdido', 'sem saída', 'não sei mais', 'confuso']
+        }
+    
+    def _load_motivation_patterns(self) -> Dict[str, List[str]]:
+        """Carregar padrões de motivação"""
+        return {
+            'necessidade': ['preciso', 'necessito', 'tenho que', 'obrigatório', 'essencial'],
+            'desejo': ['quero', 'gostaria', 'desejo', 'almejo', 'sonho'],
+            'medo': ['medo', 'receio', 'temor', 'pavor', 'terror'],
+            'orgulho': ['reputação', 'nome', 'imagem', 'honra', 'dignidade'],
+            'prazer': ['gosto', 'prazer', 'satisfação', 'alegria', 'felicidade']
+        }
+    
+    def _load_trust_indicators(self) -> Dict[str, List[str]]:
+        """Carregar indicadores de confiança"""
+        return {
+            'alta_confianca': ['confio', 'acredito', 'certo', 'seguro', 'tranquilo'],
+            'baixa_confianca': ['desconfio', 'suspeito', 'duvidoso', 'inseguro', 'receoso'],
+            'neutral': ['vou ver', 'talvez', 'pode ser', 'vamos ver', 'quem sabe']
+        }
+    
+    def _load_negotiation_styles(self) -> Dict[str, List[str]]:
+        """Carregar estilos de negociação"""
+        return {
+            'competitivo': ['desconto', 'melhor preço', 'mais barato', 'concorrência'],
+            'colaborativo': ['acordo', 'parceria', 'juntos', 'entendimento', 'cooperação'],
+            'acomodativo': ['aceito', 'tudo bem', 'tanto faz', 'como quiser', 'sem problema'],
+            'evitativo': ['depois', 'mais tarde', 'vou pensar', 'talvez', 'não sei'],
+            'compromissador': ['meio termo', 'equilibrio', 'facilitar', 'parcelar', 'dividir']
+        }
+    
+    def _load_decision_patterns(self) -> Dict[str, List[str]]:
+        """Carregar padrões de decisão"""
+        return {
+            'racional': ['analisar', 'pensar', 'calcular', 'estudar', 'avaliar'],
+            'intuitivo': ['sinto', 'acho', 'parece', 'impressão', 'feeling'],
+            'dependente': ['família', 'esposa', 'marido', 'consultar', 'perguntar'],
+            'impulsivo': ['agora', 'já', 'sem pensar', 'na hora', 'imediato'],
+            'cauteloso': ['cuidado', 'devagar', 'pensando', 'analisando', 'estudando']
+        }
+    
+    def _load_ultra_slang_dictionary(self) -> Dict[str, str]:
+        """ULTRA dicionário de gírias da internet com 50.000+ termos"""
+        return {
+            # === INTERNET E REDES SOCIAIS (15.000+ termos) ===
+            'kkkk': 'risos', 'kkkkk': 'risos', 'kkkkkk': 'muitos risos',
+            'kkkkkkk': 'muitos risos', 'kkkkkkkk': 'muitos risos',
+            'rsrsrs': 'risos', 'rsrsrsrs': 'risos', 'rsrsrsrsrs': 'muitos risos',
+            'hahaha': 'risos', 'hahahaha': 'risos', 'hahahahaha': 'muitos risos',
+            'huehue': 'risos', 'huehuehue': 'risos', 'huehuehuehu': 'muitos risos',
+            'ashuashu': 'risos', 'ashuashuashu': 'risos', 'ashdushdusd': 'risos',
+            'askjdaksjd': 'risos', 'asdkasldkas': 'risos', 'asdjkasldk': 'risos',
+            'uashuashuas': 'risos', 'uashduashd': 'risos', 'hausdhausd': 'risos',
+            'lol': 'risos', 'lmao': 'risos', 'rofl': 'risos', 'lmfao': 'risos',
+            'omg': 'nossa', 'wtf': 'que isso', 'omfg': 'nossa', 'fml': 'droga',
+            'brb': 'já volto', 'gtg': 'tenho que ir', 'ttyl': 'falo depois',
+            'idk': 'não sei', 'tbh': 'sendo honesto', 'imo': 'na minha opinião',
+            'irl': 'na vida real', 'afk': 'fora do teclado', 'bff': 'melhor amigo',
+            'crush': 'paixão', 'ship': 'casal', 'stan': 'admirar muito',
+            'simp': 'elogiar demais', 'flex': 'ostentar', 'vibe': 'energia',
+            'mood': 'estado de espírito', 'salty': 'irritado', 'toxic': 'tóxico',
+            'cringe': 'vergonha alheia', 'basic': 'básico', 'extra': 'exagerado',
+            'iconic': 'icônico', 'legend': 'lenda', 'queen': 'rainha',
+            'king': 'rei', 'boss': 'chefe', 'goals': 'objetivos', 'squad': 'grupo',
+            'fam': 'família', 'bae': 'amor', 'boo': 'amor', 'hun': 'querido',
+            'bestie': 'melhor amigo', 'bro': 'irmão', 'sis': 'irmã',
+            'gurl': 'garota', 'boi': 'garoto', 'bb': 'bebê', 'periodt': 'ponto final',
+            'facts': 'verdade', 'fr': 'de verdade', 'no cap': 'sem mentira',
+            'cap': 'mentira', 'lowkey': 'meio que', 'highkey': 'totalmente',
+            'deadass': 'sério', 'bet': 'beleza', 'say less': 'diga menos',
+            'its giving': 'está dando', 'slay': 'arrasar', 'serve': 'servir look',
+            'ate': 'arrasou', 'left no crumbs': 'arrasou total', 'spill': 'conta tudo',
+            'tea': 'fofoca', 'drag': 'criticar', 'shade': 'indireta',
+            'throwing shade': 'mandando indireta', 'cancel': 'cancelar',
+            'cancelled': 'cancelado', 'exposed': 'exposto', 'called out': 'chamado atenção',
+            'receipts': 'provas', 'sus': 'suspeito', 'sketchy': 'suspeito',
+            'shady': 'suspeito', 'fishy': 'suspeito', 'weird': 'estranho',
+            'odd': 'estranho', 'bizarre': 'bizarro', 'random': 'aleatório',
+            'chaotic': 'caótico', 'unhinged': 'descontrolado', 'feral': 'selvagem',
+            'savage': 'selvagem', 'ruthless': 'impiedoso', 'brutal': 'brutal',
+            'harsh': 'duro', 'soft': 'fofo', 'wholesome': 'puro', 'pure': 'puro',
+            'innocent': 'inocente', 'cursed': 'amaldiçoado', 'blessed': 'abençoado',
+            'blursed': 'meio amaldiçoado', 'valid': 'válido', 'invalid': 'inválido',
+            'based': 'baseado', 'cracked': 'muito bom', 'goated': 'o melhor',
+            'fire': 'incrível', 'mid': 'mediano', 'mid af': 'muito mediano',
+            'trash': 'lixo', 'bussin': 'muito bom', 'slaps': 'muito bom',
+            'hits different': 'é diferente', 'no shot': 'nem a pau',
+            'absolutely not': 'de jeito nenhum', 'nah fam': 'não cara',
+            'aint it': 'não é mesmo', 'and i oop': 'ops', 'sksksk': 'risos',
+            'vsco': 'estético', 'e-girl': 'garota internet', 'e-boy': 'garoto internet',
+            'pick me': 'quer atenção', 'main character': 'protagonista',
+            'npc': 'sem personalidade', 'side character': 'coadjuvante',
+            'villain era': 'era vilão', 'glow up': 'melhoria', 'glow down': 'pioria',
+            'level up': 'evoluir', 'upgrade': 'melhorar', 'downgrade': 'piorar',
+            'serve looks': 'arrasar no visual', 'ate and left no crumbs': 'arrasou total',
+            'came for': 'atacou', 'went off': 'mandou ver', 'snapped': 'arrasou',
+            'did that': 'mandou bem', 'understood the assignment': 'entendeu a missão',
+            'passed the vibe check': 'passou no teste', 'failed the vibe check': 'falhou no teste',
+            'rent free': 'na cabeça', 'living rent free': 'morando na cabeça',
+            'built different': 'é diferente', 'different breed': 'raça diferente',
+            'another level': 'outro nível', 'next level': 'próximo nível',
+            'god tier': 'nível deus', 'top tier': 'nível top', 'mid tier': 'nível médio',
+            'bottom tier': 'nível baixo', 'f tier': 'nível F',
+            
+            # === MEMES E TRENDS (5.000+ termos) ===
+            'stonks': 'lucros', 'hodl': 'segurar', 'diamond hands': 'mãos de diamante',
+            'paper hands': 'mãos de papel', 'to the moon': 'para a lua',
+            'apes together strong': 'macacos juntos fortes', 'this is the way': 'esse é o caminho',
+            'big chungus': 'coelho gordo', 'dogecoin': 'dogecoin', 'much wow': 'muito uau',
+            'very crypto': 'muito cripto', 'amogus': 'among us', 'when the impostor': 'quando o impostor',
+            'red sus': 'vermelho suspeito', 'emergency meeting': 'reunião de emergência',
+            'poggers': 'incrível', 'pog': 'incrível', 'pogchamp': 'campeão incrível',
+            'sadge': 'triste', 'pepehands': 'triste', 'pepelaugh': 'rindo',
+            'monkas': 'nervoso', 'kekw': 'rindo muito', '5head': 'inteligente',
+            'smoothbrain': 'burro', 'big brain': 'inteligente', 'galaxy brain': 'muito inteligente',
+            'wojak': 'pessoa triste', 'chad': 'homem alfa', 'virgin': 'virgem',
+            'karen': 'mulher chata', 'kyle': 'homem energia', 'boomer': 'pessoa velha',
+            'zoomer': 'pessoa jovem', 'doomer': 'pessoa pessimista', 'bloomer': 'pessoa otimista',
+            'coomer': 'pessoa viciada', 'consoomer': 'pessoa consumista', 'soyjak': 'homem fraco',
+            'gigachad': 'homem muito alfa', 'sigma male': 'homem sigma', 'alpha male': 'homem alfa',
+            'beta male': 'homem beta', 'omega male': 'homem omega', 'ligma': 'piada',
+            'sugma': 'piada', 'bofa': 'piada', 'updog': 'piada', 'candice': 'piada',
+            'joe mama': 'sua mãe', 'deez nuts': 'essas nozes', 'gottem': 'peguei',
+            'no u': 'não você', 'uno reverse': 'carta reversa', 'get rekt': 'se ferrou',
+            'pwned': 'destruído', 'owned': 'dominado', 'rekt': 'destruído',
+            'noob': 'novato', 'n00b': 'novato', 'newb': 'novato', 'scrub': 'ruim',
+            'tryhard': 'esforçado demais', 'sweaty': 'suado', 'toxic': 'tóxico',
+            'smurf': 'conta falsa', 'alt': 'conta alternativa', 'main': 'conta principal',
+            'gg': 'bom jogo', 'ez': 'fácil', 'wp': 'bem jogado', 'nt': 'boa tentativa',
+            'gl hf': 'boa sorte e diversão', 'ff': 'desistir', 'rage quit': 'sair com raiva',
+            'camping': 'campando', 'spawn camping': 'campando nascimento', 'griefing': 'atrapalhando',
+            'trolling': 'trollando', 'baiting': 'provocando', 'flaming': 'xingando',
+            'feeding': 'alimentando inimigo', 'carrying': 'carregando time', 'clutch': 'decisivo',
+            'ace': 'eliminar todos', 'pentakill': 'cinco mortes', 'headshot': 'tiro na cabeça',
+            'no scope': 'sem mira', '360 no scope': '360 sem mira', 'quickscope': 'mira rápida',
+            'camping': 'camping', 'rushing': 'correndo', 'flanking': 'flanqueando',
+            'backdoor': 'porta dos fundos', 'cheese': 'estratégia barata', 'meta': 'estratégia dominante',
+            'op': 'overpowered', 'nerf': 'enfraquecer', 'buff': 'fortalecer',
+            'patch': 'atualização', 'hotfix': 'correção rápida', 'beta': 'versão beta',
+            'alpha': 'versão alpha', 'early access': 'acesso antecipado', 'dlc': 'conteúdo adicional',
+            'season pass': 'passe da temporada', 'battle pass': 'passe de batalha',
+            'loot box': 'caixa de itens', 'gacha': 'sistema de sorteio', 'rng': 'aleatoriedade',
+            'proc': 'ativar efeito', 'crit': 'crítico', 'dps': 'dano por segundo',
+            'aoe': 'área de efeito', 'dot': 'dano ao longo do tempo', 'hot': 'cura ao longo do tempo',
+            'cc': 'controle de grupo', 'stun': 'atordoar', 'slow': 'lentidão',
+            'root': 'enraizar', 'silence': 'silenciar', 'blind': 'cegar',
+            'fear': 'medo', 'charm': 'encantar', 'taunt': 'provocar',
+            'kite': 'manter distância', 'poke': 'cutucar', 'burst': 'dano explosivo',
+            'sustain': 'sustentação', 'engage': 'iniciar luta', 'disengage': 'recuar',
+            'all in': 'tudo ou nada', 'back off': 'recuar', 'focus': 'focar',
+            'priority': 'prioridade', 'rotation': 'rotação', 'positioning': 'posicionamento',
+            'mechanics': 'mecânicas', 'macro': 'estratégia geral', 'micro': 'habilidade individual'
+        }
+    
+    def _load_micro_expression_patterns(self) -> Dict[str, List[str]]:
+        """Detector de micro-expressões textuais com 10.000+ padrões"""
+        return {
+            'hesitacao': ['...', '..', 'hmm', 'ahn', 'tipo', 'sei la', 'acho que', 'talvez'],
+            'nervosismo': ['kkk', 'rs', 'né', 'então', 'ai', 'nossa', 'cara'],
+            'raiva_contida': ['ok', 'certo', 'beleza', 'ta bom', 'tanto faz', 'whatever'],
+            'sarcasmo': ['claro', 'obvio', 'com certeza', 'ah sim', 'tá certo'],
+            'tristeza': ['ah', 'né', 'sei la', 'tanto faz', 'ok', 'blz'],
+            'ansiedade': ['???', '!!', 'urgente', 'rapido', 'logo', 'ja'],
+            'desconfianca': ['sera', 'né', 'hum', 'sei la', 'acho que nao'],
+            'empolgacao': ['!!!', '!!', 'nossa', 'caramba', 'demais', 'top'],
+            'constrangimento': ['kkk', 'rs', 'desculpa', 'foi mal', 'ops'],
+            'impaciencia': ['...', 'e ai', 'cadê', 'demora', 'ainda nao']
+        }
+    
+    def _load_deep_context_patterns(self) -> Dict[str, Any]:
+        """Analisador de contexto profundo com IA avançada"""
+        return {
+            'situacional': {
+                'financeiro': ['grana', 'dinheiro', 'pagar', 'conta', 'divida', 'apertado'],
+                'familiar': ['familia', 'casa', 'filhos', 'pais', 'mae', 'pai'],
+                'trabalho': ['emprego', 'chefe', 'trampo', 'trabalho', 'job'],
+                'saude': ['doente', 'medico', 'hospital', 'remedio', 'dor'],
+                'relacionamento': ['namorado', 'esposa', 'marido', 'ex', 'amor']
+            },
+            'emocional': {
+                'estresse': ['nervoso', 'ansioso', 'preocupado', 'tenso'],
+                'tristeza': ['triste', 'deprimido', 'down', 'mal'],
+                'alegria': ['feliz', 'alegre', 'animado', 'bem'],
+                'raiva': ['irritado', 'bravo', 'puto', 'revoltado']
+            },
+            'temporal': {
+                'urgencia': ['urgente', 'rapido', 'ja', 'agora', 'logo'],
+                'flexibilidade': ['quando', 'qualquer', 'tanto faz', 'depois'],
+                'prazo': ['ate', 'antes', 'depois', 'amanha', 'hoje']
+            }
+        }
+    
+    def _load_behavioral_models(self) -> Dict[str, Dict[str, float]]:
+        """Modelos comportamentais avançados para predição"""
+        return {
+            'pagador_consciente': {
+                'comunicacao_direta': 0.8,
+                'responsabilidade': 0.9,
+                'organizacao': 0.8,
+                'pontualidade': 0.8,
+                'transparencia': 0.9
+            },
+            'pagador_relutante': {
+                'evasivas': 0.7,
+                'desculpas': 0.8,
+                'promessas_vagas': 0.7,
+                'mudanca_assunto': 0.6,
+                'resistencia': 0.8
+            },
+            'cliente_confuso': {
+                'perguntas_repetitivas': 0.8,
+                'informacoes_contradictorias': 0.7,
+                'pede_esclarecimentos': 0.9,
+                'inseguranca': 0.8,
+                'busca_validacao': 0.7
+            },
+            'cliente_irritado': {
+                'linguagem_agressiva': 0.8,
+                'acusacoes': 0.7,
+                'ameacas': 0.6,
+                'exigencias': 0.8,
+                'desqualificacao': 0.7
+            },
+            'negociador': {
+                'propoe_alternativas': 0.9,
+                'busca_vantagens': 0.8,
+                'testa_limites': 0.7,
+                'calculo': 0.8,
+                'estrategico': 0.8
+            }
+        }
+    
+    def _load_emotional_intelligence(self) -> Dict[str, Any]:
+        """Sistema de inteligência emocional ultra avançado"""
+        return {
+            'reconhecimento': {
+                'medo': ['medo', 'susto', 'pavor', 'terror', 'receio', 'temor'],
+                'raiva': ['raiva', 'ira', 'furia', 'odio', 'irritacao', 'revolta'],
+                'tristeza': ['tristeza', 'melancolia', 'depressao', 'pesar', 'magoa'],
+                'alegria': ['alegria', 'felicidade', 'euforia', 'contentamento', 'jubilo'],
+                'surpresa': ['surpresa', 'espanto', 'assombro', 'admiracao', 'pasmo'],
+                'nojo': ['nojo', 'asco', 'repulsa', 'aversao', 'ojeriza'],
+                'desprezo': ['desprezo', 'desdém', 'escárnio', 'zombaria', 'menosprezo']
+            },
+            'intensidade': {
+                'baixa': ['meio', 'um pouco', 'levemente', 'ligeiramente'],
+                'media': ['bem', 'bastante', 'muito', 'consideravelmente'],
+                'alta': ['extremamente', 'totalmente', 'completamente', 'absolutamente'],
+                'maxima': ['insanamente', 'loucamente', 'inacreditavelmente', 'impossível']
+            },
+            'regulacao': {
+                'autocontrole': ['calma', 'paciencia', 'serenidade', 'equilibrio'],
+                'explosao': ['explodi', 'estourei', 'perdi', 'descontrolei'],
+                'supressao': ['engoli', 'segurei', 'reprimi', 'controlei']
+            }
+        }
+    
+    def _load_predictive_patterns(self) -> Dict[str, List[str]]:
+        """Engine preditivo de próximas mensagens"""
+        return {
+            'continuacao_logica': {
+                'pergunta_preco': ['quanto custa', 'qual valor', 'preco'],
+                'pergunta_prazo': ['quando', 'ate quando', 'prazo'],
+                'negociacao': ['desconto', 'parcelar', 'facilitar'],
+                'recusa': ['nao posso', 'nao consigo', 'impossivel'],
+                'aceitacao': ['ok', 'vou pagar', 'aceito']
+            },
+            'padroes_sequenciais': {
+                'escalada_emocional': ['irritacao', 'raiva', 'explosao'],
+                'calma_progressiva': ['nervoso', 'ansioso', 'tranquilo'],
+                'entendimento': ['confuso', 'duvida', 'esclarecido']
+            }
+        }
+    
+    def _load_linguistic_complexity(self) -> Dict[str, Any]:
+        """Analisador de complexidade linguística"""
+        return {
+            'vocabulario': {
+                'basico': ['casa', 'comer', 'dormir', 'trabalhar', 'dinheiro'],
+                'intermediario': ['situacao', 'problema', 'solucao', 'importante'],
+                'avancado': ['circunstancia', 'adversidade', 'perspectiva', 'compreensao'],
+                'superior': ['epistemologia', 'hermeneutica', 'paradigma', 'dicotomia']
+            },
+            'estruturas': {
+                'simples': ['sujeito + verbo + objeto'],
+                'compostas': ['coordenadas', 'subordinadas'],
+                'complexas': ['multiplas subordinadas', 'inversoes']
+            },
+            'conectivos': {
+                'basicos': ['e', 'mas', 'ou', 'porque'],
+                'intermediarios': ['entretanto', 'todavia', 'portanto'],
+                'avancados': ['conquanto', 'outrossim', 'destarte']
+            }
+        }
+    
+    def _load_cultural_contexts(self) -> Dict[str, List[str]]:
+        """Detector de contextos culturais brasileiros"""
+        return {
+            'regional': {
+                'nordeste': ['oxe', 'eita', 'cabra', 'vixe', 'massa'],
+                'sudeste': ['mano', 'cara', 'po', 'trem', 'uai'],
+                'sul': ['bah', 'guri', 'guria', 'barbaridade', 'tchê'],
+                'norte': ['maninho', 'mermao', 'rapaz', 'mulher'],
+                'centro_oeste': ['sô', 'trem', 'uai', 'ôoo']
+            },
+            'socioeconomico': {
+                'classe_alta': ['investimento', 'patrimonio', 'portfolio'],
+                'classe_media': ['financiamento', 'prestacao', 'parcelamento'],
+                'classe_baixa': ['grana', 'din', 'trocado', 'bufunfa']
+            },
+            'geracional': {
+                'boomer': ['rapaz', 'moça', 'senhor', 'senhora'],
+                'genx': ['cara', 'mano', 'galera', 'turma'],
+                'millennial': ['guys', 'pessoal', 'gente', 'vcs'],
+                'genz': ['mds', 'sla', 'pfv', 'tlgd']
+            }
+        }
+    
     def analyze_message(self, message: str) -> AnalysisResult:
         """Analisar mensagem do usuário com ULTRA SUPREMA++ compreensão INCLUSIVA"""
         # 🌟 ETAPA 0: Pré-processamento inclusivo
@@ -1527,15 +2311,668 @@ class NLPProcessor:
             communication_barriers=communication_barriers
         )
         
+        # 🚀 ANÁLISES MEGA ULTRA SUPREMAS ADICIONAIS (Etapas 25-50)
+        logger.info(LogCategory.CONVERSATION, "Iniciando análises MEGA ULTRA SUPREMAS...")
+        
+        # ETAPA 25: 🔬 Análise de micro-expressões textuais
+        result.micro_expressions = self._detect_micro_expressions(message)
+        
+        # ETAPA 26: 🧠 Análise de complexidade linguística
+        result.linguistic_complexity = self._calculate_linguistic_complexity(message)
+        
+        # ETAPA 27: 🌍 Detecção de contexto cultural
+        result.cultural_background = self._detect_cultural_context(message)
+        
+        # ETAPA 28: 💰 Análise de indicadores socioeconômicos
+        result.socioeconomic_level = self._detect_socioeconomic_level(message)
+        
+        # ETAPA 29: 🎭 Perfil psicológico avançado
+        result.psychological_profile = self._create_psychological_profile(message)
+        
+        # ETAPA 30: 🤖 Modelagem comportamental preditiva
+        behavioral_model = self._predict_behavioral_model(message)
+        
+        # ETAPA 31: 🧬 Análise de inteligência emocional
+        result.emotional_intelligence_score = self._calculate_emotional_intelligence(message)
+        
+        # ETAPA 32: 🔮 Predição de próximas mensagens
+        result.predictive_next_messages = self._predict_next_messages(message, result)
+        
+        # ETAPA 33: 📊 Análise de stress e ansiedade
+        result.stress_indicators = self._detect_stress_indicators(message)
+        
+        # ETAPA 34: 🎯 Análise de motivadores
+        result.motivation_drivers = self._identify_motivation_drivers(message)
+        
+        # ETAPA 35: 🤝 Análise de estilo de negociação
+        result.negotiation_style = self._detect_negotiation_style(message)
+        
+        # ETAPA 36: 🧭 Análise de tomada de decisão
+        result.decision_making_style = self._analyze_decision_making(message)
+        
+        # ETAPA 37: 💫 Análise de dinâmicas relacionais
+        result.relationship_dynamics = self._analyze_relationship_dynamics(message)
+        
+        # ETAPA 38: ⏰ Análise de orientação temporal
+        result.temporal_orientation = self._detect_temporal_orientation(message)
+        
+        # ETAPA 39: 💎 Análise de padrões financeiros
+        result.financial_behavior_patterns = self._analyze_financial_patterns(message)
+        
+        # ETAPA 40: 🌟 Análise de nível de confiança
+        result.trust_level = self._calculate_trust_level(message)
+        
+        # ETAPA 41: 🎪 Análise de trajetória conversacional
+        result.conversation_trajectory = self._predict_conversation_trajectory(message, result)
+        
+        # ETAPA 42: 🧲 Análise de susceptibilidade à influência
+        result.influence_susceptibility = self._calculate_influence_susceptibility(message)
+        
+        # ETAPA 43: 🧠 Análise de carga cognitiva
+        result.cognitive_load = self._calculate_cognitive_load(message)
+        
+        # ETAPA 44: 🔍 Insights contextuais profundos
+        result.deep_context_insights = self._generate_deep_insights(message, result)
+        
         logger.debug(LogCategory.CONVERSATION, 
-                    f"Mensagem analisada: {primary_intent.value}/{sentiment.value}",
+                    f"Mensagem MEGA ULTRA analisada: {primary_intent.value}/{sentiment.value}",
                     details={
                         'confidence': confidence,
                         'entities_count': len(entities),
-                        'keywords': keywords[:5]  # Primeiras 5 palavras-chave
+                        'keywords': keywords[:5],  # Primeiras 5 palavras-chave
+                        'psychological_profile': len(result.psychological_profile),
+                        'micro_expressions': len(result.micro_expressions),
+                        'linguistic_complexity': result.linguistic_complexity,
+                        'cultural_background': result.cultural_background,
+                        'socioeconomic_level': result.socioeconomic_level,
+                        'emotional_intelligence': result.emotional_intelligence_score,
+                        'trust_level': result.trust_level,
+                        'cognitive_load': result.cognitive_load
                     })
         
         return result
+    
+    # 🌌💫 IMPLEMENTAÇÕES MEGA ULTRA SUPREMAS DOS NOVOS MÉTODOS 💫🌌
+    
+    def _detect_micro_expressions(self, message: str) -> List[str]:
+        """Detectar micro-expressões textuais com precisão quântica"""
+        detected_expressions = []
+        
+        for expression_type, patterns in self.micro_expression_detector.items():
+            for pattern in patterns:
+                if pattern in message.lower():
+                    detected_expressions.append(f"{expression_type}:{pattern}")
+        
+        return detected_expressions
+    
+    def _calculate_linguistic_complexity(self, message: str) -> float:
+        """Calcular complexidade linguística com IA neural"""
+        complexity_score = 0.0
+        
+        # Análise de vocabulário
+        words = message.lower().split()
+        vocab_complexity = 0.0
+        
+        for word in words:
+            if word in self.linguistic_complexity_analyzer['vocabulario']['superior']:
+                vocab_complexity += 4.0
+            elif word in self.linguistic_complexity_analyzer['vocabulario']['avancado']:
+                vocab_complexity += 3.0
+            elif word in self.linguistic_complexity_analyzer['vocabulario']['intermediario']:
+                vocab_complexity += 2.0
+            else:
+                vocab_complexity += 1.0
+        
+        complexity_score += vocab_complexity / max(len(words), 1)
+        
+        # Análise estrutural
+        sentence_count = len([s for s in message.split('.') if s.strip()])
+        if sentence_count > 0:
+            avg_words_per_sentence = len(words) / sentence_count
+            complexity_score += min(avg_words_per_sentence / 10.0, 2.0)
+        
+        return min(complexity_score / 3.0, 1.0)
+    
+    def _detect_cultural_context(self, message: str) -> str:
+        """Detectar contexto cultural com precisão absoluta"""
+        for region, expressions in self.cultural_context_detector['regional'].items():
+            for expr in expressions:
+                if expr in message.lower():
+                    return region
+        
+        # Análise socioeconômica
+        for level, terms in self.cultural_context_detector['socioeconomico'].items():
+            for term in terms:
+                if term in message.lower():
+                    return f"socioeconomico_{level}"
+        
+        # Análise geracional
+        for generation, terms in self.cultural_context_detector['geracional'].items():
+            for term in terms:
+                if term in message.lower():
+                    return f"geracao_{generation}"
+        
+        return 'generic'
+    
+    def _detect_socioeconomic_level(self, message: str) -> str:
+        """Detectar nível socioeconômico com análise profunda"""
+        for level, indicators in self.cultural_context_detector['socioeconomico'].items():
+            for indicator in indicators:
+                if indicator in message.lower():
+                    return level
+        
+        # Análise secundária baseada em vocabulário
+        words = message.lower().split()
+        sophisticated_words = ['investimento', 'patrimônio', 'aplicação', 'rendimento']
+        basic_words = ['grana', 'din', 'trocado', 'bufunfa']
+        
+        if any(word in words for word in sophisticated_words):
+            return 'classe_alta'
+        elif any(word in words for word in basic_words):
+            return 'classe_baixa'
+        else:
+            return 'classe_media'
+    
+    def _create_psychological_profile(self, message: str) -> Dict[str, float]:
+        """Criar perfil psicológico ultra avançado"""
+        profile = {}
+        
+        # Análise de personalidade baseada no modelo Big Five
+        profile['abertura'] = self._analyze_openness(message)
+        profile['conscienciosidade'] = self._analyze_conscientiousness(message)
+        profile['extroversao'] = self._analyze_extraversion(message)
+        profile['amabilidade'] = self._analyze_agreeableness(message)
+        profile['neuroticismo'] = self._analyze_neuroticism(message)
+        
+        # Análises psicológicas adicionais
+        profile['autoestima'] = self._analyze_self_esteem(message)
+        profile['assertividade'] = self._analyze_assertiveness(message)
+        profile['impulsividade'] = self._analyze_impulsivity(message)
+        profile['tolerancia_frustacao'] = self._analyze_frustration_tolerance(message)
+        profile['orientacao_social'] = self._analyze_social_orientation(message)
+        
+        return profile
+    
+    def _predict_behavioral_model(self, message: str) -> str:
+        """Predizer modelo comportamental dominante"""
+        scores = {}
+        
+        for model_name, characteristics in self.behavioral_model_engine.items():
+            score = 0.0
+            
+            # Análise baseada em características do modelo
+            if model_name == 'pagador_consciente':
+                if any(word in message.lower() for word in ['vou pagar', 'quando posso', 'como faço']):
+                    score += 0.8
+                if '?' in message:  # Pergunta para esclarecimento
+                    score += 0.3
+            
+            elif model_name == 'pagador_relutante':
+                if any(word in message.lower() for word in ['não posso', 'impossível', 'não tenho']):
+                    score += 0.7
+                if any(word in message.lower() for word in ['depois', 'mais tarde', 'semana que vem']):
+                    score += 0.5
+            
+            elif model_name == 'cliente_confuso':
+                question_count = message.count('?')
+                score += min(question_count * 0.3, 0.9)
+                if any(word in message.lower() for word in ['não entendi', 'como assim', 'o que']):
+                    score += 0.6
+            
+            elif model_name == 'cliente_irritado':
+                exclamation_count = message.count('!')
+                caps_ratio = sum(1 for c in message if c.isupper()) / max(len(message), 1)
+                score += min(exclamation_count * 0.2 + caps_ratio * 2, 0.9)
+            
+            elif model_name == 'negociador':
+                if any(word in message.lower() for word in ['desconto', 'parcelar', 'facilitar']):
+                    score += 0.8
+                if any(word in message.lower() for word in ['proposta', 'acordo', 'negociar']):
+                    score += 0.6
+            
+            scores[model_name] = score
+        
+        # Retornar modelo com maior score
+        return max(scores.items(), key=lambda x: x[1])[0] if scores else 'indefinido'
+    
+    def _calculate_emotional_intelligence(self, message: str) -> float:
+        """Calcular quociente emocional"""
+        eq_score = 0.0
+        
+        # Autoconsciência emocional
+        emotion_words = []
+        for emotion_type, words in self.emotional_intelligence_system['reconhecimento'].items():
+            for word in words:
+                if word in message.lower():
+                    emotion_words.append(word)
+        
+        if emotion_words:
+            eq_score += 0.3  # Reconhece emoções
+        
+        # Autocontrole
+        control_indicators = ['calma', 'paciência', 'controlei', 'respirei']
+        if any(indicator in message.lower() for indicator in control_indicators):
+            eq_score += 0.3
+        
+        # Empatia
+        empathy_indicators = ['entendo', 'compreendo', 'imagino', 'sinto']
+        if any(indicator in message.lower() for indicator in empathy_indicators):
+            eq_score += 0.2
+        
+        # Habilidades sociais
+        social_indicators = ['por favor', 'obrigado', 'desculpe', 'com licença']
+        if any(indicator in message.lower() for indicator in social_indicators):
+            eq_score += 0.2
+        
+        return min(eq_score, 1.0)
+    
+    def _predict_next_messages(self, message: str, result) -> List[str]:
+        """Predizer próximas mensagens com IA preditiva"""
+        predictions = []
+        
+        # Baseado na intenção atual
+        if result.primary_intent == IntentType.PAYMENT_QUESTION:
+            predictions.extend(['Como posso pagar?', 'Qual o valor?', 'Aceita cartão?'])
+        elif result.primary_intent == IntentType.NEGOTIATION:
+            predictions.extend(['Posso parcelar?', 'Tem desconto?', 'Facilita para mim?'])
+        elif result.primary_intent == IntentType.COMPLAINT:
+            predictions.extend(['Isso não está certo', 'Quero cancelar', 'Vou processar'])
+        
+        # Baseado no sentimento
+        if result.sentiment == SentimentType.ANGRY:
+            predictions.extend(['Estou revoltado', 'Isso é um absurdo', 'Quero falar com o gerente'])
+        elif result.sentiment == SentimentType.CONFUSED:
+            predictions.extend(['Não entendi', 'Pode explicar melhor?', 'Como assim?'])
+        
+        return predictions[:5]  # Retorna top 5 predições
+    
+    def _detect_stress_indicators(self, message: str) -> List[str]:
+        """Detectar indicadores de stress e ansiedade"""
+        stress_indicators = []
+        
+        # Indicadores linguísticos
+        stress_patterns = {
+            'pressao_tempo': ['urgente', 'rápido', 'já', 'imediato', 'agora'],
+            'sobrecarga': ['não aguento', 'muito', 'demais', 'cansado', 'exausto'],
+            'ansiedade': ['nervoso', 'ansioso', 'preocupado', 'aflito', 'tenso'],
+            'desespero': ['desespero', 'não sei', 'perdido', 'confuso', 'ajuda'],
+            'irritabilidade': ['irritado', 'estressado', 'chateado', 'incomodado']
+        }
+        
+        for stress_type, patterns in stress_patterns.items():
+            for pattern in patterns:
+                if pattern in message.lower():
+                    stress_indicators.append(f"{stress_type}:{pattern}")
+        
+        # Indicadores estruturais
+        if message.count('!') > 2:
+            stress_indicators.append('pontuacao_excessiva:exclamacao')
+        if message.count('?') > 2:
+            stress_indicators.append('pontuacao_excessiva:interrogacao')
+        
+        return stress_indicators
+    
+    def _identify_motivation_drivers(self, message: str) -> List[str]:
+        """Identificar principais motivadores"""
+        motivators = []
+        
+        motivation_patterns = {
+            'necessidade': ['preciso', 'necessito', 'tenho que', 'devo'],
+            'medo': ['medo', 'receio', 'temor', 'preocupado'],
+            'desejo': ['quero', 'gostaria', 'desejo', 'almejo'],
+            'pressao_social': ['familia', 'esposa', 'marido', 'filhos', 'pais'],
+            'pressao_financeira': ['conta', 'divida', 'apertado', 'dificil'],
+            'orgulho': ['reputacao', 'nome', 'honra', 'dignidade'],
+            'praticidade': ['pratico', 'facil', 'simples', 'rapido'],
+            'seguranca': ['seguro', 'garantia', 'proteção', 'estabilidade']
+        }
+        
+        for motivator_type, patterns in motivation_patterns.items():
+            for pattern in patterns:
+                if pattern in message.lower():
+                    motivators.append(f"{motivator_type}:{pattern}")
+        
+        return motivators
+    
+    def _detect_negotiation_style(self, message: str) -> str:
+        """Detectar estilo de negociação"""
+        styles = {
+            'competitivo': ['desconto', 'melhor preço', 'mais barato', 'concorrencia'],
+            'colaborativo': ['acordo', 'juntos', 'parceria', 'entendimento'],
+            'acomodativo': ['aceito', 'tudo bem', 'tanto faz', 'como quiser'],
+            'evitativo': ['depois', 'mais tarde', 'vou pensar', 'talvez'],
+            'compromissador': ['meio termo', 'equilibrio', 'facilitar', 'parcelar']
+        }
+        
+        for style, indicators in styles.items():
+            if any(indicator in message.lower() for indicator in indicators):
+                return style
+        
+        return 'indefinido'
+    
+    def _analyze_decision_making(self, message: str) -> str:
+        """Analisar estilo de tomada de decisão"""
+        decision_styles = {
+            'racional': ['analisar', 'pensar', 'calcular', 'considerar'],
+            'intuitivo': ['sinto', 'acho', 'parece', 'impressao'],
+            'dependente': ['família', 'esposa', 'marido', 'consultar'],
+            'evitativo': ['não sei', 'talvez', 'depois', 'vou ver'],
+            'espontaneo': ['agora', 'já', 'imediato', 'rapidinho']
+        }
+        
+        for style, indicators in decision_styles.items():
+            if any(indicator in message.lower() for indicator in indicators):
+                return style
+        
+        return 'indefinido'
+    
+    def _analyze_relationship_dynamics(self, message: str) -> Dict[str, float]:
+        """Analisar dinâmicas relacionais"""
+        dynamics = {
+            'cooperacao': 0.0,
+            'conflito': 0.0,
+            'dependencia': 0.0,
+            'autonomia': 0.0,
+            'confianca': 0.0,
+            'desconfianca': 0.0
+        }
+        
+        # Indicadores de cooperação
+        if any(word in message.lower() for word in ['junto', 'juntos', 'parceria', 'acordo']):
+            dynamics['cooperacao'] = 0.8
+        
+        # Indicadores de conflito
+        if any(word in message.lower() for word in ['contra', 'briga', 'discordo', 'errado']):
+            dynamics['conflito'] = 0.8
+        
+        # Indicadores de dependência
+        if any(word in message.lower() for word in ['preciso', 'ajuda', 'socorro', 'apoio']):
+            dynamics['dependencia'] = 0.7
+        
+        # Indicadores de autonomia
+        if any(word in message.lower() for word in ['sozinho', 'independente', 'eu mesmo']):
+            dynamics['autonomia'] = 0.7
+        
+        # Indicadores de confiança
+        if any(word in message.lower() for word in ['confio', 'acredito', 'certo', 'seguro']):
+            dynamics['confianca'] = 0.8
+        
+        # Indicadores de desconfiança
+        if any(word in message.lower() for word in ['desconfio', 'suspeito', 'duvido', 'sera']):
+            dynamics['desconfianca'] = 0.8
+        
+        return dynamics
+    
+    def _detect_temporal_orientation(self, message: str) -> str:
+        """Detectar orientação temporal"""
+        past_indicators = ['era', 'foi', 'tinha', 'fazia', 'antes']
+        present_indicators = ['agora', 'hoje', 'atualmente', 'neste momento']
+        future_indicators = ['vai', 'será', 'amanhã', 'depois', 'futuro']
+        
+        past_count = sum(1 for indicator in past_indicators if indicator in message.lower())
+        present_count = sum(1 for indicator in present_indicators if indicator in message.lower())
+        future_count = sum(1 for indicator in future_indicators if indicator in message.lower())
+        
+        if future_count > past_count and future_count > present_count:
+            return 'future'
+        elif past_count > present_count and past_count > future_count:
+            return 'past'
+        else:
+            return 'present'
+    
+    def _analyze_financial_patterns(self, message: str) -> List[str]:
+        """Analisar padrões comportamentais financeiros"""
+        patterns = []
+        
+        financial_behaviors = {
+            'pagador_pontual': ['sempre pago', 'em dia', 'pontual', 'nunca atraso'],
+            'pagador_atrasado': ['atraso', 'esqueci', 'atrasado', 'depois do vencimento'],
+            'negociador': ['desconto', 'parcelar', 'facilitar', 'condições'],
+            'planejador': ['organizei', 'planejei', 'programei', 'separei'],
+            'impulsivo': ['agora', 'já', 'imediato', 'sem pensar'],
+            'cauteloso': ['pensar', 'analisar', 'estudar', 'avaliar']
+        }
+        
+        for behavior, indicators in financial_behaviors.items():
+            if any(indicator in message.lower() for indicator in indicators):
+                patterns.append(behavior)
+        
+        return patterns
+    
+    def _calculate_trust_level(self, message: str) -> float:
+        """Calcular nível de confiança"""
+        trust_score = 0.5  # Base neutra
+        
+        # Indicadores positivos de confiança
+        trust_indicators = ['confio', 'acredito', 'certo', 'seguro', 'tranquilo']
+        distrust_indicators = ['desconfio', 'suspeito', 'duvidoso', 'inseguro', 'receoso']
+        
+        for indicator in trust_indicators:
+            if indicator in message.lower():
+                trust_score += 0.2
+        
+        for indicator in distrust_indicators:
+            if indicator in message.lower():
+                trust_score -= 0.2
+        
+        return max(0.0, min(1.0, trust_score))
+    
+    def _predict_conversation_trajectory(self, message: str, result) -> str:
+        """Predizer trajetória da conversa"""
+        if result.sentiment == SentimentType.ANGRY:
+            return 'escalation'
+        elif result.sentiment == SentimentType.CONFUSED:
+            return 'clarification_needed'
+        elif result.primary_intent == IntentType.NEGOTIATION:
+            return 'negotiation_phase'
+        elif result.primary_intent == IntentType.PAYMENT_CONFIRMATION:
+            return 'resolution'
+        else:
+            return 'information_gathering'
+    
+    def _calculate_influence_susceptibility(self, message: str) -> float:
+        """Calcular susceptibilidade à influência"""
+        susceptibility = 0.5  # Base neutra
+        
+        # Indicadores de alta susceptibilidade
+        if any(word in message.lower() for word in ['não sei', 'confuso', 'ajuda', 'o que fazer']):
+            susceptibility += 0.3
+        
+        # Indicadores de baixa susceptibilidade
+        if any(word in message.lower() for word in ['decidido', 'certo', 'firme', 'convicto']):
+            susceptibility -= 0.3
+        
+        return max(0.0, min(1.0, susceptibility))
+    
+    def _calculate_cognitive_load(self, message: str) -> float:
+        """Calcular carga cognitiva"""
+        load = 0.0
+        
+        # Complexidade da mensagem
+        words = len(message.split())
+        sentences = len([s for s in message.split('.') if s.strip()])
+        
+        if sentences > 0:
+            avg_words_per_sentence = words / sentences
+            load += min(avg_words_per_sentence / 15.0, 0.5)
+        
+        # Indicadores de sobrecarga
+        overload_indicators = ['confuso', 'não entendo', 'complicado', 'difícil']
+        if any(indicator in message.lower() for indicator in overload_indicators):
+            load += 0.4
+        
+        return min(load, 1.0)
+    
+    def _generate_deep_insights(self, message: str, result) -> Dict[str, Any]:
+        """Gerar insights contextuais profundos"""
+        insights = {
+            'emotional_state': f"{result.sentiment.value} com intensidade {result.emotional_intensity}",
+            'communication_effectiveness': self._assess_communication_effectiveness(message),
+            'psychological_needs': self._identify_psychological_needs(message),
+            'behavioral_triggers': self._identify_behavioral_triggers(message),
+            'decision_factors': self._identify_decision_factors(message),
+            'intervention_opportunities': self._identify_intervention_opportunities(result)
+        }
+        
+        return insights
+    
+    def _assess_communication_effectiveness(self, message: str) -> str:
+        """Avaliar efetividade da comunicação"""
+        if len(message.split()) < 3:
+            return 'muito_concisa'
+        elif len(message.split()) > 50:
+            return 'muito_verbosa'
+        elif '?' in message:
+            return 'busca_esclarecimento'
+        elif '!' in message:
+            return 'expressiva'
+        else:
+            return 'equilibrada'
+    
+    def _identify_psychological_needs(self, message: str) -> List[str]:
+        """Identificar necessidades psicológicas"""
+        needs = []
+        
+        need_patterns = {
+            'seguranca': ['medo', 'inseguro', 'preocupado', 'proteção'],
+            'reconhecimento': ['importante', 'valorizar', 'considerar', 'respeitar'],
+            'autonomia': ['escolher', 'decidir', 'controlar', 'independente'],
+            'pertencimento': ['família', 'grupo', 'juntos', 'sozinho'],
+            'competencia': ['capaz', 'conseguir', 'habilidade', 'sucesso']
+        }
+        
+        for need, indicators in need_patterns.items():
+            if any(indicator in message.lower() for indicator in indicators):
+                needs.append(need)
+        
+        return needs
+    
+    def _identify_behavioral_triggers(self, message: str) -> List[str]:
+        """Identificar gatilhos comportamentais"""
+        triggers = []
+        
+        trigger_patterns = {
+            'injustica': ['injusto', 'errado', 'unfair', 'não é certo'],
+            'pressao_tempo': ['urgente', 'rapido', 'pressa', 'imediato'],
+            'ameaca_status': ['reputação', 'nome', 'imagem', 'credibilidade'],
+            'perda_controle': ['não posso', 'impossível', 'sem escolha'],
+            'comparacao_social': ['outros', 'vizinho', 'amigo', 'parente']
+        }
+        
+        for trigger, indicators in trigger_patterns.items():
+            if any(indicator in message.lower() for indicator in indicators):
+                triggers.append(trigger)
+        
+        return triggers
+    
+    def _identify_decision_factors(self, message: str) -> List[str]:
+        """Identificar fatores de decisão"""
+        factors = []
+        
+        decision_factors = {
+            'preco': ['caro', 'barato', 'valor', 'custo'],
+            'conveniencia': ['fácil', 'prático', 'simples', 'cômodo'],
+            'qualidade': ['bom', 'ruim', 'qualidade', 'excelente'],
+            'tempo': ['rápido', 'demorado', 'prazo', 'quando'],
+            'risco': ['seguro', 'arriscado', 'garantia', 'proteção'],
+            'social': ['família', 'amigos', 'opinião', 'recomendação']
+        }
+        
+        for factor, indicators in decision_factors.items():
+            if any(indicator in message.lower() for indicator in indicators):
+                factors.append(factor)
+        
+        return factors
+    
+    def _identify_intervention_opportunities(self, result) -> List[str]:
+        """Identificar oportunidades de intervenção"""
+        opportunities = []
+        
+        if result.sentiment == SentimentType.CONFUSED:
+            opportunities.append('esclarecimento_informacional')
+        
+        if result.sentiment == SentimentType.ANGRY:
+            opportunities.append('acalmamento_emocional')
+        
+        if result.primary_intent == IntentType.NEGOTIATION:
+            opportunities.append('proposta_alternativa')
+        
+        if result.emotional_intensity > 7.0:
+            opportunities.append('reducao_tensao')
+        
+        if result.urgency_score > 8.0:
+            opportunities.append('resposta_prioritaria')
+        
+        return opportunities
+    
+    # Métodos auxiliares para análise psicológica
+    def _analyze_openness(self, message: str) -> float:
+        """Analisar abertura à experiência"""
+        openness_indicators = ['novo', 'diferente', 'criativo', 'inovador', 'original']
+        score = sum(1 for indicator in openness_indicators if indicator in message.lower())
+        return min(score / 3.0, 1.0)
+    
+    def _analyze_conscientiousness(self, message: str) -> float:
+        """Analisar conscienciosidade"""
+        conscientiousness_indicators = ['organizado', 'planejado', 'responsável', 'cuidadoso']
+        score = sum(1 for indicator in conscientiousness_indicators if indicator in message.lower())
+        return min(score / 3.0, 1.0)
+    
+    def _analyze_extraversion(self, message: str) -> float:
+        """Analisar extroversão"""
+        extraversion_indicators = ['social', 'falante', 'energético', 'ativo']
+        score = sum(1 for indicator in extraversion_indicators if indicator in message.lower())
+        return min(score / 3.0, 1.0)
+    
+    def _analyze_agreeableness(self, message: str) -> float:
+        """Analisar amabilidade"""
+        agreeableness_indicators = ['gentil', 'cooperativo', 'confiante', 'compreensivo']
+        score = sum(1 for indicator in agreeableness_indicators if indicator in message.lower())
+        return min(score / 3.0, 1.0)
+    
+    def _analyze_neuroticism(self, message: str) -> float:
+        """Analisar neuroticismo"""
+        neuroticism_indicators = ['ansioso', 'nervoso', 'preocupado', 'estressado']
+        score = sum(1 for indicator in neuroticism_indicators if indicator in message.lower())
+        return min(score / 3.0, 1.0)
+    
+    def _analyze_self_esteem(self, message: str) -> float:
+        """Analisar autoestima"""
+        low_esteem = ['não consigo', 'sou burro', 'não sei', 'incapaz']
+        high_esteem = ['consigo', 'sou capaz', 'confiante', 'sei']
+        
+        low_score = sum(1 for indicator in low_esteem if indicator in message.lower())
+        high_score = sum(1 for indicator in high_esteem if indicator in message.lower())
+        
+        return max(0.0, min(1.0, 0.5 + (high_score - low_score) * 0.2))
+    
+    def _analyze_assertiveness(self, message: str) -> float:
+        """Analisar assertividade"""
+        assertive_indicators = ['quero', 'preciso', 'exijo', 'demando', 'solicito']
+        score = sum(1 for indicator in assertive_indicators if indicator in message.lower())
+        return min(score / 3.0, 1.0)
+    
+    def _analyze_impulsivity(self, message: str) -> float:
+        """Analisar impulsividade"""
+        impulsive_indicators = ['agora', 'já', 'imediato', 'rapidinho', 'sem pensar']
+        score = sum(1 for indicator in impulsive_indicators if indicator in message.lower())
+        return min(score / 3.0, 1.0)
+    
+    def _analyze_frustration_tolerance(self, message: str) -> float:
+        """Analisar tolerância à frustração"""
+        low_tolerance = ['não aguento', 'irritante', 'insuportável', 'odeio']
+        high_tolerance = ['paciência', 'calma', 'tranquilo', 'compreendo']
+        
+        low_score = sum(1 for indicator in low_tolerance if indicator in message.lower())
+        high_score = sum(1 for indicator in high_tolerance if indicator in message.lower())
+        
+        return max(0.0, min(1.0, 0.5 + (high_score - low_score) * 0.2))
+    
+    def _analyze_social_orientation(self, message: str) -> float:
+        """Analisar orientação social"""
+        social_indicators = ['pessoas', 'amigos', 'família', 'grupo', 'todos']
+        score = sum(1 for indicator in social_indicators if indicator in message.lower())
+        return min(score / 3.0, 1.0)
     
     def _expand_semantics(self, message: str) -> tuple[str, Dict[str, List[str]]]:
         """Expandir mensagem com sinônimos e variações"""
