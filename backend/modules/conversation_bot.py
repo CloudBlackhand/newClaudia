@@ -132,6 +132,20 @@ class AnalysisResult:
     emotional_intensity: float = 0.0
     communication_style: str = 'neutral'
     
+    # 🔥 ANÁLISES ULTRA AVANÇADAS
+    implicit_meanings: Dict[str, List[str]] = None      # O que não foi dito mas está implícito
+    emotional_progression: List[str] = None             # Evolução emocional na conversa
+    behavioral_predictions: Dict[str, float] = None     # Predições de comportamento
+    deception_indicators: List[str] = None              # Indicadores de mentira/omissão
+    commitment_level: float = 0.0                       # Nível de comprometimento com pagamento
+    financial_stress_score: float = 0.0                # Score de estresse financeiro
+    empathy_triggers: List[str] = None                  # Gatilhos de empatia detectados
+    conversation_momentum: str = 'neutral'              # Momentum da conversa
+    hidden_objections: List[str] = None                 # Objeções não verbalizadas
+    social_proof_needs: List[str] = None               # Necessidades de prova social
+    decision_readiness: float = 0.0                    # Prontidão para tomar decisão
+    relationship_quality: str = 'neutral'              # Qualidade do relacionamento
+    
     def __post_init__(self):
         if self.multiple_intents is None:
             self.multiple_intents = []
@@ -145,6 +159,22 @@ class AnalysisResult:
             self.personality = {}
         if self.semantic_expansion is None:
             self.semantic_expansion = {}
+        
+        # Inicializar novos campos ultra avançados
+        if self.implicit_meanings is None:
+            self.implicit_meanings = {}
+        if self.emotional_progression is None:
+            self.emotional_progression = []
+        if self.behavioral_predictions is None:
+            self.behavioral_predictions = {}
+        if self.deception_indicators is None:
+            self.deception_indicators = []
+        if self.empathy_triggers is None:
+            self.empathy_triggers = []
+        if self.hidden_objections is None:
+            self.hidden_objections = []
+        if self.social_proof_needs is None:
+            self.social_proof_needs = []
 
 @dataclass
 class BotResponse:
@@ -177,7 +207,21 @@ class NLPProcessor:
         self.urgency_multipliers = self._load_urgency_multipliers()
         self.multi_intent_separators = self._load_multi_intent_patterns()
         
-        logger.info(LogCategory.CONVERSATION, "NLP Processor SUPREMO inicializado")
+        # 🔥 SISTEMAS ULTRA AVANÇADOS DE COMPREENSÃO
+        self.context_builders = self._load_context_builders()
+        self.implicit_meaning_detectors = self._load_implicit_meaning_patterns()
+        self.emotional_state_analyzers = self._load_emotional_state_patterns()
+        self.conversation_flow_predictors = self._load_conversation_flow_patterns()
+        self.micro_expression_detectors = self._load_micro_expression_patterns()
+        self.behavioral_predictors = self._load_behavioral_patterns()
+        self.escalation_preventers = self._load_escalation_prevention_patterns()
+        self.empathy_triggers = self._load_empathy_trigger_patterns()
+        self.lie_detectors = self._load_deception_patterns()
+        self.commitment_analyzers = self._load_commitment_patterns()
+        self.financial_stress_indicators = self._load_financial_stress_patterns()
+        self.time_sensitivity_calculators = self._load_time_sensitivity_patterns()
+        
+        logger.info(LogCategory.CONVERSATION, "NLP Processor ULTRA SUPREMO++ inicializado com 20+ sistemas de análise")
     
     def _load_intent_patterns(self) -> Dict[IntentType, List[str]]:
         """Carregar padrões de intenção"""
@@ -662,8 +706,304 @@ class NLPProcessor:
             r'\b(agora|depois|então|aí)\b'
         ]
     
+    def _load_context_builders(self) -> Dict[str, List[str]]:
+        """Construtores de contexto conversacional"""
+        return {
+            'financial_context': [
+                r'\b(desemprego|demissão|fechou empresa|pandemia)\b',
+                r'\b(aposentado|pensionista|auxílio|benefício)\b',
+                r'\b(parcelou|financiou|empréstimo|cartão)\b'
+            ],
+            'family_context': [
+                r'\b(filhos|família|esposa|marido|mãe|pai)\b',
+                r'\b(casa|aluguel|condomínio|financiamento)\b',
+                r'\b(escola|faculdade|hospital|remédio)\b'
+            ],
+            'emotional_context': [
+                r'\b(estresse|pressão|ansiedade|depressão)\b',
+                r'\b(desesperado|sem saída|encurralado)\b',
+                r'\b(envergonhado|humilhado|constrangido)\b'
+            ],
+            'time_context': [
+                r'\b(pressa|urgente|correndo|atrasado)\b',
+                r'\b(fim do mês|salário|15|30)\b',
+                r'\b(vencimento|prazo|deadline)\b'
+            ]
+        }
+    
+    def _load_implicit_meaning_patterns(self) -> Dict[str, Dict[str, List[str]]]:
+        """Detectores de significado implícito"""
+        return {
+            'financial_distress': {
+                'euphemisms': [
+                    r'\b(meio apertado|situação complicada|momento difícil)\b',
+                    r'\b(fazendo economia|cortando gastos|sem luxo)\b',
+                    r'\b(só o essencial|priorizando|reorganizando)\b'
+                ],
+                'hidden_meaning': ['Cliente em dificuldade financeira grave']
+            },
+            'relationship_deterioration': {
+                'patterns': [
+                    r'\b(vocês sempre|toda vez|de novo)\b',
+                    r'\b(já falei|quantas vezes|repetindo)\b',
+                    r'\b(não adianta|não resolve|mesma coisa)\b'
+                ],
+                'hidden_meaning': ['Frustração acumulada', 'Perda de confiança']
+            },
+            'desperation_signals': {
+                'patterns': [
+                    r'\b(pelo amor de|por favor|imploro)\b',
+                    r'\b(qualquer coisa|aceito qualquer|seja o que for)\b',
+                    r'\b(última chance|último recurso|não sei mais)\b'
+                ],
+                'hidden_meaning': ['Desespero extremo', 'Disposição total a negociar']
+            },
+            'resistance_patterns': {
+                'patterns': [
+                    r'\b(vou pensar|deixa eu ver|preciso consultar)\b',
+                    r'\b(minha esposa|meu marido|família decide)\b',
+                    r'\b(não sei se posso|vou verificar|depois vejo)\b'
+                ],
+                'hidden_meaning': ['Resistência educada', 'Falta de autonomia decisória']
+            }
+        }
+    
+    def _load_emotional_state_patterns(self) -> Dict[str, Dict[str, Any]]:
+        """Analisadores de estado emocional profundo"""
+        return {
+            'overwhelmed': {
+                'patterns': [r'\b(não aguento|não suporto|sufocando)\b'],
+                'intensity': 9,
+                'empathy_required': True
+            },
+            'defensive': {
+                'patterns': [r'\b(não é verdade|não foi assim|vocês que)\b'],
+                'intensity': 7,
+                'approach': 'gentle'
+            },
+            'resigned': {
+                'patterns': [r'\b(tanto faz|que seja|fazer o que)\b'],
+                'intensity': 6,
+                'opportunity': 'motivation_boost'
+            },
+            'hopeful': {
+                'patterns': [r'\b(quem sabe|talvez|se der certo)\b'],
+                'intensity': 5,
+                'approach': 'encourage'
+            },
+            'bargaining': {
+                'patterns': [r'\b(e se|que tal|você aceita)\b'],
+                'intensity': 6,
+                'approach': 'negotiate'
+            }
+        }
+    
+    def _load_conversation_flow_patterns(self) -> Dict[str, List[str]]:
+        """Preditores de fluxo conversacional"""
+        return {
+            'opening_to_close': [
+                r'\b(então|resumindo|enfim)\b',
+                r'\b(tá bom|ok então|beleza)\b'
+            ],
+            'escalation_building': [
+                r'\b(cada vez mais|toda vez|sempre assim)\b',
+                r'\b(cansado disso|farto|saturado)\b'
+            ],
+            'agreement_signals': [
+                r'\b(faz sentido|concordo|entendo)\b',
+                r'\b(é verdade|tem razão|é isso mesmo)\b'
+            ],
+            'objection_incoming': [
+                r'\b(mas|porém|só que|acontece que)\b',
+                r'\b(o problema é|a questão é|o negócio é)\b'
+            ]
+        }
+    
+    def _load_micro_expression_patterns(self) -> Dict[str, List[str]]:
+        """Detectores de micro-expressões textuais"""
+        return {
+            'fake_agreement': [
+                r'\b(tá bom)\.{3,}',  # "Tá bom..." com reticências
+                r'\b(ok|certo)\s*\!+',  # "Ok!!!" com múltiplas exclamações
+            ],
+            'hidden_frustration': [
+                r'\b(entendi)\.\s*$',  # "Entendi." seco
+                r'\b(beleza)\s*$',     # "Beleza" sem entusiasmo
+            ],
+            'passive_aggression': [
+                r'\b(claro né|óbvio né|lógico né)\b',
+                r'\b(imagino|suponho|deve ser)\b'
+            ],
+            'genuine_interest': [
+                r'\b(nossa|sério|interessante)\?',
+                r'\b(como assim|me explica|conta mais)\b'
+            ]
+        }
+    
+    def _load_behavioral_patterns(self) -> Dict[str, Dict[str, Any]]:
+        """Preditores comportamentais"""
+        return {
+            'payment_likelihood': {
+                'high_indicators': [
+                    r'\b(quando|onde|como pagar)\b',
+                    r'\b(dados bancários|pix|conta)\b'
+                ],
+                'low_indicators': [
+                    r'\b(não posso|impossível|não dá)\b',
+                    r'\b(outro dia|depois|mais tarde)\b'
+                ]
+            },
+            'negotiation_openness': {
+                'open_indicators': [
+                    r'\b(conversar|negociar|acordo)\b',
+                    r'\b(proposta|condições|jeito)\b'
+                ],
+                'closed_indicators': [
+                    r'\b(não quero|não aceito|recuso)\b',
+                    r'\b(final|definitivo|ponto final)\b'
+                ]
+            },
+            'escalation_probability': {
+                'high_risk': [
+                    r'\b(advogado|justiça|processo)\b',
+                    r'\b(procon|órgão|denunciar)\b'
+                ],
+                'medium_risk': [
+                    r'\b(reclamação|problema sério)\b',
+                    r'\b(não concordo|inadmissível)\b'
+                ]
+            }
+        }
+    
+    def _load_escalation_prevention_patterns(self) -> Dict[str, List[str]]:
+        """Padrões para prevenção de escalação"""
+        return {
+            'early_warning': [
+                r'\b(começo a achar|parece que|impressão)\b',
+                r'\b(toda vez|sempre|nunca)\b'
+            ],
+            'frustration_building': [
+                r'\b(quantas vezes|de novo|outra vez)\b',
+                r'\b(cansado|farto|chato)\b'
+            ],
+            'trust_erosion': [
+                r'\b(não confio|duvidoso|suspeito)\b',
+                r'\b(promessa|palavra|garantia)\b'
+            ],
+            'respect_issues': [
+                r'\b(me tratam|vocês acham|consideram)\b',
+                r'\b(desrespeito|descaso|ignoram)\b'
+            ]
+        }
+    
+    def _load_empathy_trigger_patterns(self) -> Dict[str, List[str]]:
+        """Gatilhos que requerem resposta empática"""
+        return {
+            'health_issues': [
+                r'\b(doente|hospital|cirurgia|tratamento)\b',
+                r'\b(remédio|médico|saúde|dor)\b'
+            ],
+            'family_crisis': [
+                r'\b(faleceu|morreu|funeral|velório)\b',
+                r'\b(separação|divórcio|sozinho)\b'
+            ],
+            'job_loss': [
+                r'\b(demitido|desempregado|perdeu emprego)\b',
+                r'\b(empresa fechou|lay-off|corte)\b'
+            ],
+            'financial_ruin': [
+                r'\b(falência|dívidas|despejo)\b',
+                r'\b(perdeu tudo|sem nada|zerado)\b'
+            ]
+        }
+    
+    def _load_deception_patterns(self) -> Dict[str, List[str]]:
+        """Detectores de possível decepção/omissão"""
+        return {
+            'evasion': [
+                r'\b(meio que|tipo assim|sei lá)\b',
+                r'\b(mais ou menos|por aí|algo assim)\b'
+            ],
+            'overcompensation': [
+                r'\b(juro|prometo|palavra de honra)\b.*\!{2,}',
+                r'\b(acredite|pode ter certeza|com toda certeza)\b'
+            ],
+            'deflection': [
+                r'\b(mas e vocês|e a empresa|e o sistema)\b',
+                r'\b(todo mundo|outros clientes|sempre assim)\b'
+            ],
+            'inconsistency': [
+                r'\b(na verdade|aliás|quer dizer)\b',
+                r'\b(esqueci de falar|não mencionei)\b'
+            ]
+        }
+    
+    def _load_commitment_patterns(self) -> Dict[str, float]:
+        """Analisadores de nível de comprometimento"""
+        return {
+            # Frases que indicam alto comprometimento
+            'vou pagar': 3.0,
+            'pode contar': 3.0,
+            'palavra': 2.5,
+            'prometo': 2.5,
+            'me comprometo': 3.0,
+            'combinado': 2.0,
+            
+            # Frases que indicam baixo comprometimento
+            'vou tentar': 0.5,
+            'vou ver': 0.3,
+            'talvez': 0.2,
+            'quem sabe': 0.2,
+            'se possível': 0.4,
+            'se der': 0.3
+        }
+    
+    def _load_financial_stress_patterns(self) -> Dict[str, float]:
+        """Indicadores de estresse financeiro"""
+        return {
+            # Alto estresse
+            'sem dinheiro': 4.0,
+            'quebrado': 4.0,
+            'desempregado': 3.5,
+            'dívidas': 3.0,
+            'apertado': 2.5,
+            
+            # Médio estresse
+            'complicado': 2.0,
+            'difícil': 2.0,
+            'controlando gastos': 1.5,
+            'economizando': 1.5,
+            
+            # Baixo estresse
+            'organizando': 1.0,
+            'planejando': 0.5
+        }
+    
+    def _load_time_sensitivity_patterns(self) -> Dict[str, float]:
+        """Calculadores de sensibilidade temporal"""
+        return {
+            # Altíssima urgência
+            'hoje': 5.0,
+            'agora': 5.0,
+            'já': 4.5,
+            'imediato': 4.5,
+            
+            # Alta urgência
+            'amanhã': 3.5,
+            'urgente': 3.0,
+            'rápido': 2.5,
+            
+            # Média urgência
+            'semana': 2.0,
+            'breve': 1.5,
+            
+            # Baixa urgência
+            'mês': 1.0,
+            'futuro': 0.5
+        }
+    
     def analyze_message(self, message: str) -> AnalysisResult:
-        """Analisar mensagem do usuário com SUPREMA compreensão"""
+        """Analisar mensagem do usuário com ULTRA SUPREMA++ compreensão"""
         message_clean = self._clean_text(message)
         
         # ETAPA 1: Expansão semântica (sinônimos e gírias)
@@ -703,6 +1043,44 @@ class NLPProcessor:
         # ETAPA 12: Estilo comunicativo
         communication_style = self._detect_communication_style(expanded_message)
         
+        # 🔥 ETAPAS ULTRA AVANÇADAS (13-20):
+        
+        # ETAPA 13: Significados implícitos
+        implicit_meanings = self._analyze_implicit_meanings(expanded_message)
+        
+        # ETAPA 14: Estado emocional profundo
+        emotional_progression = self._analyze_emotional_progression(expanded_message, sentiment)
+        
+        # ETAPA 15: Predições comportamentais
+        behavioral_predictions = self._predict_behavior(expanded_message, multiple_intents)
+        
+        # ETAPA 16: Detecção de decepção/omissão
+        deception_indicators = self._detect_deception(expanded_message)
+        
+        # ETAPA 17: Nível de comprometimento
+        commitment_level = self._calculate_commitment_level(expanded_message)
+        
+        # ETAPA 18: Score de estresse financeiro
+        financial_stress_score = self._calculate_financial_stress(expanded_message)
+        
+        # ETAPA 19: Gatilhos de empatia
+        empathy_triggers = self._identify_empathy_triggers(expanded_message)
+        
+        # ETAPA 20: Momentum conversacional
+        conversation_momentum = self._analyze_conversation_momentum(expanded_message)
+        
+        # ETAPA 21: Objeções ocultas
+        hidden_objections = self._detect_hidden_objections(expanded_message)
+        
+        # ETAPA 22: Necessidades de prova social
+        social_proof_needs = self._analyze_social_proof_needs(expanded_message)
+        
+        # ETAPA 23: Prontidão para decisão
+        decision_readiness = self._calculate_decision_readiness(expanded_message, sentiment)
+        
+        # ETAPA 24: Qualidade do relacionamento
+        relationship_quality = self._assess_relationship_quality(expanded_message, sentiment)
+        
         # Extrair palavras-chave básicas
         keywords = self._extract_keywords(message_clean)
         
@@ -724,11 +1102,25 @@ class NLPProcessor:
             regional_context=regional_context,
             semantic_expansion=semantic_expansion,
             emotional_intensity=emotional_intensity,
-            communication_style=communication_style
+            communication_style=communication_style,
+            
+            # 🔥 Novos campos ultra avançados
+            implicit_meanings=implicit_meanings,
+            emotional_progression=emotional_progression,
+            behavioral_predictions=behavioral_predictions,
+            deception_indicators=deception_indicators,
+            commitment_level=commitment_level,
+            financial_stress_score=financial_stress_score,
+            empathy_triggers=empathy_triggers,
+            conversation_momentum=conversation_momentum,
+            hidden_objections=hidden_objections,
+            social_proof_needs=social_proof_needs,
+            decision_readiness=decision_readiness,
+            relationship_quality=relationship_quality
         )
         
         logger.debug(LogCategory.CONVERSATION, 
-                    f"Mensagem analisada: {intent.value}/{sentiment.value}",
+                    f"Mensagem analisada: {primary_intent.value}/{sentiment.value}",
                     details={
                         'confidence': confidence,
                         'entities_count': len(entities),
@@ -1009,6 +1401,265 @@ class NLPProcessor:
         intensity *= sentiment_multipliers.get(sentiment, 1.0)
         
         return min(intensity, 10.0)
+    
+    # 🔥 MÉTODOS ULTRA AVANÇADOS DE ANÁLISE
+    
+    def _analyze_implicit_meanings(self, message: str) -> Dict[str, List[str]]:
+        """Analisar significados implícitos não verbalizados"""
+        implicit_meanings = {}
+        
+        for category, patterns_data in self.implicit_meaning_detectors.items():
+            # Verificar padrões ou eufemismos
+            patterns = patterns_data.get('patterns', patterns_data.get('euphemisms', []))
+            
+            for pattern in patterns:
+                if re.search(pattern, message, re.IGNORECASE):
+                    if category not in implicit_meanings:
+                        implicit_meanings[category] = []
+                    implicit_meanings[category].extend(patterns_data['hidden_meaning'])
+        
+        return implicit_meanings
+    
+    def _analyze_emotional_progression(self, message: str, sentiment: SentimentType) -> List[str]:
+        """Analisar progressão emocional na conversa"""
+        progression = []
+        
+        # Detectar sinais de evolução emocional
+        emotion_signals = {
+            'getting_worse': [r'\b(cada vez pior|piorando|deteriorando)\b'],
+            'improving': [r'\b(melhorando|mais calmo|tranquilizando)\b'],
+            'escalating': [r'\b(mais irritado|perdendo paciência|explodindo)\b'],
+            'stabilizing': [r'\b(controlando|respirando|pensando melhor)\b']
+        }
+        
+        for emotion_state, patterns in emotion_signals.items():
+            for pattern in patterns:
+                if re.search(pattern, message, re.IGNORECASE):
+                    progression.append(emotion_state)
+        
+        return progression
+    
+    def _predict_behavior(self, message: str, multiple_intents: List[Dict[str, Any]]) -> Dict[str, float]:
+        """Predizer comportamentos futuros do cliente"""
+        predictions = {
+            'payment_probability': 0.5,
+            'negotiation_willingness': 0.5,
+            'escalation_risk': 0.3,
+            'ghosting_risk': 0.2
+        }
+        
+        # Analisar indicadores comportamentais
+        for behavior_type, indicators in self.behavioral_predictors.items():
+            if behavior_type == 'payment_likelihood':
+                high_indicators = indicators['high_indicators']
+                low_indicators = indicators['low_indicators']
+                
+                score = 0.5
+                for pattern in high_indicators:
+                    if re.search(pattern, message, re.IGNORECASE):
+                        score += 0.2
+                        
+                for pattern in low_indicators:
+                    if re.search(pattern, message, re.IGNORECASE):
+                        score -= 0.3
+                        
+                predictions['payment_probability'] = max(0.0, min(1.0, score))
+        
+        return predictions
+    
+    def _detect_deception(self, message: str) -> List[str]:
+        """Detectar possíveis indicadores de decepção ou omissão"""
+        deception_signs = []
+        
+        for deception_type, patterns in self.lie_detectors.items():
+            for pattern in patterns:
+                if re.search(pattern, message, re.IGNORECASE):
+                    deception_signs.append(deception_type)
+        
+        # Detectar super-detalhamento (possível compensação)
+        if len(message.split()) > 50:
+            deception_signs.append('over_explaining')
+        
+        # Detectar linguagem muito formal em contexto informal
+        formal_words = ['solicito', 'cordialmente', 'atenciosamente']
+        if any(word in message.lower() for word in formal_words):
+            deception_signs.append('formality_mask')
+        
+        return list(set(deception_signs))
+    
+    def _calculate_commitment_level(self, message: str) -> float:
+        """Calcular nível de comprometimento com pagamento"""
+        commitment_score = 0.0
+        word_count = 0
+        
+        for phrase, score in self.commitment_analyzers.items():
+            if phrase in message.lower():
+                commitment_score += score
+                word_count += 1
+        
+        # Normalizar baseado no número de frases encontradas
+        if word_count > 0:
+            commitment_score = commitment_score / word_count
+        
+        # Ajustar por intensidade
+        if '!' in message:
+            commitment_score *= 1.2
+        if '?' in message:
+            commitment_score *= 0.8
+        
+        return max(0.0, min(3.0, commitment_score))
+    
+    def _calculate_financial_stress(self, message: str) -> float:
+        """Calcular score de estresse financeiro"""
+        stress_score = 0.0
+        
+        for indicator, score in self.financial_stress_indicators.items():
+            if indicator in message.lower():
+                stress_score += score
+        
+        # Multiplicadores baseados em contexto
+        if any(word in message.lower() for word in ['família', 'filhos', 'casa']):
+            stress_score *= 1.3
+        
+        if any(word in message.lower() for word in ['saúde', 'hospital', 'remédio']):
+            stress_score *= 1.5
+        
+        return min(5.0, stress_score)
+    
+    def _identify_empathy_triggers(self, message: str) -> List[str]:
+        """Identificar gatilhos que requerem resposta empática"""
+        triggers = []
+        
+        for trigger_type, patterns in self.empathy_triggers.items():
+            for pattern in patterns:
+                if re.search(pattern, message, re.IGNORECASE):
+                    triggers.append(trigger_type)
+        
+        return list(set(triggers))
+    
+    def _analyze_conversation_momentum(self, message: str) -> str:
+        """Analisar momentum da conversa"""
+        # Detectar momentum positivo
+        positive_signals = [r'\b(entendi|faz sentido|concordo|vamos)\b']
+        
+        # Detectar momentum negativo
+        negative_signals = [r'\b(não adianta|sempre assim|cansei)\b']
+        
+        # Detectar momentum neutro/estagnado
+        neutral_signals = [r'\b(não sei|talvez|vou pensar)\b']
+        
+        positive_count = sum(1 for pattern in positive_signals 
+                           if re.search(pattern, message, re.IGNORECASE))
+        negative_count = sum(1 for pattern in negative_signals 
+                           if re.search(pattern, message, re.IGNORECASE))
+        neutral_count = sum(1 for pattern in neutral_signals 
+                          if re.search(pattern, message, re.IGNORECASE))
+        
+        if positive_count > negative_count and positive_count > neutral_count:
+            return 'positive'
+        elif negative_count > positive_count:
+            return 'negative'
+        else:
+            return 'neutral'
+    
+    def _detect_hidden_objections(self, message: str) -> List[str]:
+        """Detectar objeções não verbalizadas"""
+        objections = []
+        
+        # Padrões que indicam objeções ocultas
+        objection_patterns = {
+            'price_concern': [r'\b(caro|alto|muito|absurdo)\b.*\b(valor|preço)\b'],
+            'trust_issues': [r'\b(não confio|suspeito|duvidoso)\b'],
+            'authority_issues': [r'\b(não posso decidir|esposa|marido|família)\b'],
+            'timing_issues': [r'\b(não é o momento|agora não|mais tarde)\b'],
+            'service_doubt': [r'\b(não funciona|não vale|não compensa)\b']
+        }
+        
+        for objection_type, patterns in objection_patterns.items():
+            for pattern in patterns:
+                if re.search(pattern, message, re.IGNORECASE):
+                    objections.append(objection_type)
+        
+        return objections
+    
+    def _analyze_social_proof_needs(self, message: str) -> List[str]:
+        """Analisar necessidades de prova social"""
+        social_needs = []
+        
+        # Padrões que indicam necessidade de validação social
+        social_patterns = {
+            'peer_validation': [r'\b(outros fazem|todo mundo|normal)\b'],
+            'authority_validation': [r'\b(especialista|profissional|autoridade)\b'],
+            'testimonial_need': [r'\b(experiência|depoimento|exemplo)\b'],
+            'popularity_proof': [r'\b(muita gente|maioria|comum)\b']
+        }
+        
+        for need_type, patterns in social_patterns.items():
+            for pattern in patterns:
+                if re.search(pattern, message, re.IGNORECASE):
+                    social_needs.append(need_type)
+        
+        return social_needs
+    
+    def _calculate_decision_readiness(self, message: str, sentiment: SentimentType) -> float:
+        """Calcular prontidão para tomar decisão"""
+        readiness = 0.5  # Base neutra
+        
+        # Sinais de alta prontidão
+        ready_signals = [r'\b(vamos|aceito|combinado|fechado)\b']
+        
+        # Sinais de baixa prontidão
+        hesitant_signals = [r'\b(pensar|ver|talvez|não sei)\b']
+        
+        # Contar sinais
+        ready_count = sum(1 for pattern in ready_signals 
+                         if re.search(pattern, message, re.IGNORECASE))
+        hesitant_count = sum(1 for pattern in hesitant_signals 
+                           if re.search(pattern, message, re.IGNORECASE))
+        
+        # Ajustar baseado nos sinais
+        readiness += (ready_count * 0.2) - (hesitant_count * 0.2)
+        
+        # Ajustar baseado no sentimento
+        if sentiment == SentimentType.POSITIVE:
+            readiness += 0.2
+        elif sentiment == SentimentType.URGENT:
+            readiness += 0.3
+        elif sentiment == SentimentType.ANXIOUS:
+            readiness -= 0.1
+        
+        return max(0.0, min(1.0, readiness))
+    
+    def _assess_relationship_quality(self, message: str, sentiment: SentimentType) -> str:
+        """Avaliar qualidade do relacionamento cliente-empresa"""
+        # Indicadores de relacionamento positivo
+        positive_indicators = [r'\b(obrigado|grato|educados|atenciosos)\b']
+        
+        # Indicadores de relacionamento deteriorado
+        negative_indicators = [r'\b(sempre assim|toda vez|decepcionado|chateado)\b']
+        
+        # Indicadores de relacionamento neutro
+        neutral_indicators = [r'\b(primeira vez|novo|não conheço)\b']
+        
+        positive_score = sum(1 for pattern in positive_indicators 
+                           if re.search(pattern, message, re.IGNORECASE))
+        negative_score = sum(1 for pattern in negative_indicators 
+                           if re.search(pattern, message, re.IGNORECASE))
+        neutral_score = sum(1 for pattern in neutral_indicators 
+                          if re.search(pattern, message, re.IGNORECASE))
+        
+        # Considerar sentimento geral
+        if sentiment == SentimentType.ANGRY:
+            negative_score += 2
+        elif sentiment == SentimentType.POSITIVE:
+            positive_score += 1
+        
+        if positive_score > negative_score:
+            return 'good'
+        elif negative_score > positive_score:
+            return 'deteriorated'
+        else:
+            return 'neutral'
     
     def _detect_communication_style(self, message: str) -> str:
         """Detectar estilo comunicativo"""
