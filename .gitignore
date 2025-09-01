@@ -27,6 +27,7 @@ env/
 ENV/
 env.bak/
 venv.bak/
+.venv
 
 # Environment variables
 .env
@@ -34,6 +35,8 @@ venv.bak/
 .env.development.local
 .env.test.local
 .env.production.local
+.env.production
+config.local.py
 
 # IDE
 .vscode/
@@ -84,6 +87,8 @@ coverage.xml
 *.temp
 temp/
 tmp/
+data/
+uploads/
 
 # Railway
 .railway/
