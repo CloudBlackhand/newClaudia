@@ -5383,11 +5383,11 @@ class NLPProcessor:
         predictions = []
         
         # Baseado na intenção atual
-        if result.primary_intent == IntentType.PAYMENT_QUESTION:
+        if result.intent == IntentType.PAYMENT_QUESTION:
             predictions.extend(['Como posso pagar?', 'Qual o valor?', 'Aceita cartão?'])
-        elif result.primary_intent == IntentType.NEGOTIATION:
+        elif result.intent == IntentType.NEGOTIATION:
             predictions.extend(['Posso parcelar?', 'Tem desconto?', 'Facilita para mim?'])
-        elif result.primary_intent == IntentType.COMPLAINT:
+        elif result.intent == IntentType.COMPLAINT:
             predictions.extend(['Isso não está certo', 'Quero cancelar', 'Vou processar'])
         
         # Baseado no sentimento
@@ -5575,9 +5575,9 @@ class NLPProcessor:
             return 'escalation'
         elif result.sentiment == SentimentType.CONFUSED:
             return 'clarification_needed'
-        elif result.primary_intent == IntentType.NEGOTIATION:
+        elif result.intent == IntentType.NEGOTIATION:
             return 'negotiation_phase'
-        elif result.primary_intent == IntentType.PAYMENT_CONFIRMATION:
+        elif result.intent == IntentType.PAYMENT_CONFIRMATION:
             return 'resolution'
         else:
             return 'information_gathering'
@@ -5706,7 +5706,7 @@ class NLPProcessor:
         if result.sentiment == SentimentType.ANGRY:
             opportunities.append('acalmamento_emocional')
         
-        if result.primary_intent == IntentType.NEGOTIATION:
+        if result.intent == IntentType.NEGOTIATION:
             opportunities.append('proposta_alternativa')
         
         if result.emotional_intensity > 7.0:
