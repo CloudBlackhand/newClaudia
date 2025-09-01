@@ -1,10 +1,10 @@
 from flask import Blueprint, request, jsonify
 from backend.modules.campaign_processor import CampaignProcessor
-from backend.modules.logger_system import Logger, LogCategory
+from backend.modules.logger_system import SmartLogger, LogCategory
 import os
 import json
 
-logger = Logger()
+logger = SmartLogger()
 campaign_blueprint = Blueprint('campaign', __name__)
 campaign_processor = CampaignProcessor()
 

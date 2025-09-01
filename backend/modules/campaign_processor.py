@@ -5,9 +5,9 @@ from datetime import datetime, timedelta
 import re
 from backend.modules.billing_dispatcher import BillingDispatcher
 from backend.modules.conversation_bot import ConversationBot
-from backend.modules.logger_system import Logger, LogCategory
+from backend.modules.logger_system import SmartLogger, LogCategory
 
-logger = Logger()
+logger = SmartLogger()
 
 class CampaignProcessor:
     """Processa campanhas em massa a partir de arquivos JSON de cruzamento"""
