@@ -236,3 +236,87 @@ def health_check():
             'success': False,
             'error': str(e)
         }), 500
+
+@admin_blueprint.route('/admin/test-waha', methods=['POST'])
+def test_waha():
+    """Testar conexão com Waha"""
+    try:
+        import asyncio
+        from backend.modules.waha_integration import WahaIntegration, SessionStatus
+        
+        async def test_connection():
+            waha_url = os.getenv('WAHA_BASE_URL', 'https://waha-production-e3dd.up.railway.app')
+            session_name = os.getenv('WAHA_SESSION_NAME', 'claudia-cobrancas')
+            
+            waha = WahaIntegration(waha_url, session_name)
+            
+            try:
+                # Testar health check
+                health_ok = await waha.health_check()
+                if not health_ok:
+                    return {'success': False, 'error': 'Waha não está respondendo'}
+                
+                # Verificar status da sessão
+                status = await waha.get_session_status(force_refresh=True)
+                
+                if status:
+                    if status == SessionStatus.WORKING:
+                        return {
+                            'success': True,
+                            'status': 'working',
+                            'message': 'WhatsApp está funcionando e pronto!'
+                        }
+                    elif status == SessionStatus.SCAN_QR_CODE:
+                        qr_code = await waha.get_qr_code()
+                        return {
+                            'success': True,
+                            'status': 'qr_required',
+                            'message': 'QR Code necessário para autenticação',
+                            'qr_code': qr_code
+                        }
+                    elif status == SessionStatus.STOPPED:
+                        started = await waha.start_whatsapp_session()
+                        if started:
+                            return {
+                                'success': True,
+                                'status': 'started',
+                                'message': 'Sessão iniciada com sucesso!'
+                            }
+                        else:
+                            return {
+                                'success': False,
+                                'error': 'Falha ao iniciar sessão'
+                            }
+                    else:
+                        return {
+                            'success': True,
+                            'status': status.value,
+                            'message': f'Status atual: {status.value}'
+                        }
+                else:
+                    return {
+                        'success': False,
+                        'error': 'Não foi possível obter status da sessão'
+                    }
+                    
+            except Exception as e:
+                return {'success': False, 'error': str(e)}
+            finally:
+                await waha.close_session()
+        
+        # Executar teste assíncrono
+        result = asyncio.run(test_connection())
+        
+        if result['success']:
+            logger.info(LogCategory.SYSTEM, f"Teste Waha bem-sucedido: {result.get('status', 'unknown')}")
+        else:
+            logger.error(LogCategory.SYSTEM, f"Teste Waha falhou: {result.get('error', 'unknown')}")
+        
+        return jsonify(result)
+        
+    except Exception as e:
+        logger.error(LogCategory.SYSTEM, f"Erro no teste Waha: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
