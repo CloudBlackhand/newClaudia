@@ -4,7 +4,7 @@ from backend.modules.logger_system import SmartLogger, LogCategory
 import os
 import json
 
-logger = SmartLogger()
+logger = SmartLogger("campaign_routes")
 campaign_blueprint = Blueprint('campaign', __name__)
 campaign_processor = CampaignProcessor()
 

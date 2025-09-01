@@ -7,7 +7,7 @@ from backend.modules.billing_dispatcher import BillingDispatcher
 from backend.modules.conversation_bot import ConversationBot
 from backend.modules.logger_system import SmartLogger, LogCategory
 
-logger = SmartLogger()
+logger = SmartLogger("campaign_processor")
 
 class CampaignProcessor:
     """Processa campanhas em massa a partir de arquivos JSON de cruzamento"""
