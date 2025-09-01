@@ -276,6 +276,59 @@ class BillingDispatcher:
         
         logger.info(LogCategory.BILLING, f"🚀 Disparo inteligente configurado: {max_per_minute}/min, delay {min_delay}-{max_delay}s")
     
+    def _normalize_phone(self, phone: str) -> str:
+        """Normalizar número de telefone para formato do WhatsApp"""
+        # Remover caracteres especiais
+        clean = ''.join(filter(str.isdigit, phone))
+        
+        # Adicionar código do país se necessário
+        if len(clean) == 11 and clean.startswith('11'):
+            clean = '55' + clean
+        elif len(clean) == 10:
+            clean = '5511' + clean
+        elif not clean.startswith('55'):
+            clean = '55' + clean
+        
+        # Formato final para WhatsApp (APENAS CONTATOS INDIVIDUAIS)
+        return clean + '@c.us'
+    
+    def _is_group_chat(self, chat_id: str) -> bool:
+        """Verificar se é um grupo do WhatsApp"""
+        # Grupos terminam com @g.us
+        return chat_id.endswith('@g.us')
+    
+    def _is_broadcast_list(self, chat_id: str) -> bool:
+        """Verificar se é uma lista de transmissão"""
+        # Listas de transmissão terminam com @broadcast
+        return chat_id.endswith('@broadcast')
+    
+    def _validate_individual_contact(self, phone: str) -> bool:
+        """Validar se é um contato individual válido"""
+        try:
+            # Normalizar o número
+            normalized = self._normalize_phone(phone)
+            
+            # Verificar se é contato individual
+            if self._is_group_chat(normalized):
+                logger.warning(LogCategory.BILLING, f"🚫 GRUPO DETECTADO: {phone} - Ignorando")
+                return False
+            
+            if self._is_broadcast_list(normalized):
+                logger.warning(LogCategory.BILLING, f"🚫 LISTA DE TRANSMISSÃO DETECTADA: {phone} - Ignorando")
+                return False
+            
+            # Verificar se termina com @c.us (contato individual)
+            if not normalized.endswith('@c.us'):
+                logger.warning(LogCategory.BILLING, f"🚫 FORMATO INVÁLIDO: {phone} - Ignorando")
+                return False
+            
+            logger.debug(LogCategory.BILLING, f"✅ CONTATO INDIVIDUAL VÁLIDO: {phone}")
+            return True
+            
+        except Exception as e:
+            logger.error(LogCategory.BILLING, f"Erro ao validar contato {phone}: {e}")
+            return False
+    
     def load_clients_from_json(self, json_data: str) -> Tuple[List[Dict[str, Any]], List[str]]:
         """Carregar e validar clientes do JSON"""
         validation_result = self.json_processor.process_json_string(json_data)
@@ -295,9 +348,16 @@ class BillingDispatcher:
                               schedule_time: Optional[datetime] = None) -> List[BillingMessage]:
         """Criar mensagens de cobrança a partir da lista de clientes"""
         messages = []
+        skipped_groups = 0
         
         for client in clients:
             try:
+                # 🚫 VALIDAÇÃO ANTI-GRUPOS - VERIFICAR SE É CONTATO INDIVIDUAL
+                if not self._validate_individual_contact(client['phone']):
+                    skipped_groups += 1
+                    logger.warning(LogCategory.BILLING, f"🚫 PULANDO GRUPO/LISTA: {client['name']} - {client['phone']}")
+                    continue
+                
                 # Preparar variáveis para o template
                 variables = {
                     'client_name': client['name'],
@@ -329,13 +389,13 @@ class BillingDispatcher:
                 
                 messages.append(message)
                 
-                logger.debug(LogCategory.BILLING, f"Mensagem criada para {client['name']}", 
+                logger.debug(LogCategory.BILLING, f"✅ Mensagem criada para {client['name']}", 
                            details={'message_id': message.id, 'phone': message.phone})
                 
             except Exception as e:
                 logger.error(LogCategory.BILLING, f"Erro ao criar mensagem para cliente {client.get('id', 'unknown')}: {e}")
         
-        logger.info(LogCategory.BILLING, f"Mensagens de cobrança criadas: {len(messages)}")
+        logger.info(LogCategory.BILLING, f"📊 Mensagens criadas: {len(messages)} | Grupos ignorados: {skipped_groups}")
         return messages
     
     async def dispatch_batch(self, messages: List[BillingMessage]) -> BatchResult:
@@ -410,6 +470,13 @@ class BillingDispatcher:
     async def _send_single_message(self, message: BillingMessage) -> bool:
         """Enviar uma única mensagem com simulação humana"""
         try:
+            # 🚫 VALIDAÇÃO FINAL ANTI-GRUPOS
+            if not self._validate_individual_contact(message.phone):
+                logger.warning(LogCategory.BILLING, f"🚫 BLOQUEANDO ENVIO PARA GRUPO: {message.phone}")
+                message.status = MessageStatus.CANCELLED
+                message.error_message = "Grupo detectado - envio bloqueado"
+                return False
+            
             message.status = MessageStatus.SENDING
             
             # 1. Simular digitação humana ANTES de enviar
