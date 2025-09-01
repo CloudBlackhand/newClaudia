@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Cobrança Inteligente</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="loading-overlay hidden">
+        <div class="loading-spinner">
+            <i class="fas fa-spinner fa-spin"></i>
+            <span>Processando...</span>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fas fa-robot"></i>
+                    <h1>Sistema de Cobrança Inteligente</h1>
+                </div>
+                <div class="status-indicator">
+                    <div id="system-status" class="status-badge checking">
+                        <i class="fas fa-pulse"></i>
+                        <span>Verificando...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main">
+        <div class="container">
+            <!-- Navigation Tabs -->
+            <nav class="tab-nav">
+                <button class="tab-button active" data-tab="billing">
+                    <i class="fas fa-file-invoice"></i>
+                    <span>Cobrança</span>
+                </button>
+                <button class="tab-button" data-tab="conversation">
+                    <i class="fas fa-comments"></i>
+                    <span>Conversas</span>
+                </button>
+                <button class="tab-button" data-tab="analytics">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Analytics</span>
+                </button>
+                <button class="tab-button" data-tab="settings">
+                    <i class="fas fa-cog"></i>
+                    <span>Configurações</span>
+                </button>
+            </nav>
+
+            <!-- Tab Content -->
+            <div class="tab-content">
+                <!-- Billing Tab -->
+                <div id="billing-tab" class="tab-pane active">
+                    <div class="section-header">
+                        <h2>Gerenciamento de Cobrança</h2>
+                        <p>Envie mensagens de cobrança de forma automatizada e inteligente</p>
+                    </div>
+
+                    <div class="grid">
+                        <!-- Upload Section -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h3><i class="fas fa-upload"></i> Upload de Clientes</h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="upload-area" id="upload-area">
+                                    <div class="upload-icon">
+                                        <i class="fas fa-cloud-upload-alt"></i>
+                                    </div>
+                                    <div class="upload-text">
+                                        <h4>Arraste e solte seu arquivo JSON aqui</h4>
+                                        <p>ou clique para selecionar</p>
+                                    </div>
+                                    <input type="file" id="file-input" accept=".json" hidden>
+                                </div>
+                                
+                                <div id="file-info" class="file-info hidden">
+                                    <div class="file-details">
+                                        <i class="fas fa-file-code"></i>
+                                        <span id="file-name"></span>
+                                        <span id="file-size"></span>
+                                    </div>
+                                    <button id="remove-file" class="btn-remove">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="template-select">Template de Mensagem:</label>
+                                    <select id="template-select" class="form-control">
+                                        <option value="initial_br">Cobrança Inicial</option>
+                                        <option value="reminder_br">Lembrete</option>
+                                        <option value="urgent_br">Urgente</option>
+                                        <option value="final_notice_br">Aviso Final</option>
+                                    </select>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="schedule-input">Agendar Envio (Opcional):</label>
+                                    <input type="datetime-local" id="schedule-input" class="form-control">
+                                </div>
+
+                                <div class="button-group">
+                                    <button id="validate-btn" class="btn btn-secondary" disabled>
+                                        <i class="fas fa-check"></i>
+                                        Validar Dados
+                                    </button>
+                                    <button id="send-btn" class="btn btn-primary" disabled>
+                                        <i class="fas fa-paper-plane"></i>
+                                        Enviar Cobranças
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Preview Section -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h3><i class="fas fa-eye"></i> Preview</h3>
+                            </div>
+                            <div class="card-body">
+                                <div id="preview-content" class="preview-empty">
+                                    <i class="fas fa-inbox"></i>
+                                    <p>Faça upload de um arquivo para ver o preview</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Results Section -->
+                    <div id="results-section" class="section hidden">
+                        <div class="card">
+                            <div class="card-header">
+                                <h3><i class="fas fa-chart-bar"></i> Resultados do Envio</h3>
+                            </div>
+                            <div class="card-body">
+                                <div id="results-content"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Conversation Tab -->
+                <div id="conversation-tab" class="tab-pane">
+                    <div class="section-header">
+                        <h2>Conversas Ativas</h2>
+                        <p>Monitore e gerencie as conversas com clientes em tempo real</p>
+                    </div>
+
+                    <div class="grid">
+                        <!-- Conversation List -->
+                        <div class="card full-width">
+                            <div class="card-header">
+                                <h3><i class="fas fa-list"></i> Lista de Conversas</h3>
+                                <button id="refresh-conversations" class="btn btn-secondary">
+                                    <i class="fas fa-sync-alt"></i>
+                                    Atualizar
+                                </button>
+                            </div>
+                            <div class="card-body">
+                                <div id="conversations-list" class="conversations-list">
+                                    <div class="loading-state">
+                                        <i class="fas fa-spinner fa-spin"></i>
+                                        <p>Carregando conversas...</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Test Message -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h3><i class="fas fa-flask"></i> Testar IA</h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="form-group">
+                                    <label for="test-phone">Telefone:</label>
+                                    <input type="tel" id="test-phone" class="form-control" placeholder="+5511999999999">
+                                </div>
+                                <div class="form-group">
+                                    <label for="test-message">Mensagem:</label>
+                                    <textarea id="test-message" class="form-control" rows="3" placeholder="Digite uma mensagem para testar a IA..."></textarea>
+                                </div>
+                                <button id="test-ai-btn" class="btn btn-primary">
+                                    <i class="fas fa-robot"></i>
+                                    Testar IA
+                                </button>
+                                <div id="ai-response" class="ai-response hidden"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Analytics Tab -->
+                <div id="analytics-tab" class="tab-pane">
+                    <div class="section-header">
+                        <h2>Analytics & Estatísticas</h2>
+                        <p>Acompanhe o desempenho do sistema em tempo real</p>
+                    </div>
+
+                    <div class="grid">
+                        <!-- System Stats -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h3><i class="fas fa-tachometer-alt"></i> Sistema</h3>
+                            </div>
+                            <div class="card-body">
+                                <div id="system-stats" class="stats-grid">
+                                    <div class="stat-item">
+                                        <div class="stat-value">--</div>
+                                        <div class="stat-label">Mensagens Enviadas</div>
+                                    </div>
+                                    <div class="stat-item">
+                                        <div class="stat-value">--</div>
+                                        <div class="stat-label">Conversas Ativas</div>
+                                    </div>
+                                    <div class="stat-item">
+                                        <div class="stat-value">--</div>
+                                        <div class="stat-label">Taxa de Sucesso</div>
+                                    </div>
+                                    <div class="stat-item">
+                                        <div class="stat-value">--</div>
+                                        <div class="stat-label">Uptime</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Logs -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h3><i class="fas fa-terminal"></i> Logs Recentes</h3>
+                            </div>
+                            <div class="card-body">
+                                <div id="recent-logs" class="logs-container">
+                                    <div class="loading-state">
+                                        <i class="fas fa-spinner fa-spin"></i>
+                                        <p>Carregando logs...</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Settings Tab -->
+                <div id="settings-tab" class="tab-pane">
+                    <div class="section-header">
+                        <h2>Configurações</h2>
+                        <p>Configure parâmetros do sistema e templates</p>
+                    </div>
+
+                    <div class="grid">
+                        <!-- Templates -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h3><i class="fas fa-edit"></i> Templates de Mensagem</h3>
+                            </div>
+                            <div class="card-body">
+                                <div id="templates-list" class="templates-list">
+                                    <div class="loading-state">
+                                        <i class="fas fa-spinner fa-spin"></i>
+                                        <p>Carregando templates...</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- System Config -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h3><i class="fas fa-server"></i> Configuração do Sistema</h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="config-section">
+                                    <h4>WhatsApp (Waha)</h4>
+                                    <div class="form-group">
+                                        <label>URL Base:</label>
+                                        <input type="url" id="waha-url" class="form-control" readonly>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Status da Sessão:</label>
+                                        <div id="waha-status" class="status-indicator">
+                                            <span class="status-badge checking">Verificando...</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="config-section">
+                                    <h4>IA & Processamento</h4>
+                                    <div class="form-group">
+                                        <label>Limite de Confiança:</label>
+                                        <input type="range" id="confidence-threshold" class="range-input" min="0" max="1" step="0.1" value="0.8">
+                                        <span id="confidence-value">0.8</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Toast Notifications -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <!-- Modal -->
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modal-title">Título</h3>
+                <button id="modal-close" class="modal-close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body" id="modal-body">
+                Conteúdo do modal
+            </div>
+            <div class="modal-footer">
+                <button id="modal-cancel" class="btn btn-secondary">Cancelar</button>
+                <button id="modal-confirm" class="btn btn-primary">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
