@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 import re
 from backend.modules.billing_dispatcher import BillingDispatcher
 from backend.modules.conversation_bot import ConversationBot
-from backend.utils.logger import Logger, LogCategory
+from backend.modules.logger_system import Logger, LogCategory
 
 logger = Logger()
 
