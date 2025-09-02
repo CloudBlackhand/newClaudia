@@ -57,6 +57,15 @@ def verify_webhook_signature(payload: bytes, signature: str) -> bool:
         logger.error(LogCategory.SECURITY, f"Erro na verificação de assinatura: {e}")
         return False
 
+@webhook_bp.route('/test-simple', methods=['GET'])
+def test_simple():
+    """Rota de teste simples para verificar se o blueprint está funcionando"""
+    return jsonify({
+        'status': 'success',
+        'message': 'Blueprint webhook está funcionando!',
+        'timestamp': '2025-09-02'
+    }), 200
+
 @webhook_bp.route('/webhooks/whatsapp', methods=['POST'])
 def whatsapp_webhook():
     """Receber webhooks do WhatsApp via Waha"""
