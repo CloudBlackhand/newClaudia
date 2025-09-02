@@ -100,6 +100,10 @@ def register_blueprints(app):
         # CORREÇÃO DEFINITIVA: Registrar webhook sem prefixo
         if webhook_bp:
             app.register_blueprint(webhook_bp, url_prefix='')
+            logger.info("✅ Webhook blueprint registrado com sucesso - url_prefix=''")
+            logger.info(f"✅ Rotas disponíveis: {[rule.rule for rule in app.url_map.iter_rules()]}")
+        else:
+            logger.error("❌ Webhook blueprint é None - não foi registrado!")
         if campaign_blueprint:
             app.register_blueprint(campaign_blueprint, url_prefix='/api')
         if admin_blueprint:
