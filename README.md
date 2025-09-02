@@ -441,3 +441,4 @@ Desenvolvido com ❤️ para automação inteligente de cobrança.
 # Force deploy
 # Force new deploy - ter 02 set 2025 10:25:59 -03
 # Force restart - ter 02 set 2025 10:41:31 -03
+# CRÍTICO: Blueprint webhook não carregando - ter 02 set 2025 10:45:44 -03
