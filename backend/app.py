@@ -25,30 +25,59 @@ logger = logging.getLogger(__name__)
 def create_app():
     """Factory function para criar a aplicação Flask"""
     
-    app = Flask(__name__, 
-                static_folder='../frontend',
-                static_url_path='')
+    logger.info("🚀 Iniciando criação da aplicação Flask...")
     
-    # Configurações da aplicação
-    app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-key-change-me')
-    app.config['DEBUG'] = os.getenv('DEBUG', 'False').lower() == 'true'
-    app.config['JSON_AS_ASCII'] = False
-    app.config['JSONIFY_PRETTYPRINT_REGULAR'] = True
+    try:
+        app = Flask(__name__, 
+                    static_folder='../frontend',
+                    static_url_path='')
+        logger.info("✅ Flask app criado com sucesso")
+    except Exception as e:
+        logger.error(f"❌ Erro ao criar Flask app: {e}")
+        raise
     
-    # Configurar CORS
-    CORS(app, resources={
-        r"/api/*": {
-            "origins": "*",
-            "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-            "allow_headers": ["Content-Type", "Authorization", "X-API-Key"]
-        }
-    })
+    try:
+        # Configurações da aplicação
+        app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-key-change-me')
+        app.config['DEBUG'] = os.getenv('DEBUG', 'False').lower() == 'true'
+        app.config['JSON_AS_ASCII'] = False
+        app.config['JSONIFY_PRETTYPRINT_REGULAR'] = True
+        logger.info("✅ Configurações da aplicação definidas")
+    except Exception as e:
+        logger.error(f"❌ Erro ao configurar aplicação: {e}")
+        raise
     
-    # Registrar blueprints
-    register_blueprints(app)
+    try:
+        # Configurar CORS
+        CORS(app, resources={
+            r"/api/*": {
+                "origins": "*",
+                "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+                "allow_headers": ["Content-Type", "Authorization", "X-API-Key"]
+            }
+        })
+        logger.info("✅ CORS configurado com sucesso")
+    except Exception as e:
+        logger.error(f"❌ Erro ao configurar CORS: {e}")
+        raise
     
-    # Registrar handlers de erro
-    register_error_handlers(app)
+    try:
+        # Registrar blueprints
+        logger.info("🔄 Iniciando registro de blueprints...")
+        register_blueprints(app)
+        logger.info("✅ Blueprints registrados com sucesso")
+    except Exception as e:
+        logger.error(f"❌ Erro ao registrar blueprints: {e}")
+        raise
+    
+    try:
+        # Registrar handlers de erro
+        logger.info("🔄 Iniciando registro de error handlers...")
+        register_error_handlers(app)
+        logger.info("✅ Error handlers registrados com sucesso")
+    except Exception as e:
+        logger.error(f"❌ Erro ao registrar error handlers: {e}")
+        raise
     
     logger.info("✅ Aplicação Flask criada com sucesso")
     return app
@@ -112,27 +141,6 @@ def register_blueprints(app):
                 'service': 'Sistema de Cobrança Inteligente',
                 'version': '1.0.0'
             }), 200
-        
-        # ROTA DE WEBHOOK DIRETA - SEM BLUEPRINT
-        @app.route('/webhooks/whatsapp', methods=['POST'])
-        def webhook_direct():
-            """Webhook direto para WhatsApp - SEM BLUEPRINT"""
-            try:
-                # Log simples
-                print("WEBHOOK RECEBIDO DIRETAMENTE!")
-                
-                # Retornar sucesso
-                return jsonify({
-                    'status': 'success',
-                    'message': 'Webhook recebido com sucesso!',
-                    'method': 'direct_route'
-                }), 200
-                
-            except Exception as e:
-                print(f"ERRO NO WEBHOOK: {e}")
-                return jsonify({
-                    'error': str(e)
-                }), 500
         
         logger.info("✅ Blueprints registrados com sucesso")
         
