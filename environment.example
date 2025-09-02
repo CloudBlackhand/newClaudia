@@ -11,11 +11,11 @@ PORT=8000
 # Configurações do WhatsApp (Waha)
 WAHA_BASE_URL=https://waha-production-e3dd.up.railway.app
 WAHA_SESSION_NAME=default
-WAHA_WEBHOOK_URL=https://seu-dominio.railway.app/api/webhook/whatsapp
+WAHA_WEBHOOK_URL=https://seu-dominio.railway.app/webhooks/whatsapp
 
 # Configurações de segurança
 API_KEY=sua_api_key_aqui
-WEBHOOK_SECRET=seu_webhook_secret_aqui
+# WEBHOOK_SECRET removido - não é mais necessário
 
 # Configurações de logs
 LOG_LEVEL=INFO
