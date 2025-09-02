@@ -291,19 +291,7 @@ class AnalysisResult:
         if self.predictive_next_messages is None:
             self.predictive_next_messages = []
         
-        # Inicializar campos transcendentais
-        if self.parallel_universe_echoes is None:
-            self.parallel_universe_echoes = []
-        if self.interdimensional_memories is None:
-            self.interdimensional_memories = []
-        if self.multiverse_emotional_spectrum is None:
-            self.multiverse_emotional_spectrum = {}
-        
-        # Inicializar campos impossíveis
-        if self.impossible_emotions_detected is None:
-            self.impossible_emotions_detected = []
-        if self.alien_languages_recognized is None:
-            self.alien_languages_recognized = []
+        # ✅ Campos básicos já inicializados acima
 
 @dataclass
 class BotResponse:
