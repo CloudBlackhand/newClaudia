@@ -28,6 +28,7 @@ class Config:
     WAHA_BASE_URL = os.getenv('WAHA_BASE_URL', 'http://localhost:3000')
     WAHA_SESSION_NAME = os.getenv('WAHA_SESSION_NAME', 'default')
     WAHA_WEBHOOK_URL = os.getenv('WAHA_WEBHOOK_URL', '')
+    WAHA_API_KEY = os.getenv('WAHA_API_KEY', '')
     
     # Configurações de segurança
     API_KEY = os.getenv('API_KEY', '')
@@ -72,6 +73,9 @@ class Config:
         if not cls.WAHA_BASE_URL:
             errors.append("WAHA_BASE_URL deve ser definida")
         
+        if not cls.WAHA_API_KEY:
+            warnings.append("WAHA_API_KEY não definida - autenticação Waha desabilitada")
+        
         return {
             'errors': errors,
             'warnings': warnings,
@@ -84,7 +88,8 @@ class Config:
         return {
             'base_url': cls.WAHA_BASE_URL,
             'session_name': cls.WAHA_SESSION_NAME,
-            'webhook_url': cls.WAHA_WEBHOOK_URL
+            'webhook_url': cls.WAHA_WEBHOOK_URL,
+            'api_key': cls.WAHA_API_KEY
         }
     
     @classmethod
