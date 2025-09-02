@@ -245,7 +245,7 @@ def test_waha():
         from backend.modules.waha_integration import WahaIntegration, SessionStatus
         
         async def test_connection():
-            waha_url = os.getenv('WAHA_BASE_URL', 'https://waha-production-e3dd.up.railway.app')
+            waha_url = os.getenv('WAHA_BASE_URL', 'https://wahawa-production.up.railway.app')
             session_name = os.getenv('WAHA_SESSION_NAME', 'claudia-cobrancas')
             
             waha = WahaIntegration(waha_url, session_name)

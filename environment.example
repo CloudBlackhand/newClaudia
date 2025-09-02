@@ -9,7 +9,7 @@ HOST=0.0.0.0
 PORT=8000
 
 # Configurações do WhatsApp (Waha)
-WAHA_BASE_URL=https://waha-production-e3dd.up.railway.app
+WAHA_BASE_URL=https://wahawa-production.up.railway.app
 WAHA_SESSION_NAME=default
 WAHA_WEBHOOK_URL=https://seu-dominio.railway.app/webhooks/whatsapp
 
