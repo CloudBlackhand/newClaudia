@@ -60,10 +60,9 @@ class WahaIntegration:
     """Cliente para integração com Waha"""
     
     def __init__(self, base_url: str = None, session_name: str = None):
-        # Forçar URL correta para Railway
-        self.base_url = "https://wahawa-production.up.railway.app"
-        self.session_name = session_name or Config.WAHA_SESSION_NAME or "default"
-        self.api_key = Config.WAHA_API_KEY or "qualquer_coisa_123"
+        self.base_url = base_url or Config.WAHA_BASE_URL
+        self.session_name = session_name or Config.WAHA_SESSION_NAME
+        self.api_key = Config.WAHA_API_KEY
         self.session: Optional[aiohttp.ClientSession] = None
         
         # Cache de status
