@@ -113,6 +113,27 @@ def register_blueprints(app):
                 'version': '1.0.0'
             }), 200
         
+        # ROTA DE WEBHOOK DIRETA - SEM BLUEPRINT
+        @app.route('/webhooks/whatsapp', methods=['POST'])
+        def webhook_direct():
+            """Webhook direto para WhatsApp - SEM BLUEPRINT"""
+            try:
+                # Log simples
+                print("WEBHOOK RECEBIDO DIRETAMENTE!")
+                
+                # Retornar sucesso
+                return jsonify({
+                    'status': 'success',
+                    'message': 'Webhook recebido com sucesso!',
+                    'method': 'direct_route'
+                }), 200
+                
+            except Exception as e:
+                print(f"ERRO NO WEBHOOK: {e}")
+                return jsonify({
+                    'error': str(e)
+                }), 500
+        
         logger.info("✅ Blueprints registrados com sucesso")
         
     except Exception as e:
