@@ -223,7 +223,7 @@ class WahaIntegration:
         if reply_to:
             message_data['reply_to'] = reply_to
         
-        success, data = await self._make_request('POST', '/sendText', message_data)
+        success, data = await self._make_request('POST', f'/{self.session_name}/sendText', message_data)
         
         if success:
             logger.info(LogCategory.WHATSAPP, 
@@ -253,7 +253,7 @@ class WahaIntegration:
         if caption:
             message_data['file']['caption'] = caption
         
-        success, data = await self._make_request('POST', '/sendImage', message_data)
+        success, data = await self._make_request('POST', f'/{self.session_name}/sendImage', message_data)
         
         if success:
             logger.info(LogCategory.WHATSAPP, f"Imagem enviada para {clean_phone}")
@@ -278,7 +278,7 @@ class WahaIntegration:
         if filename:
             message_data['file']['filename'] = filename
         
-        success, data = await self._make_request('POST', '/sendFile', message_data)
+        success, data = await self._make_request('POST', f'/{self.session_name}/sendFile', message_data)
         
         if success:
             logger.info(LogCategory.WHATSAPP, f"Documento enviado para {clean_phone}")
