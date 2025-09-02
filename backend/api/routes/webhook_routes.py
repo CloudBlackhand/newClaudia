@@ -57,7 +57,7 @@ def verify_webhook_signature(payload: bytes, signature: str) -> bool:
         logger.error(LogCategory.SECURITY, f"Erro na verificação de assinatura: {e}")
         return False
 
-@webhook_bp.route('/whatsapp', methods=['POST'])
+@webhook_bp.route('/webhooks/whatsapp', methods=['POST'])
 def whatsapp_webhook():
     """Receber webhooks do WhatsApp via Waha"""
     try:

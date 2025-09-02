@@ -65,7 +65,8 @@ def register_blueprints(app):
         
         # Registrar blueprints
         app.register_blueprint(billing_bp, url_prefix='/api/billing')
-        app.register_blueprint(webhook_bp, url_prefix='/webhooks')
+        # CORREÇÃO DEFINITIVA: Registrar webhook sem prefixo
+        app.register_blueprint(webhook_bp, url_prefix='')
         app.register_blueprint(campaign_blueprint, url_prefix='/api')
         app.register_blueprint(admin_blueprint, url_prefix='/api')
         
