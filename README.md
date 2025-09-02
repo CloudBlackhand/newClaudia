@@ -438,3 +438,4 @@ Desenvolvido com ❤️ para automação inteligente de cobrança.
 ---
 
 **Sistema de Cobrança Inteligente** - Transformando a gestão de cobranças com IA e automação! 🚀
+# Force deploy
