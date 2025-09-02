@@ -50,8 +50,11 @@ def verify_webhook_signature(payload: bytes, signature: str) -> bool:
             hashlib.sha256
         ).hexdigest()
         
-        # Comparar assinaturas
-        return hmac.compare_digest(f"sha256={expected_signature}", signature)
+        # Comparar assinaturas - aceitar tanto com prefixo quanto sem
+        if signature.startswith('sha256='):
+            return hmac.compare_digest(f"sha256={expected_signature}", signature)
+        else:
+            return hmac.compare_digest(expected_signature, signature)
         
     except Exception as e:
         logger.error(LogCategory.SECURITY, f"Erro na verificação de assinatura: {e}")
