@@ -106,8 +106,9 @@ class WahaIntegration:
         
         # Preparar headers com autenticação
         headers = {}
-        if self.api_key:
-            headers['Authorization'] = f'Bearer {self.api_key}'
+        # Temporariamente desabilitar autenticação para teste
+        # if self.api_key:
+        #     headers['Authorization'] = f'Bearer {self.api_key}'
         
         try:
             async with self.session.request(
