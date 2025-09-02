@@ -64,7 +64,7 @@ def register_blueprints(app):
         # Registrar blueprints
         app.register_blueprint(billing_bp, url_prefix='/api/billing')
         app.register_blueprint(conversation_bp, url_prefix='/api/conversation')
-        app.register_blueprint(webhook_bp, url_prefix='/api/webhook')
+        app.register_blueprint(webhook_bp, url_prefix='/webhooks')
         
         # Rota principal
         @app.route('/')

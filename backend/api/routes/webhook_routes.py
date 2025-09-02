@@ -122,6 +122,11 @@ def whatsapp_webhook():
             'message': str(e)
         }), 500
 
+@webhook_bp.route('/webhooks/waha', methods=['POST'])
+def waha_webhook():
+    """Receber webhooks do Waha na rota correta"""
+    return whatsapp_webhook()
+
 def handle_message_event(webhook_data: Dict[str, Any]):
     """Processar evento de mensagem"""
     try:
