@@ -1,0 +1,35 @@
+{
+  "campaign_name": "Campanha FPD - Lembretes de Pagamento",
+  "description": "Campanha para enviar lembretes de pagamento para clientes em FPD",
+  "file_path": "resultado_cruzamento_20250901_081851.json",
+  "campaign_config": {
+    "message_template": "Olá {NOME}! 👋\n\nSua fatura de R$ {VALOR} venceu há {DIAS_FPD} dias.\n\nPara evitar bloqueios, regularize seu pagamento o quanto antes.\n\nAgradecemos sua preferência! 🙏\n\nEquipe Stochos Telecom",
+    "fallback_message": "Olá! Temos uma mensagem importante sobre sua fatura. Entre em contato conosco.",
+    "rate_limit": {
+      "messages_per_minute": 10,
+      "delay_between_messages": 6
+    },
+    "filters": {
+      "status_filter": ["CONECTADO", "PAGO"],
+      "tipo_filter": ["FPD"],
+      "valor_minimo": 50.0,
+      "cidades": ["SUMARÉ", "CAMPINAS", "HORTOLÂNDIA", "SANTA BÁRBARA D'OESTE"],
+      "vendedores": ["EVAN", "MARCOS_PAP", "M.H.Z", "NATALIA CAMPINAS"]
+    },
+    "scheduling": {
+      "start_time": "09:00",
+      "end_time": "18:00",
+      "timezone": "America/Sao_Paulo",
+      "exclude_weekends": true
+    },
+    "notification": {
+      "webhook_url": "https://seu-webhook.com/campaign-updates",
+      "email_notifications": ["admin@stochos.com"]
+    }
+  },
+  "expected_results": {
+    "total_contacts": "~100-200",
+    "estimated_success_rate": "85-90%",
+    "estimated_duration": "2-3 horas"
+  }
+}

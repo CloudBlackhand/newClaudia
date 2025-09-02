@@ -6,6 +6,7 @@ Endpoints para gerenciamento de conversas com IA
 """
 
 import asyncio
+from datetime import datetime
 from flask import Blueprint, request, jsonify
 from typing import Dict, Any
 
@@ -363,6 +364,184 @@ def test_nlp():
         
     except Exception as e:
         logger.error(LogCategory.CONVERSATION, f"Erro no teste de NLP: {e}")
+        return jsonify({
+            'error': 'Erro interno do servidor',
+            'message': str(e)
+        }), 500
+
+# 🚀 NOVAS ROTAS DE APRENDIZADO PARA PRÓXIMAS COBRANÇAS
+
+@conversation_bp.route('/learning/insights', methods=['GET'])
+def get_learning_insights():
+    """Obter insights de aprendizado para otimizar futuras cobranças"""
+    try:
+        bot = get_conversation_bot()
+        insights = bot.get_learning_stats()
+        
+        return jsonify({
+            'success': True,
+            'insights': insights,
+            'timestamp': datetime.utcnow().isoformat()
+        }), 200
+        
+    except Exception as e:
+        logger.error(LogCategory.CONVERSATION, f"Erro ao obter insights: {e}")
+        return jsonify({
+            'error': 'Erro interno do servidor',
+            'message': str(e)
+        }), 500
+
+@conversation_bp.route('/learning/quality-insights', methods=['GET'])
+def get_quality_insights():
+    """Obter insights de qualidade das respostas"""
+    try:
+        bot = get_conversation_bot()
+        quality_insights = bot.get_quality_insights()
+        
+        return jsonify({
+            'success': True,
+            'quality_insights': quality_insights,
+            'timestamp': datetime.utcnow().isoformat()
+        }), 200
+        
+    except Exception as e:
+        logger.error(LogCategory.CONVERSATION, f"Erro ao obter insights de qualidade: {e}")
+        return jsonify({
+            'error': 'Erro interno do servidor',
+            'message': str(e)
+        }), 500
+
+@conversation_bp.route('/learning/template-recommendations/<intent>', methods=['GET'])
+def get_template_recommendations(intent):
+    """Obter recomendações para melhorar templates"""
+    try:
+        bot = get_conversation_bot()
+        recommendations = bot.get_template_recommendations(intent)
+        
+        return jsonify({
+            'success': True,
+            'intent': intent,
+            'recommendations': recommendations,
+            'timestamp': datetime.utcnow().isoformat()
+        }), 200
+        
+    except Exception as e:
+        logger.error(LogCategory.CONVERSATION, f"Erro ao obter recomendações: {e}")
+        return jsonify({
+            'error': 'Erro interno do servidor',
+            'message': str(e)
+        }), 500
+
+@conversation_bp.route('/learning/optimize-template', methods=['POST'])
+def optimize_template():
+    """Otimizar template para uma intenção específica"""
+    try:
+        if not request.is_json:
+            return jsonify({
+                'error': 'Content-Type deve ser application/json'
+            }), 400
+        
+        data = request.get_json()
+        intent = data.get('intent')
+        
+        if not intent:
+            return jsonify({
+                'error': 'Campo "intent" é obrigatório'
+            }), 400
+        
+        bot = get_conversation_bot()
+        optimization = bot.optimize_template_for_intent(intent)
+        
+        return jsonify({
+            'success': True,
+            'optimization': optimization,
+            'timestamp': datetime.utcnow().isoformat()
+        }), 200
+        
+    except Exception as e:
+        logger.error(LogCategory.CONVERSATION, f"Erro na otimização: {e}")
+        return jsonify({
+            'error': 'Erro interno do servidor',
+            'message': str(e)
+        }), 500
+
+@conversation_bp.route('/learning/analyze-campaign', methods=['POST'])
+def analyze_campaign():
+    """Analisar performance de uma campanha"""
+    try:
+        if not request.is_json:
+            return jsonify({
+                'error': 'Content-Type deve ser application/json'
+            }), 400
+        
+        campaign_data = request.get_json()
+        
+        bot = get_conversation_bot()
+        analysis = bot.analyze_campaign_performance(campaign_data)
+        
+        return jsonify({
+            'success': True,
+            'analysis': analysis,
+            'timestamp': datetime.utcnow().isoformat()
+        }), 200
+        
+    except Exception as e:
+        logger.error(LogCategory.CONVERSATION, f"Erro na análise de campanha: {e}")
+        return jsonify({
+            'error': 'Erro interno do servidor',
+            'message': str(e)
+        }), 500
+
+@conversation_bp.route('/learning/campaign-insights', methods=['GET'])
+def get_campaign_insights():
+    """Obter insights gerais de campanhas"""
+    try:
+        bot = get_conversation_bot()
+        insights = bot.get_campaign_insights()
+        
+        return jsonify({
+            'success': True,
+            'campaign_insights': insights,
+            'timestamp': datetime.utcnow().isoformat()
+        }), 200
+        
+    except Exception as e:
+        logger.error(LogCategory.CONVERSATION, f"Erro ao obter insights de campanha: {e}")
+        return jsonify({
+            'error': 'Erro interno do servidor',
+            'message': str(e)
+        }), 500
+
+@conversation_bp.route('/learning/update-feedback', methods=['POST'])
+def update_feedback():
+    """Atualizar feedback do cliente para aprendizado"""
+    try:
+        if not request.is_json:
+            return jsonify({
+                'error': 'Content-Type deve ser application/json'
+            }), 400
+        
+        data = request.get_json()
+        phone = data.get('phone')
+        feedback = data.get('feedback')
+        outcome = data.get('outcome', 'neutral')
+        
+        if not phone or not feedback:
+            return jsonify({
+                'error': 'Campos "phone" e "feedback" são obrigatórios'
+            }), 400
+        
+        bot = get_conversation_bot()
+        bot.update_client_feedback(phone, feedback, outcome)
+        
+        return jsonify({
+            'success': True,
+            'message': 'Feedback atualizado com sucesso',
+            'timestamp': datetime.utcnow().isoformat()
+        }), 200
+        
+    except Exception as e:
+        logger.error(LogCategory.CONVERSATION, f"Erro ao atualizar feedback: {e}")
         return jsonify({
             'error': 'Erro interno do servidor',
             'message': str(e)

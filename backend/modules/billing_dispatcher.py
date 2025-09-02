@@ -182,14 +182,16 @@ Entre em contato IMEDIATAMENTE! 📞""",
             return None
 
 class RateLimiter:
-    """Controlador de taxa de envio"""
+    """Controlador de taxa de envio com simulação humana"""
     
     def __init__(self, max_per_minute: int = 10):
         self.max_per_minute = max_per_minute
         self.sent_times: List[float] = []
+        self.min_delay = 5  # Mínimo 5 segundos entre mensagens
+        self.max_delay = 60  # Máximo 1 minuto entre mensagens
     
     async def wait_if_needed(self):
-        """Aguardar se necessário para respeitar limite"""
+        """Aguardar com tempo variado e simulação humana"""
         now = time.time()
         
         # Remover timestamps antigos (mais de 1 minuto)
@@ -205,16 +207,55 @@ class RateLimiter:
                 logger.info(LogCategory.BILLING, f"Rate limit atingido, aguardando {wait_time:.2f}s")
                 await asyncio.sleep(wait_time)
         
+        # Tempo variado entre mensagens (5s a 1min)
+        if self.sent_times:
+            last_sent = max(self.sent_times)
+            time_since_last = now - last_sent
+            
+            if time_since_last < self.min_delay:
+                # Calcular delay aleatório
+                import random
+                delay = random.uniform(self.min_delay, self.max_delay)
+                actual_delay = delay - time_since_last
+                
+                if actual_delay > 0:
+                    logger.info(LogCategory.BILLING, f"Delay inteligente: {actual_delay:.2f}s")
+                    await asyncio.sleep(actual_delay)
+        
         # Registrar envio atual
-        self.sent_times.append(now)
+        self.sent_times.append(time.time())
+    
+    async def simulate_human_typing(self, message: str):
+        """Simular digitação humana para evitar detecção"""
+        try:
+            # Calcular tempo de digitação baseado no tamanho da mensagem
+            typing_time = len(message) * 0.05  # 50ms por caractere
+            typing_time = max(1, min(typing_time, 10))  # Entre 1s e 10s
+            
+            logger.debug(LogCategory.BILLING, f"Simulando digitação: {typing_time:.2f}s")
+            
+            # Simular digitação em chunks
+            chunk_size = max(1, len(message) // 10)
+            for i in range(0, len(message), chunk_size):
+                chunk = message[i:i + chunk_size]
+                chunk_time = (len(chunk) / len(message)) * typing_time
+                await asyncio.sleep(chunk_time)
+                
+        except Exception as e:
+            logger.warning(LogCategory.BILLING, f"Erro na simulação de digitação: {e}")
+            # Fallback: delay simples
+            await asyncio.sleep(2)
 
 class BillingDispatcher:
     """Dispatcher principal de mensagens de cobrança"""
     
-    def __init__(self, waha_integration=None):
+    def __init__(self, waha_integration=None, max_per_minute: int = 10, 
+                 min_delay: int = 5, max_delay: int = 60):
         self.waha = waha_integration
         self.template_manager = MessageTemplateManager()
-        self.rate_limiter = RateLimiter()
+        self.rate_limiter = RateLimiter(max_per_minute)
+        self.rate_limiter.min_delay = min_delay
+        self.rate_limiter.max_delay = max_delay
         self.json_processor = JSONProcessor()
         
         # Configurações
@@ -225,7 +266,68 @@ class BillingDispatcher:
         self.pending_messages: List[BillingMessage] = []
         self.sent_messages: List[BillingMessage] = []
         
-        logger.info(LogCategory.BILLING, "Billing Dispatcher inicializado")
+        logger.info(LogCategory.BILLING, f"Billing Dispatcher inicializado - Rate: {max_per_minute}/min, Delay: {min_delay}-{max_delay}s")
+    
+    def configure_smart_dispatch(self, max_per_minute: int = 10, min_delay: int = 5, max_delay: int = 60):
+        """Configurar parâmetros de disparo inteligente"""
+        self.rate_limiter.max_per_minute = max_per_minute
+        self.rate_limiter.min_delay = min_delay
+        self.rate_limiter.max_delay = max_delay
+        
+        logger.info(LogCategory.BILLING, f"🚀 Disparo inteligente configurado: {max_per_minute}/min, delay {min_delay}-{max_delay}s")
+    
+    def _normalize_phone(self, phone: str) -> str:
+        """Normalizar número de telefone para formato do WhatsApp"""
+        # Remover caracteres especiais
+        clean = ''.join(filter(str.isdigit, phone))
+        
+        # Adicionar código do país se necessário
+        if len(clean) == 11 and clean.startswith('11'):
+            clean = '55' + clean
+        elif len(clean) == 10:
+            clean = '5511' + clean
+        elif not clean.startswith('55'):
+            clean = '55' + clean
+        
+        # Formato final para WhatsApp (APENAS CONTATOS INDIVIDUAIS)
+        return clean + '@c.us'
+    
+    def _is_group_chat(self, chat_id: str) -> bool:
+        """Verificar se é um grupo do WhatsApp"""
+        # Grupos terminam com @g.us
+        return chat_id.endswith('@g.us')
+    
+    def _is_broadcast_list(self, chat_id: str) -> bool:
+        """Verificar se é uma lista de transmissão"""
+        # Listas de transmissão terminam com @broadcast
+        return chat_id.endswith('@broadcast')
+    
+    def _validate_individual_contact(self, phone: str) -> bool:
+        """Validar se é um contato individual válido"""
+        try:
+            # Normalizar o número
+            normalized = self._normalize_phone(phone)
+            
+            # Verificar se é contato individual
+            if self._is_group_chat(normalized):
+                logger.warning(LogCategory.BILLING, f"🚫 GRUPO DETECTADO: {phone} - Ignorando")
+                return False
+            
+            if self._is_broadcast_list(normalized):
+                logger.warning(LogCategory.BILLING, f"🚫 LISTA DE TRANSMISSÃO DETECTADA: {phone} - Ignorando")
+                return False
+            
+            # Verificar se termina com @c.us (contato individual)
+            if not normalized.endswith('@c.us'):
+                logger.warning(LogCategory.BILLING, f"🚫 FORMATO INVÁLIDO: {phone} - Ignorando")
+                return False
+            
+            logger.debug(LogCategory.BILLING, f"✅ CONTATO INDIVIDUAL VÁLIDO: {phone}")
+            return True
+            
+        except Exception as e:
+            logger.error(LogCategory.BILLING, f"Erro ao validar contato {phone}: {e}")
+            return False
     
     def load_clients_from_json(self, json_data: str) -> Tuple[List[Dict[str, Any]], List[str]]:
         """Carregar e validar clientes do JSON"""
@@ -246,9 +348,16 @@ class BillingDispatcher:
                               schedule_time: Optional[datetime] = None) -> List[BillingMessage]:
         """Criar mensagens de cobrança a partir da lista de clientes"""
         messages = []
+        skipped_groups = 0
         
         for client in clients:
             try:
+                # 🚫 VALIDAÇÃO ANTI-GRUPOS - VERIFICAR SE É CONTATO INDIVIDUAL
+                if not self._validate_individual_contact(client['phone']):
+                    skipped_groups += 1
+                    logger.warning(LogCategory.BILLING, f"🚫 PULANDO GRUPO/LISTA: {client['name']} - {client['phone']}")
+                    continue
+                
                 # Preparar variáveis para o template
                 variables = {
                     'client_name': client['name'],
@@ -280,13 +389,13 @@ class BillingDispatcher:
                 
                 messages.append(message)
                 
-                logger.debug(LogCategory.BILLING, f"Mensagem criada para {client['name']}", 
+                logger.debug(LogCategory.BILLING, f"✅ Mensagem criada para {client['name']}", 
                            details={'message_id': message.id, 'phone': message.phone})
                 
             except Exception as e:
                 logger.error(LogCategory.BILLING, f"Erro ao criar mensagem para cliente {client.get('id', 'unknown')}: {e}")
         
-        logger.info(LogCategory.BILLING, f"Mensagens de cobrança criadas: {len(messages)}")
+        logger.info(LogCategory.BILLING, f"📊 Mensagens criadas: {len(messages)} | Grupos ignorados: {skipped_groups}")
         return messages
     
     async def dispatch_batch(self, messages: List[BillingMessage]) -> BatchResult:
@@ -359,31 +468,50 @@ class BillingDispatcher:
         return result
     
     async def _send_single_message(self, message: BillingMessage) -> bool:
-        """Enviar uma única mensagem"""
+        """Enviar uma única mensagem com simulação humana"""
         try:
+            # 🚫 VALIDAÇÃO FINAL ANTI-GRUPOS
+            if not self._validate_individual_contact(message.phone):
+                logger.warning(LogCategory.BILLING, f"🚫 BLOQUEANDO ENVIO PARA GRUPO: {message.phone}")
+                message.status = MessageStatus.CANCELLED
+                message.error_message = "Grupo detectado - envio bloqueado"
+                return False
+            
             message.status = MessageStatus.SENDING
+            
+            # 1. Simular digitação humana ANTES de enviar
+            logger.info(LogCategory.BILLING, f"🤖 Simulando digitação para {message.phone}")
+            await self.rate_limiter.simulate_human_typing(message.content)
+            
+            # 2. Delay adicional para simular "escrevendo..."
+            import random
+            writing_delay = random.uniform(1, 3)  # 1-3 segundos
+            logger.debug(LogCategory.BILLING, f"✍️ Simulando 'escrevendo...': {writing_delay:.2f}s")
+            await asyncio.sleep(writing_delay)
             
             if not self.waha:
                 # Modo simulação/desenvolvimento
-                logger.debug(LogCategory.BILLING, f"Simulando envio para {message.phone}")
-                await asyncio.sleep(0.1)  # Simular delay de rede
+                logger.info(LogCategory.BILLING, f"📤 [SIMULAÇÃO] Enviando para {message.phone}")
+                logger.info(LogCategory.BILLING, f"📝 Conteúdo: {message.content[:100]}...")
+                await asyncio.sleep(0.5)  # Simular delay de rede
                 return True
             
-            # Integração real com Waha
+            # 3. Integração real com Waha
+            logger.info(LogCategory.BILLING, f"📤 Enviando mensagem real para {message.phone}")
             success = await self.waha.send_text_message(
                 phone=message.phone,
                 text=message.content
             )
             
             if success:
-                logger.debug(LogCategory.BILLING, f"Mensagem enviada com sucesso para {message.phone}")
+                logger.info(LogCategory.BILLING, f"✅ Mensagem enviada com sucesso para {message.phone}")
                 return True
             else:
-                logger.warning(LogCategory.BILLING, f"Falha no envio para {message.phone}")
+                logger.warning(LogCategory.BILLING, f"❌ Falha no envio para {message.phone}")
                 return False
                 
         except Exception as e:
-            logger.error(LogCategory.BILLING, f"Erro ao enviar mensagem para {message.phone}: {e}")
+            logger.error(LogCategory.BILLING, f"💥 Erro ao enviar mensagem para {message.phone}: {e}")
             return False
     
     async def retry_failed_messages(self) -> BatchResult:

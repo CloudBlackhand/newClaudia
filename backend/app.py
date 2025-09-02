@@ -60,11 +60,14 @@ def register_blueprints(app):
         from backend.api.routes.billing_routes import billing_bp
         from backend.api.routes.conversation_routes import conversation_bp
         from backend.api.routes.webhook_routes import webhook_bp
+        from backend.api.routes.campaign_routes import campaign_blueprint
+        from backend.api.routes.admin_routes import admin_blueprint
         
         # Registrar blueprints
         app.register_blueprint(billing_bp, url_prefix='/api/billing')
-        app.register_blueprint(conversation_bp, url_prefix='/api/conversation')
         app.register_blueprint(webhook_bp, url_prefix='/webhooks')
+        app.register_blueprint(campaign_blueprint, url_prefix='/api')
+        app.register_blueprint(admin_blueprint, url_prefix='/api')
         
         # Rota principal
         @app.route('/')

@@ -21,14 +21,22 @@ wheels/
 *.egg
 MANIFEST
 
-# Virtual environments
-.env
-.venv
-env/
+# Virtual Environment
 venv/
+env/
 ENV/
 env.bak/
 venv.bak/
+.venv
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.production
+config.local.py
 
 # IDE
 .vscode/
@@ -37,23 +45,60 @@ venv.bak/
 *.swo
 *~
 
-# Logs
-logs/
-*.log
-
-# Data files
-data/
-temp/
-uploads/
-
 # OS
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 Thumbs.db
+
+# Logs
+*.log
+logs/
+log/
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Cache
+.cache/
+.pytest_cache/
+
+# Coverage
+htmlcov/
+.coverage
+.coverage.*
+coverage.xml
+*.cover
+.hypothesis/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# pyenv
+.python-version
+
+# Temporary files
+*.tmp
+*.temp
+temp/
+tmp/
+data/
+uploads/
 
 # Railway
 .railway/
 
-# Config
-.env.local
-.env.production
-config.local.py
+# Test files (keep the important ones)
+test_*.py
+!test_learning_simple.py
+!test_learning_system.py
+
+# Documentation (keep the important ones)
+*.md
+!README.md
+!SISTEMA_APRENDIZADO_REAL.md
