@@ -53,7 +53,6 @@ def main():
             from backend.app import create_app
         except ImportError:
             # Fallback: adicionar ao path e tentar novamente
-            import sys
             current_dir = os.path.dirname(os.path.abspath(__file__))
             sys.path.insert(0, current_dir)
             from backend.app import create_app
