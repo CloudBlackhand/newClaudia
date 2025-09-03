@@ -146,39 +146,72 @@ class BillingApp {
     displayPreview(data) {
         const previewContent = document.getElementById('preview-content');
         
-        if (!data.clients || !Array.isArray(data.clients)) {
+        // ✅ CORREÇÃO: Suportar tanto formato antigo quanto novo
+        let clients = [];
+        
+        if (Array.isArray(data)) {
+            // ✅ NOVO FORMATO: Array direto com dados de cobrança
+            clients = data.filter(item => 
+                item.dados_fpd && 
+                item.dados_fpd.first_name && 
+                item.dados_fpd.cobrado_fpd > 0
+            ).map(item => ({
+                name: item.dados_fpd.first_name,
+                phone: item.dados_fpd.documento || 'N/A',
+                amount: item.dados_fpd.cobrado_fpd || 0,
+                due_date: item.dados_fpd.data_vencimento_fpd,
+                protocolo: item.protocolo,
+                contrato: item.dados_fpd.contrato,
+                dias_atraso: item.dados_fpd.dias_fpd || 0
+            }));
+        } else if (data.clients && Array.isArray(data.clients)) {
+            // ✅ FORMATO ANTIGO: { "clients": [...] }
+            clients = data.clients;
+        } else {
             previewContent.innerHTML = `
                 <div class="preview-empty">
                     <i class="fas fa-exclamation-triangle"></i>
-                    <p>Estrutura de arquivo inválida. Esperado: { "clients": [...] }</p>
+                    <p>Estrutura de arquivo inválida. Formato não reconhecido.</p>
                 </div>
             `;
             return;
         }
-
-        const clients = data.clients.slice(0, 5); // Preview primeiros 5
+        
+        if (clients.length === 0) {
+            previewContent.innerHTML = `
+                <div class="preview-empty">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <p>Nenhum cliente com cobrança encontrado no arquivo.</p>
+                </div>
+            `;
+            return;
+        }
+        
+        const previewClients = clients.slice(0, 5); // Preview primeiros 5
         
         previewContent.innerHTML = `
             <div style="margin-bottom: 1rem;">
-                <strong>Total de clientes:</strong> ${data.clients.length}
-                ${data.clients.length > 5 ? `<span style="color: var(--text-muted);">(mostrando primeiros 5)</span>` : ''}
+                <strong>Total de clientes com cobrança:</strong> ${clients.length}
+                ${clients.length > 5 ? `<span style="color: var(--text-muted);">(mostrando primeiros 5)</span>` : ''}
             </div>
             <table class="preview-table">
                 <thead>
                     <tr>
                         <th>Nome</th>
-                        <th>Telefone</th>
+                        <th>Documento</th>
                         <th>Valor</th>
                         <th>Vencimento</th>
+                        <th>Dias Atraso</th>
                     </tr>
                 </thead>
                 <tbody>
-                    ${clients.map(client => `
+                    ${previewClients.map(client => `
                         <tr>
                             <td>${this.escapeHtml(client.name || 'N/A')}</td>
                             <td>${this.escapeHtml(client.phone || 'N/A')}</td>
                             <td>R$ ${(client.amount || 0).toFixed(2)}</td>
                             <td>${this.formatDate(client.due_date) || 'N/A'}</td>
+                            <td>${client.dias_atraso || 0}</td>
                         </tr>
                     `).join('')}
                 </tbody>
@@ -220,12 +253,42 @@ class BillingApp {
         this.showLoading(true);
         
         try {
+            // ✅ CORREÇÃO: Converter dados para formato esperado pelo backend
+            let clients = [];
+            
+            if (Array.isArray(this.fileData)) {
+                // ✅ NOVO FORMATO: Converter para formato padrão
+                clients = this.fileData.filter(item => 
+                    item.dados_fpd && 
+                    item.dados_fpd.first_name && 
+                    item.dados_fpd.cobrado_fpd > 0
+                ).map(item => ({
+                    name: item.dados_fpd.first_name,
+                    phone: item.dados_fpd.documento || 'N/A',
+                    amount: item.dados_fpd.cobrado_fpd || 0,
+                    due_date: item.dados_fpd.data_vencimento_fpd,
+                    protocolo: item.protocolo,
+                    contrato: item.dados_fpd.contrato,
+                    dias_atraso: item.dados_fpd.dias_fpd || 0,
+                    documento: item.dados_fpd.documento,
+                    regional: item.dados_fpd.regional,
+                    territorio: item.dados_fpd.territorio
+                }));
+            } else if (this.fileData.clients) {
+                // ✅ FORMATO ANTIGO: Usar como está
+                clients = this.fileData.clients;
+            }
+            
+            const payload = {
+                clients: clients
+            };
+            
             const response = await fetch(`${this.apiBase}/billing/validate-clients`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify(this.fileData)
+                body: JSON.stringify(payload)
             });
 
             const result = await response.json();
@@ -252,9 +315,21 @@ class BillingApp {
         const templateId = document.getElementById('template-select').value;
         const scheduleTime = document.getElementById('schedule-input').value;
 
+        // ✅ CORREÇÃO: Calcular total de clientes corretamente para ambos os formatos
+        let totalClients = 0;
+        if (Array.isArray(this.fileData)) {
+            totalClients = this.fileData.filter(item => 
+                item.dados_fpd && 
+                item.dados_fpd.first_name && 
+                item.dados_fpd.cobrado_fpd > 0
+            ).length;
+        } else if (this.fileData.clients) {
+            totalClients = this.fileData.clients.length;
+        }
+        
         const confirmed = await this.showConfirmModal(
             'Confirmar Envio',
-            `Deseja enviar mensagens de cobrança para ${this.fileData.clients?.length || 0} clientes usando o template "${templateId}"?`
+            `Deseja enviar mensagens de cobrança para ${totalClients} clientes usando o template "${templateId}"?`
         );
 
         if (!confirmed) return;
@@ -262,8 +337,34 @@ class BillingApp {
         this.showLoading(true);
 
         try {
+            // ✅ CORREÇÃO: Converter dados para formato esperado pelo backend
+            let clients = [];
+            
+            if (Array.isArray(this.fileData)) {
+                // ✅ NOVO FORMATO: Converter para formato padrão
+                clients = this.fileData.filter(item => 
+                    item.dados_fpd && 
+                    item.dados_fpd.first_name && 
+                    item.dados_fpd.cobrado_fpd > 0
+                ).map(item => ({
+                    name: item.dados_fpd.first_name,
+                    phone: item.dados_fpd.documento || 'N/A',
+                    amount: item.dados_fpd.cobrado_fpd || 0,
+                    due_date: item.dados_fpd.data_vencimento_fpd,
+                    protocolo: item.protocolo,
+                    contrato: item.dados_fpd.contrato,
+                    dias_atraso: item.dados_fpd.dias_fpd || 0,
+                    documento: item.dados_fpd.documento,
+                    regional: item.dados_fpd.regional,
+                    territorio: item.dados_fpd.territorio
+                }));
+            } else if (this.fileData.clients) {
+                // ✅ FORMATO ANTIGO: Usar como está
+                clients = this.fileData.clients;
+            }
+            
             const payload = {
-                ...this.fileData,
+                clients: clients,
                 template_id: templateId
             };
 
