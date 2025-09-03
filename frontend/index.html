@@ -307,6 +307,43 @@
                                         <span id="confidence-value">0.8</span>
                                     </div>
                                 </div>
+
+                                <div class="config-section">
+                                    <h4>🗄️ Gerenciamento do Banco de Dados</h4>
+                                    <div class="form-group">
+                                        <label>Status do Banco:</label>
+                                        <div id="db-status" class="status-indicator">
+                                            <span class="status-badge checking">Verificando...</span>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Estatísticas:</label>
+                                        <div id="db-stats" class="db-stats">
+                                            <div class="stat-item">
+                                                <span class="stat-label">Clientes:</span>
+                                                <span id="clients-count" class="stat-value">-</span>
+                                            </div>
+                                            <div class="stat-item">
+                                                <span class="stat-label">Conversas:</span>
+                                                <span id="conversations-count" class="stat-value">-</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="danger-zone">
+                                        <h5>⚠️ Zona de Perigo</h5>
+                                        <p class="warning-text">Ações irreversíveis - use com cuidado!</p>
+                                        <div class="button-group">
+                                            <button id="clear-db-btn" class="btn btn-danger">
+                                                <i class="fas fa-trash-alt"></i>
+                                                Limpar Banco de Dados
+                                            </button>
+                                            <button id="export-db-btn" class="btn btn-secondary">
+                                                <i class="fas fa-download"></i>
+                                                Exportar Dados
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>

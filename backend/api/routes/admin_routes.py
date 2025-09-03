@@ -320,3 +320,209 @@ def test_waha():
             'success': False,
             'error': str(e)
         }), 500
+
+@admin_blueprint.route('/admin/database/stats', methods=['GET'])
+def get_database_stats():
+    """Obter estatísticas do banco de dados"""
+    try:
+        logger.info(LogCategory.SYSTEM, "Buscando estatísticas do banco de dados")
+        
+        # Conectar ao banco
+        database_url = os.getenv('DATABASE_URL')
+        if not database_url:
+            return jsonify({
+                'success': False,
+                'error': 'DATABASE_URL não encontrada'
+            }), 500
+        
+        conn = psycopg2.connect(database_url)
+        cursor = conn.cursor()
+        
+        # Contar clientes
+        cursor.execute("SELECT COUNT(*) FROM customers")
+        clients_count = cursor.fetchone()[0]
+        
+        # Contar conversas
+        cursor.execute("SELECT COUNT(*) FROM conversation_contexts")
+        conversations_count = cursor.fetchone()[0]
+        
+        cursor.close()
+        conn.close()
+        
+        logger.info(LogCategory.SYSTEM, f"Estatísticas: {clients_count} clientes, {conversations_count} conversas")
+        
+        return jsonify({
+            'success': True,
+            'clients_count': clients_count,
+            'conversations_count': conversations_count,
+            'total_records': clients_count + conversations_count
+        })
+        
+    except Exception as e:
+        logger.error(LogCategory.SYSTEM, f"Erro ao buscar estatísticas: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@admin_blueprint.route('/admin/database/clear', methods=['POST'])
+def clear_database():
+    """Limpar todos os dados do banco de dados"""
+    try:
+        logger.warning(LogCategory.SYSTEM, "INICIANDO LIMPEZA COMPLETA DO BANCO DE DADOS")
+        
+        # Conectar ao banco
+        database_url = os.getenv('DATABASE_URL')
+        if not database_url:
+            return jsonify({
+                'success': False,
+                'error': 'DATABASE_URL não encontrada'
+            }), 500
+        
+        conn = psycopg2.connect(database_url)
+        cursor = conn.cursor()
+        
+        # Contar registros antes da limpeza
+        cursor.execute("SELECT COUNT(*) FROM customers")
+        clients_before = cursor.fetchone()[0]
+        
+        cursor.execute("SELECT COUNT(*) FROM conversation_contexts")
+        conversations_before = cursor.fetchone()[0]
+        
+        # Limpar todas as tabelas
+        logger.warning(LogCategory.SYSTEM, "Limpando tabela customers...")
+        cursor.execute("DELETE FROM customers")
+        
+        logger.warning(LogCategory.SYSTEM, "Limpando tabela conversation_contexts...")
+        cursor.execute("DELETE FROM conversation_contexts")
+        
+        # Resetar sequências
+        cursor.execute("ALTER SEQUENCE customers_id_seq RESTART WITH 1")
+        cursor.execute("ALTER SEQUENCE conversation_contexts_id_seq RESTART WITH 1")
+        
+        # Commit das alterações
+        conn.commit()
+        
+        cursor.close()
+        conn.close()
+        
+        total_removed = clients_before + conversations_before
+        
+        logger.warning(LogCategory.SYSTEM, f"BANCO LIMPO! {total_removed} registros removidos")
+        
+        return jsonify({
+            'success': True,
+            'message': 'Banco de dados limpo com sucesso',
+            'removed_count': total_removed,
+            'details': {
+                'clients_removed': clients_before,
+                'conversations_removed': conversations_before
+            }
+        })
+        
+    except Exception as e:
+        logger.error(LogCategory.SYSTEM, f"Erro ao limpar banco: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@admin_blueprint.route('/admin/database/export', methods=['GET'])
+def export_database():
+    """Exportar todos os dados do banco como JSON"""
+    try:
+        logger.info(LogCategory.SYSTEM, "Iniciando exportação do banco de dados")
+        
+        # Conectar ao banco
+        database_url = os.getenv('DATABASE_URL')
+        if not database_url:
+            return jsonify({
+                'success': False,
+                'error': 'DATABASE_URL não encontrada'
+            }), 500
+        
+        conn = psycopg2.connect(database_url)
+        cursor = conn.cursor()
+        
+        # Exportar clientes
+        cursor.execute("SELECT * FROM customers")
+        clients = []
+        for row in cursor.fetchall():
+            clients.append({
+                'id': row[0],
+                'protocolo': row[1],
+                'first_name': row[2],
+                'documento': row[3],
+                'cobrado_fpd': float(row[4]) if row[4] else 0,
+                'dias_fpd': int(row[5]) if row[5] else 0,
+                'data_vencimento_fpd': row[6].isoformat() if row[6] else None,
+                'contrato': row[7],
+                'regional': row[8],
+                'territorio': row[9],
+                'dsc_plano': row[10],
+                'valor_mensalidade': float(row[11]) if row[11] else 0,
+                'empresa': row[12],
+                'status': row[13],
+                'priority': int(row[14]) if row[14] else 0,
+                'is_customer': bool(row[15]) if row[15] else False,
+                'last_contact': row[16].isoformat() if row[16] else None,
+                'conversation_count': int(row[17]) if row[17] else 0,
+                'payment_promises': int(row[18]) if row[18] else 0,
+                'last_payment_date': row[19].isoformat() if row[19] else None,
+                'created_at': row[20].isoformat() if row[20] else None,
+                'updated_at': row[21].isoformat() if row[21] else None
+            })
+        
+        # Exportar conversas
+        cursor.execute("SELECT * FROM conversation_contexts")
+        conversations = []
+        for row in cursor.fetchall():
+            conversations.append({
+                'id': row[0],
+                'phone': row[1],
+                'session_id': row[2],
+                'user_name': row[3],
+                'started_at': row[4].isoformat() if row[4] else None,
+                'last_activity': row[5].isoformat() if row[5] else None,
+                'message_count': int(row[6]) if row[6] else 0,
+                'payment_amount': float(row[7]) if row[7] else 0,
+                'due_date': row[8].isoformat() if row[8] else None,
+                'topics_discussed': row[9] if row[9] else [],
+                'intent_history': row[10] if row[10] else [],
+                'sentiment_history': row[11] if row[11] else [],
+                'created_at': row[12].isoformat() if row[12] else None,
+                'updated_at': row[13].isoformat() if row[13] else None
+            })
+        
+        cursor.close()
+        conn.close()
+        
+        # Preparar dados para exportação
+        from datetime import datetime
+        export_data = {
+            'export_date': datetime.now().isoformat(),
+            'total_records': len(clients) + len(conversations),
+            'clients': clients,
+            'conversations': conversations
+        }
+        
+        logger.info(LogCategory.SYSTEM, f"Exportação concluída: {len(clients)} clientes, {len(conversations)} conversas")
+        
+        # Retornar como arquivo JSON para download
+        from flask import Response
+        import json
+        
+        response = Response(
+            json.dumps(export_data, indent=2, ensure_ascii=False),
+            mimetype='application/json',
+            headers={'Content-Disposition': f'attachment; filename=database_backup_{datetime.now().strftime("%Y%m%d_%H%M%S")}.json'}
+        )
+        
+        return response
+        
+    except Exception as e:
+        logger.error(LogCategory.SYSTEM, f"Erro ao exportar banco: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500

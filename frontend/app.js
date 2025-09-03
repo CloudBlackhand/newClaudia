@@ -57,6 +57,10 @@ class BillingApp {
         document.getElementById('confidence-threshold').addEventListener('input', (e) => {
             document.getElementById('confidence-value').textContent = e.target.value;
         });
+        
+        // Database management
+        document.getElementById('clear-db-btn').addEventListener('click', this.clearDatabase.bind(this));
+        document.getElementById('export-db-btn').addEventListener('click', this.exportDatabase.bind(this));
     }
 
     switchTab(tabName) {
@@ -723,7 +727,8 @@ class BillingApp {
     async loadSettings() {
         await Promise.all([
             this.loadTemplates(),
-            this.loadSystemConfig()
+            this.loadSystemConfig(),
+            this.loadDatabaseStats()
         ]);
     }
 
@@ -931,6 +936,134 @@ class BillingApp {
         const div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;
+    }
+
+    // Database management functions
+    async loadDatabaseStats() {
+        try {
+            // Atualizar status do banco
+            document.getElementById('db-status').innerHTML = '<span class="status-badge checking">Verificando...</span>';
+            
+            // Buscar estatísticas do banco
+            const response = await fetch(`${this.apiBase}/admin/database/stats`);
+            
+            if (response.ok) {
+                const stats = await response.json();
+                
+                // Atualizar contadores
+                document.getElementById('clients-count').textContent = stats.clients_count || 0;
+                document.getElementById('conversations-count').textContent = stats.conversations_count || 0;
+                
+                // Atualizar status
+                document.getElementById('db-status').innerHTML = '<span class="status-badge healthy">Conectado</span>';
+            } else {
+                throw new Error('Falha ao carregar estatísticas');
+            }
+        } catch (error) {
+            console.error('Database stats error:', error);
+            
+            // Atualizar status com erro
+            document.getElementById('db-status').innerHTML = '<span class="status-badge unhealthy">Erro</span>';
+            document.getElementById('clients-count').textContent = '?';
+            document.getElementById('conversations-count').textContent = '?';
+        }
+    }
+
+    async clearDatabase() {
+        // Mostrar modal de confirmação
+        const confirmed = await this.showConfirmModal(
+            '⚠️ Limpar Banco de Dados',
+            `
+            <div style="text-align: center; padding: 1rem;">
+                <div style="font-size: 3rem; margin-bottom: 1rem;">🗑️</div>
+                <h3 style="color: #e53e3e; margin-bottom: 1rem;">ATENÇÃO!</h3>
+                <p style="margin-bottom: 1rem; font-size: 1.1rem;">
+                    Esta ação irá <strong>PERMANENTEMENTE</strong> remover todos os dados do banco:
+                </p>
+                <ul style="text-align: left; margin: 1rem 0; padding-left: 2rem;">
+                    <li>✅ Todos os clientes cadastrados</li>
+                    <li>✅ Todas as conversas e histórico</li>
+                    <li>✅ Todos os contextos de cobrança</li>
+                    <li>✅ Todas as estatísticas e métricas</li>
+                </ul>
+                <p style="color: #e53e3e; font-weight: 600; margin-top: 1rem;">
+                    ⚠️ Esta ação é <strong>IRREVERSÍVEL</strong> e não pode ser desfeita!
+                </p>
+                <p style="margin-top: 1rem; font-size: 0.9rem; color: #666;">
+                    Digite <strong>"LIMPAR"</strong> para confirmar:
+                </p>
+                <input type="text" id="confirm-clear" placeholder="Digite LIMPAR" 
+                       style="width: 100%; padding: 0.5rem; margin: 1rem 0; border: 2px solid #e53e3e; border-radius: 4px; text-align: center; font-weight: 600;">
+            </div>
+            `,
+            true
+        );
+
+        if (!confirmed) return;
+
+        // Verificar se digitou "LIMPAR"
+        const confirmInput = document.getElementById('confirm-clear');
+        if (confirmInput.value.trim() !== 'LIMPAR') {
+            this.showToast('error', 'Confirmação Inválida', 'Você deve digitar "LIMPAR" para confirmar a ação.');
+            return;
+        }
+
+        try {
+            this.showLoading(true);
+            
+            const response = await fetch(`${this.apiBase}/admin/database/clear`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (response.ok) {
+                const result = await response.json();
+                this.showToast('success', 'Banco Limpo', `Banco de dados limpo com sucesso! ${result.removed_count} registros removidos.`);
+                
+                // Recarregar estatísticas
+                await this.loadDatabaseStats();
+            } else {
+                const error = await response.json();
+                throw new Error(error.message || 'Erro ao limpar banco');
+            }
+        } catch (error) {
+            console.error('Clear database error:', error);
+            this.showToast('error', 'Erro', `Falha ao limpar banco: ${error.message}`);
+        } finally {
+            this.showLoading(false);
+        }
+    }
+
+    async exportDatabase() {
+        try {
+            this.showLoading(true);
+            
+            const response = await fetch(`${this.apiBase}/admin/database/export`);
+            
+            if (response.ok) {
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `database_backup_${new Date().toISOString().split('T')[0]}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+                
+                this.showToast('success', 'Exportação Concluída', 'Dados do banco exportados com sucesso!');
+            } else {
+                const error = await response.json();
+                throw new Error(error.message || 'Erro ao exportar dados');
+            }
+        } catch (error) {
+            console.error('Export database error:', error);
+            this.showToast('error', 'Erro', `Falha ao exportar dados: ${error.message}`);
+        } finally {
+            this.showLoading(false);
+        }
     }
 }
 

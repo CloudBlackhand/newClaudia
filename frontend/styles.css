@@ -961,6 +961,83 @@ select.form-control {
     margin-bottom: var(--spacing-md);
 }
 
+/* Database Management Styles */
+.db-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-md);
+}
+
+.stat-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacing-sm);
+    background: var(--color-bg-secondary);
+    border-radius: var(--border-radius);
+    border: 1px solid var(--color-border);
+}
+
+.stat-label {
+    font-weight: 500;
+    color: var(--color-text-secondary);
+}
+
+.stat-value {
+    font-weight: 600;
+    color: var(--color-primary);
+    font-size: 1.1rem;
+}
+
+.danger-zone {
+    margin-top: var(--spacing-lg);
+    padding: var(--spacing-md);
+    background: linear-gradient(135deg, #fff5f5 0%, #fed7d7 100%);
+    border: 2px solid #feb2b2;
+    border-radius: var(--border-radius);
+    border-left: 4px solid #e53e3e;
+}
+
+.danger-zone h5 {
+    color: #c53030;
+    margin: 0 0 var(--spacing-sm) 0;
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.danger-zone h5::before {
+    content: "⚠️";
+    font-size: 1.2rem;
+}
+
+.warning-text {
+    color: #744210;
+    margin: 0 0 var(--spacing-md) 0;
+    font-size: 0.9rem;
+    font-style: italic;
+}
+
+.btn-danger {
+    background: linear-gradient(135deg, #e53e3e 0%, #c53030 100%);
+    border: 1px solid #c53030;
+    color: white;
+    box-shadow: 0 2px 4px rgba(197, 48, 48, 0.3);
+}
+
+.btn-danger:hover {
+    background: linear-gradient(135deg, #c53030 0%, #a52a2a 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(197, 48, 48, 0.4);
+}
+
+.btn-danger:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(197, 48, 48, 0.3);
+}
+
 /* Utility Classes */
 .hidden {
     display: none !important;
