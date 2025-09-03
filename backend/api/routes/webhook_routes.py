@@ -186,11 +186,11 @@ def handle_message_event(webhook_data: Dict[str, Any]):
         
         if customer_data and customer_data.get('is_customer', False):
             # É cliente - processar com dados do cliente
-            logger.info(f"👤 Cliente identificado: {customer_data.get('name', 'Cliente')}")
+            logger.info(LogCategory.WHATSAPP, f"👤 Cliente identificado: {customer_data.get('name', 'Cliente')}")
             response = bot.process_message(phone, message.content, customer_data)
         else:
             # Não é cliente - responder com mensagem geral
-            logger.info(f"👤 Pessoa não cadastrada como cliente: {phone}")
+            logger.info(LogCategory.WHATSAPP, f"👤 Pessoa não cadastrada como cliente: {phone}")
             general_response = bot.generate_general_response(phone, message.content)
             response = general_response
         
@@ -226,7 +226,7 @@ def handle_message_event(webhook_data: Dict[str, Any]):
                          details={
                              'reason': 'Sistema detectou necessidade de intervenção humana',
                              'confidence': response.confidence,
-                             'suggested_actions': response.suggested_actions
+                             'response_type': response.response_type.value
                          })
         
         return jsonify({

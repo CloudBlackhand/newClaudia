@@ -144,7 +144,8 @@ class DatabaseManager:
                 AND table_name = 'customers'
             """)
             
-            customers_exists = self.cursor.fetchone()[0] > 0
+            result = self.cursor.fetchone()
+            customers_exists = result[0] > 0 if result else False
             
             # Verificar se tabela conversations existe
             self.cursor.execute("""
@@ -153,7 +154,8 @@ class DatabaseManager:
                 AND table_name = 'conversations'
             """)
             
-            conversations_exists = self.cursor.fetchone()[0] > 0
+            result = self.cursor.fetchone()
+            conversations_exists = result[0] > 0 if result else False
             
             if customers_exists and conversations_exists:
                 logger.info("✅ Tabelas existentes verificadas com sucesso!")

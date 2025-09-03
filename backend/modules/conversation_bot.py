@@ -29,6 +29,14 @@ import statistics
 # Configuração de logging
 logger = logging.getLogger(__name__)
 
+# Importar sistema de logging
+try:
+    from backend.modules.logger_system import LogCategory
+except ImportError:
+    # Fallback se não conseguir importar
+    class LogCategory:
+        CONVERSATION = "conversation"
+
 # Importar módulos de aprendizado
 try:
     from backend.modules.response_quality_analyzer import ResponseQualityAnalyzer
@@ -1258,7 +1266,7 @@ class ConversationBot:
     def process_message(self, phone: str, message: str, customer_data: Dict[str, Any]) -> BotResponse:
         """Processa mensagem do cliente com INTELIGÊNCIA REAL + APRENDIZADO"""
         
-        logger.info(f"🔍 Analisando mensagem de {phone}: {message[:50]}...")
+        logger.info(LogCategory.CONVERSATION, f"🔍 Analisando mensagem de {phone}: {message[:50]}...")
         
         # Carrega ou cria contexto
         context = self._get_or_create_context(phone, customer_data)
@@ -1266,7 +1274,7 @@ class ConversationBot:
         # ANÁLISE ULTRA INTELIGENTE da mensagem
         analysis = self.nlp_processor.analyze_message(message, context)
         
-        logger.info(f"🧠 Análise: Intent={analysis.intent.value}, "
+        logger.info(LogCategory.CONVERSATION, f"🧠 Análise: Intent={analysis.intent.value}, "
                    f"Sentiment={analysis.sentiment.value}, "
                    f"Cooperação={analysis.cooperation_score:.2f}, "
                    f"Estado={analysis.emotional_state}")
@@ -1292,7 +1300,7 @@ class ConversationBot:
                 'quality_scores': quality_scores
             })
             
-            logger.info(f"🎓 Qualidade: {quality_scores.get('overall', 0):.2f}")
+            logger.info(LogCategory.CONVERSATION, f"🎓 Qualidade: {quality_scores.get('overall', 0):.2f}")
         
         # ATUALIZA CONTEXTO
         self._update_context(phone, response.context_update)
@@ -1300,14 +1308,14 @@ class ConversationBot:
         # ADICIONA À HISTÓRIA
         self._add_to_history(phone, message, response.message)
         
-        logger.info(f"💬 Resposta gerada: {response.response_type.value}")
+        logger.info(LogCategory.CONVERSATION, f"💬 Resposta gerada: {response.response_type.value}")
         
         return response
     
     def generate_general_response(self, phone: str, message: str) -> BotResponse:
         """Gera resposta para pessoas não cadastradas como clientes"""
         try:
-            logger.info(f"👤 Gerando resposta geral para não-cliente: {phone}")
+            logger.info(LogCategory.CONVERSATION, f"👤 Gerando resposta geral para não-cliente: {phone}")
             
             # Análise básica da mensagem
             message_lower = message.lower().strip()
@@ -1349,7 +1357,7 @@ class ConversationBot:
                 confidence=0.8
             )
             
-            logger.info(f"✅ Resposta geral gerada para {phone}: {response_type.value}")
+            logger.info(LogCategory.CONVERSATION, f"✅ Resposta geral gerada para {phone}: {response_type.value}")
             return response
             
         except Exception as e:
