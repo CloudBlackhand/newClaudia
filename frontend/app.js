@@ -128,16 +128,94 @@ class BillingApp {
         const reader = new FileReader();
         reader.onload = (e) => {
             try {
-                this.fileData = JSON.parse(e.target.result);
+                let jsonText = e.target.result;
+                
+                // 🔧 CORREÇÃO: Limpar valores NaN e outros problemas do JSON
+                jsonText = jsonText.replace(/:\s*NaN\s*,/g, ': null,');
+                jsonText = jsonText.replace(/:\s*NaN\s*}/g, ': null}');
+                jsonText = jsonText.replace(/:\s*undefined\s*,/g, ': null,');
+                jsonText = jsonText.replace(/:\s*undefined\s*}/g, ': null}');
+                
+                // Parse do JSON limpo
+                const fullData = JSON.parse(jsonText);
+                
+                // 🎯 FOCO: Extrair apenas os dados_vendas de todos os objetos
+                this.fileData = this.extractDadosVendas(fullData);
+                
                 this.displayFileInfo(file);
                 this.displayVendasPreview(this.fileData);
                 this.enableButtons();
             } catch (error) {
-                this.showToast('error', 'Erro', 'Arquivo JSON inválido');
+                this.showToast('error', 'Erro', 'Erro ao processar arquivo JSON');
                 console.error('JSON parse error:', error);
+                console.log('Tentando método alternativo...');
+                
+                // 🚨 MÉTODO ALTERNATIVO: Extrair dados_vendas via regex
+                this.processFileAlternative(e.target.result);
             }
         };
         reader.readAsText(file);
+    }
+
+    // 🔄 MÉTODO ALTERNATIVO: Extrair dados_vendas sem fazer parse completo
+    processFileAlternative(jsonText) {
+        try {
+            console.log('🔄 Usando método alternativo para extrair dados_vendas...');
+            
+            // Encontrar todas as seções "dados_vendas"
+            const dadosVendasRegex = /"dados_vendas":\s*\[([\s\S]*?)\]/g;
+            const allVendas = [];
+            let match;
+            
+            while ((match = dadosVendasRegex.exec(jsonText)) !== null) {
+                try {
+                    // Limpar e parsear cada seção de dados_vendas
+                    let vendasSection = '[' + match[1] + ']';
+                    vendasSection = vendasSection.replace(/:\s*NaN\s*,/g, ': null,');
+                    vendasSection = vendasSection.replace(/:\s*NaN\s*}/g, ': null}');
+                    vendasSection = vendasSection.replace(/:\s*undefined\s*,/g, ': null,');
+                    vendasSection = vendasSection.replace(/:\s*undefined\s*}/g, ': null}');
+                    
+                    const vendas = JSON.parse(vendasSection);
+                    allVendas.push(...vendas);
+                } catch (e) {
+                    console.warn('Erro ao processar uma seção de dados_vendas:', e);
+                }
+            }
+            
+            if (allVendas.length > 0) {
+                this.fileData = { dados_vendas: allVendas };
+                this.displayFileInfo({ name: 'arquivo_processado.json', size: jsonText.length });
+                this.displayVendasPreview(this.fileData);
+                this.enableButtons();
+                this.showToast('success', 'Sucesso', `${allVendas.length} registros de vendas extraídos com sucesso!`);
+            } else {
+                throw new Error('Nenhum dado de vendas encontrado');
+            }
+            
+        } catch (error) {
+            this.showToast('error', 'Erro', 'Não foi possível extrair dados de vendas do arquivo');
+            console.error('Erro no método alternativo:', error);
+        }
+    }
+
+    // 🎯 EXTRAIR DADOS_VENDAS: Função para extrair apenas dados_vendas
+    extractDadosVendas(data) {
+        const allVendas = [];
+        
+        if (Array.isArray(data)) {
+            // Array de objetos
+            for (const item of data) {
+                if (item.dados_vendas && Array.isArray(item.dados_vendas)) {
+                    allVendas.push(...item.dados_vendas);
+                }
+            }
+        } else if (data.dados_vendas && Array.isArray(data.dados_vendas)) {
+            // Objeto único com dados_vendas
+            allVendas.push(...data.dados_vendas);
+        }
+        
+        return { dados_vendas: allVendas };
     }
 
     displayFileInfo(file) {
@@ -150,11 +228,25 @@ class BillingApp {
     displayVendasPreview(data) {
         const previewContent = document.getElementById('preview-content');
         
-        // ✅ NOVO FORMATO: Array com dados_vendas
+        // 🎯 EXTRAIR DADOS_VENDAS: Trabalhar com dados já extraídos
         let vendas = [];
         
-        if (Array.isArray(data)) {
-            // Processar cada item do array
+        if (data && data.dados_vendas && Array.isArray(data.dados_vendas)) {
+            // Dados já processados pela função extractDadosVendas
+            for (const venda of data.dados_vendas) {
+                vendas.push({
+                    nome: venda.NOME || 'N/A',
+                    documento: venda.DOCUMENTO || 'N/A',
+                    telefone: venda.TELEFONE1 || 'N/A',
+                    email: venda.EMAIL || 'N/A',
+                    cidade: venda.CIDADE || 'N/A',
+                    fpd: venda.fpd || 'N/A',
+                    aba_origem: venda.aba_origem || 'N/A',
+                    status: venda.STATUS || 'N/A'
+                });
+            }
+        } else if (Array.isArray(data)) {
+            // Fallback: Processar cada item do array original
             for (const item of data) {
                 if (item.dados_vendas && Array.isArray(item.dados_vendas)) {
                     for (const venda of item.dados_vendas) {
