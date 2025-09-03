@@ -8,6 +8,7 @@ Endpoints para receber webhooks do WhatsApp (Waha)
 import hmac
 import hashlib
 import asyncio
+from datetime import datetime
 from flask import Blueprint, request, jsonify
 from typing import Dict, Any
 
@@ -330,7 +331,7 @@ def test_webhook():
             'status': 'test_successful',
             'message': 'Webhook de teste processado',
             'received_data': data,
-            'timestamp': logger.get_stats()['start_time']
+            'timestamp': datetime.now().isoformat()
         }), 200
         
     except Exception as e:

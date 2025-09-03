@@ -234,37 +234,71 @@ class DatabaseManager:
             
             result = self.cursor.fetchone()
             if result:
-                # Converter resultado para Customer
-                customer = Customer(
-                    protocolo=result['protocolo'],
-                    first_name=result['first_name'] or '',
-                    documento=result['documento'] or '',
-                    cobrado_fpd=float(result['cobrado_fpd'] or 0),
-                    dias_fpd=int(result['dias_fpd'] or 0),
-                    data_vencimento_fpd=result['data_vencimento_fpd'].isoformat() if result['data_vencimento_fpd'] else '',
-                    contrato=str(result['contrato'] or ''),
-                    regional=result['regional'] or '',
-                    territorio=result['territorio'] or '',
-                    dsc_plano=result['dsc_plano'] or '',
-                    valor_mensalidade=float(result['valor_mensalidade'] or 0),
-                    empresa=result['empresa'] or '',
-                    status=result['status'] or 'active',
-                    priority=result['priority'] or 'medium',
-                    is_customer=bool(result['is_customer']) if 'is_customer' in result else True,
-                    last_contact=result['last_contact'].isoformat() if result['last_contact'] else None,
-                    conversation_count=int(result['conversation_count'] or 0) if 'conversation_count' in result else 0,
-                    payment_promises=int(result['payment_promises'] or 0) if 'payment_promises' in result else 0,
-                    last_payment_date=result['last_payment_date'].isoformat() if result['last_payment_date'] else None,
-                    created_at=result['created_at'].isoformat() if result['created_at'] else None,
-                    updated_at=result['updated_at'].isoformat() if result['updated_at'] else None
-                )
-                return customer
+                return self._convert_to_customer(result)
             
             return None
             
         except Exception as e:
             logger.error(f"❌ Erro ao buscar cliente no banco: {str(e)}")
             return None
+    
+    def get_customer_by_phone(self, phone: str) -> Optional[Customer]:
+        """Busca cliente por telefone (usando documento como fallback)"""
+        try:
+            if not self.connected:
+                return None
+            
+            # Primeiro tentar buscar por telefone se a coluna existir
+            try:
+                self.cursor.execute("""
+                    SELECT * FROM customers WHERE phone = %s
+                """, (phone,))
+                
+                result = self.cursor.fetchone()
+                if result:
+                    return self._convert_to_customer(result)
+            except Exception:
+                # Se coluna phone não existir, tentar buscar por documento
+                # Assumindo que o telefone pode estar no campo documento
+                self.cursor.execute("""
+                    SELECT * FROM customers WHERE documento = %s
+                """, (phone,))
+                
+                result = self.cursor.fetchone()
+                if result:
+                    return self._convert_to_customer(result)
+            
+            return None
+            
+        except Exception as e:
+            logger.error(f"❌ Erro ao buscar cliente por telefone no banco: {str(e)}")
+            return None
+    
+    def _convert_to_customer(self, result) -> Customer:
+        """Converte resultado do banco para objeto Customer"""
+        return Customer(
+            protocolo=result['protocolo'],
+            first_name=result['first_name'] or '',
+            documento=result['documento'] or '',
+            cobrado_fpd=float(result['cobrado_fpd'] or 0),
+            dias_fpd=int(result['dias_fpd'] or 0),
+            data_vencimento_fpd=result['data_vencimento_fpd'].isoformat() if result['data_vencimento_fpd'] else '',
+            contrato=str(result['contrato'] or ''),
+            regional=result['regional'] or '',
+            territorio=result['territorio'] or '',
+            dsc_plano=result['dsc_plano'] or '',
+            valor_mensalidade=float(result['valor_mensalidade'] or 0),
+            empresa=result['empresa'] or '',
+            status=result['status'] or 'active',
+            priority=result['priority'] or 'medium',
+            is_customer=bool(result['is_customer']) if 'is_customer' in result else True,
+            last_contact=result['last_contact'].isoformat() if result['last_contact'] else None,
+            conversation_count=int(result['conversation_count'] or 0) if 'conversation_count' in result else 0,
+            payment_promises=int(result['payment_promises'] or 0) if 'payment_promises' in result else 0,
+            last_payment_date=result['last_payment_date'].isoformat() if result['last_payment_date'] else None,
+            created_at=result['created_at'].isoformat() if result['created_at'] else None,
+            updated_at=result['updated_at'].isoformat() if result['updated_at'] else None
+        )
     
     def save_conversation_context(self, context: Conversation) -> bool:
         """Salva contexto da conversa no banco"""
