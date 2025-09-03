@@ -5,7 +5,7 @@ from typing import List, Dict, Any, Tuple
 from dataclasses import dataclass
 from backend.modules.logger_system import SmartLogger, LogCategory
 
-logger = SmartLogger()
+logger = SmartLogger("vendas_data_processor")
 
 @dataclass
 class VendasData:

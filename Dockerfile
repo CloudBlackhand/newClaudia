@@ -24,14 +24,17 @@ COPY requirements.txt .
 # Instalar dependências Python
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copiar código da aplicação
-COPY . .
-
 # Criar diretórios necessários
 RUN mkdir -p logs data temp
+
+# Copiar código da aplicação (estrutura completa)
+COPY . .
+
+# Verificar estrutura dos arquivos
+RUN ls -la && echo "=== ESTRUTURA BACKEND ===" && ls -la backend/ || echo "BACKEND NÃO ENCONTRADO"
 
 # Expor porta
 EXPOSE 8000
 
 # Comando de inicialização
-CMD ["python", "start.py"]
+CMD ["python", "start_railway.py"]

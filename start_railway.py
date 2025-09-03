@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 Sistema de Cobrança Inteligente
-Arquivo principal de inicialização para Railway
+Versão otimizada para Railway
 """
 
 import os
@@ -47,16 +47,22 @@ def main():
         sys.exit(1)
     
     try:
+        # Configurar path para importações
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        sys.path.insert(0, current_dir)
+        
+        logger.info(f"📁 Diretório atual: {current_dir}")
+        logger.info(f"📁 Conteúdo: {os.listdir(current_dir)}")
+        
+        if 'backend' in os.listdir(current_dir):
+            logger.info("✅ Diretório backend encontrado")
+            logger.info(f"📁 Conteúdo backend: {os.listdir('backend')}")
+        else:
+            logger.error("❌ Diretório backend não encontrado")
+            return
+        
         # Importar e inicializar a aplicação
-        try:
-            # Tentar importação direta primeiro
-            from backend.app import create_app
-        except ImportError:
-            # Fallback: adicionar ao path e tentar novamente
-            import sys
-            current_dir = os.path.dirname(os.path.abspath(__file__))
-            sys.path.insert(0, current_dir)
-            from backend.app import create_app
+        from backend.app import create_app
         
         app = create_app()
         
@@ -89,6 +95,8 @@ def main():
             
     except Exception as e:
         logger.error(f"❌ Erro ao inicializar aplicação: {e}")
+        import traceback
+        traceback.print_exc()
         sys.exit(1)
 
 if __name__ == '__main__':
