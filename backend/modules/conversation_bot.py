@@ -127,6 +127,7 @@ class BotResponse:
     next_contact_hours: int
     escalate: bool
     context_update: Dict[str, Any]
+    confidence: float = 0.8
 
 class AdvancedNLPProcessor:
     """Processador de Linguagem Natural ULTRA AVANÇADO focado em cobrança"""
@@ -1302,6 +1303,68 @@ class ConversationBot:
         logger.info(f"💬 Resposta gerada: {response.response_type.value}")
         
         return response
+    
+    def generate_general_response(self, phone: str, message: str) -> BotResponse:
+        """Gera resposta para pessoas não cadastradas como clientes"""
+        try:
+            logger.info(f"👤 Gerando resposta geral para não-cliente: {phone}")
+            
+            # Análise básica da mensagem
+            message_lower = message.lower().strip()
+            
+            # Respostas para diferentes tipos de mensagens
+            if any(word in message_lower for word in ['oi', 'olá', 'ola', 'hey', 'hi', 'hello']):
+                response_text = "Olá! Como posso ajudá-lo hoje? Se você for cliente nosso, posso verificar suas informações. Caso contrário, posso direcioná-lo para o setor correto."
+                response_type = ResponseType.CUMPRIMENTO_RESPOSTA
+                urgency_level = 0.3
+                
+            elif any(word in message_lower for word in ['ajuda', 'help', 'suporte', 'atendimento']):
+                response_text = "Estou aqui para ajudar! Se você for cliente nosso, posso verificar suas informações. Caso contrário, posso direcioná-lo para o setor correto. Como posso ajudá-lo?"
+                response_type = ResponseType.RESPOSTA_EDUCADA
+                urgency_level = 0.4
+                
+            elif any(word in message_lower for word in ['cliente', 'cadastro', 'cadastrado']):
+                response_text = "Para verificar se você é cliente nosso, preciso que você entre em contato com nosso setor de atendimento através do número principal. Eles poderão verificar seu cadastro e te ajudar melhor."
+                response_type = ResponseType.RESPOSTA_EDUCADA
+                urgency_level = 0.5
+                
+            elif any(word in message_lower for word in ['cobrança', 'fatura', 'conta', 'pagamento']):
+                response_text = "Se você recebeu uma cobrança nossa, por favor entre em contato com nosso setor de atendimento através do número principal para verificar se há algum equívoco. Eles poderão te ajudar melhor."
+                response_type = ResponseType.RESPOSTA_EDUCADA
+                urgency_level = 0.6
+                
+            else:
+                response_text = "Obrigado por entrar em contato! Se você for cliente nosso, posso verificar suas informações. Caso contrário, posso direcioná-lo para o setor correto. Como posso ajudá-lo?"
+                response_type = ResponseType.RESPOSTA_EDUCADA
+                urgency_level = 0.4
+            
+            # Criar resposta estruturada
+            response = BotResponse(
+                message=response_text,
+                response_type=response_type,
+                urgency_level=urgency_level,
+                next_contact_hours=24,
+                escalate=False,
+                context_update={},
+                confidence=0.8
+            )
+            
+            logger.info(f"✅ Resposta geral gerada para {phone}: {response_type.value}")
+            return response
+            
+        except Exception as e:
+            logger.error(f"❌ Erro ao gerar resposta geral: {str(e)}")
+            # Resposta de fallback
+            fallback_response = BotResponse(
+                message="Obrigado por entrar em contato! Como posso ajudá-lo?",
+                response_type=ResponseType.RESPOSTA_EDUCADA,
+                urgency_level=0.5,
+                next_contact_hours=24,
+                escalate=False,
+                context_update={},
+                confidence=0.5
+            )
+            return fallback_response
     
     def _get_or_create_context(self, phone: str, customer_data: Dict[str, Any]) -> ConversationContext:
         """Carrega ou cria contexto da conversa"""

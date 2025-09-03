@@ -14,6 +14,7 @@ from typing import Dict, Any
 from backend.modules.conversation_bot import ConversationBot
 from backend.modules.waha_integration import WahaIntegration
 from backend.modules.logger_system import LogManager, LogCategory
+from backend.modules.customer_data_manager import get_customer_data
 from backend.config.settings import Config
 
 logger = LogManager.get_logger('api_webhook')
@@ -177,15 +178,27 @@ def handle_message_event(webhook_data: Dict[str, Any]):
             message=message.content
         )
         
-        # Processar mensagem com IA
-        response = bot.process_message(phone, message.content)
+        # Verificar se é cliente antes de processar
+        
+        # Buscar dados do cliente
+        customer_data = get_customer_data(phone)
+        
+        if customer_data and customer_data.get('is_customer', False):
+            # É cliente - processar com dados do cliente
+            logger.info(f"👤 Cliente identificado: {customer_data.get('name', 'Cliente')}")
+            response = bot.process_message(phone, message.content, customer_data)
+        else:
+            # Não é cliente - responder com mensagem geral
+            logger.info(f"👤 Pessoa não cadastrada como cliente: {phone}")
+            general_response = bot.generate_general_response(phone, message.content)
+            response = general_response
         
         # Enviar resposta automaticamente
         sent = False
         try:
             async def send_response():
                 async with waha:
-                    return await waha.send_text_message(phone, response.text)
+                    return await waha.send_text_message(phone, response.message)
             
             loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)
@@ -201,12 +214,12 @@ def handle_message_event(webhook_data: Dict[str, Any]):
             logger.conversation_event(
                 phone=phone,
                 direction="outgoing",
-                message=response.text,
+                message=response.message,
                 ai_response=True
             )
         
         # Verificar se deve escalar
-        if response.should_escalate:
+        if response.escalate:
             logger.warning(LogCategory.CONVERSATION, 
                          f"Conversa requer escalação: {phone}",
                          details={
@@ -219,7 +232,7 @@ def handle_message_event(webhook_data: Dict[str, Any]):
             'status': 'processed',
             'message': 'Mensagem processada com sucesso',
             'response_sent': sent,
-            'should_escalate': response.should_escalate,
+            'should_escalate': response.escalate,
             'phone': phone
         }), 200
         
