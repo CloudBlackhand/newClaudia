@@ -130,7 +130,7 @@ class BillingApp {
             try {
                 this.fileData = JSON.parse(e.target.result);
                 this.displayFileInfo(file);
-                this.displayPreview(this.fileData);
+                this.displayVendasPreview(this.fileData);
                 this.enableButtons();
             } catch (error) {
                 this.showToast('error', 'Erro', 'Arquivo JSON inválido');
@@ -147,75 +147,73 @@ class BillingApp {
         document.getElementById('file-size').textContent = this.formatFileSize(file.size);
     }
 
-    displayPreview(data) {
+    displayVendasPreview(data) {
         const previewContent = document.getElementById('preview-content');
         
-        // ✅ CORREÇÃO: Suportar tanto formato antigo quanto novo
-        let clients = [];
+        // ✅ NOVO FORMATO: Dados de vendas com "dados_vendas"
+        let vendasList = [];
         
         if (Array.isArray(data)) {
-            // ✅ NOVO FORMATO: Array direto com dados de cobrança
-            clients = data.filter(item => 
-                item.dados_fpd && 
-                item.dados_fpd.first_name && 
-                item.dados_fpd.cobrado_fpd > 0
-            ).map(item => ({
-                name: item.dados_fpd.first_name,
-                phone: item.dados_fpd.documento || 'N/A',
-                amount: item.dados_fpd.cobrado_fpd || 0,
-                due_date: item.dados_fpd.data_vencimento_fpd,
-                protocolo: item.protocolo,
-                contrato: item.dados_fpd.contrato,
-                dias_atraso: item.dados_fpd.dias_fpd || 0
-            }));
-        } else if (data.clients && Array.isArray(data.clients)) {
-            // ✅ FORMATO ANTIGO: { "clients": [...] }
-            clients = data.clients;
-        } else {
+            // Processar cada registro
+            for (const record of data) {
+                if (record.dados_vendas && Array.isArray(record.dados_vendas)) {
+                    for (const vendas of record.dados_vendas) {
+                        if (vendas.NOME && vendas.DOCUMENTO && vendas.TELEFONE1) {
+                            vendasList.push({
+                                nome: vendas.NOME,
+                                documento: vendas.DOCUMENTO,
+                                telefone: vendas.TELEFONE1,
+                                cidade: vendas.CIDADE || 'N/A',
+                                fpd: vendas.fpd || '0',
+                                status: vendas.STATUS || 'N/A',
+                                aba_origem: vendas.aba_origem || 'N/A'
+                            });
+                        }
+                    }
+                }
+            }
+        }
+        
+        if (vendasList.length === 0) {
             previewContent.innerHTML = `
                 <div class="preview-empty">
                     <i class="fas fa-exclamation-triangle"></i>
-                    <p>Estrutura de arquivo inválida. Formato não reconhecido.</p>
+                    <p>Nenhum registro de vendas válido encontrado no arquivo.</p>
+                    <p class="text-muted">Verifique se o arquivo contém a estrutura 'dados_vendas'</p>
                 </div>
             `;
             return;
         }
         
-        if (clients.length === 0) {
-            previewContent.innerHTML = `
-                <div class="preview-empty">
-                    <i class="fas fa-exclamation-triangle"></i>
-                    <p>Nenhum cliente com cobrança encontrado no arquivo.</p>
-                </div>
-            `;
-            return;
-        }
-        
-        const previewClients = clients.slice(0, 5); // Preview primeiros 5
+        const previewVendas = vendasList.slice(0, 10); // Preview primeiros 10
         
         previewContent.innerHTML = `
             <div style="margin-bottom: 1rem;">
-                <strong>Total de clientes com cobrança:</strong> ${clients.length}
-                ${clients.length > 5 ? `<span style="color: var(--text-muted);">(mostrando primeiros 5)</span>` : ''}
+                <strong>Total de registros de vendas:</strong> ${vendasList.length}
+                ${vendasList.length > 10 ? `<span style="color: var(--text-muted);">(mostrando primeiros 10)</span>` : ''}
             </div>
             <table class="preview-table">
                 <thead>
                     <tr>
                         <th>Nome</th>
                         <th>Documento</th>
-                        <th>Valor</th>
-                        <th>Vencimento</th>
-                        <th>Dias Atraso</th>
+                        <th>Telefone</th>
+                        <th>Cidade</th>
+                        <th>FPD</th>
+                        <th>Status</th>
+                        <th>Origem</th>
                     </tr>
                 </thead>
                 <tbody>
-                    ${previewClients.map(client => `
+                    ${previewVendas.map(venda => `
                         <tr>
-                            <td>${this.escapeHtml(client.name || 'N/A')}</td>
-                            <td>${this.escapeHtml(client.phone || 'N/A')}</td>
-                            <td>R$ ${(client.amount || 0).toFixed(2)}</td>
-                            <td>${this.formatDate(client.due_date) || 'N/A'}</td>
-                            <td>${client.dias_atraso || 0}</td>
+                            <td>${this.escapeHtml(venda.nome || 'N/A')}</td>
+                            <td>${this.escapeHtml(venda.documento || 'N/A')}</td>
+                            <td>${this.escapeHtml(venda.telefone || 'N/A')}</td>
+                            <td>${this.escapeHtml(venda.cidade || 'N/A')}</td>
+                            <td>${venda.fpd || '0'}</td>
+                            <td>${this.escapeHtml(venda.status || 'N/A')}</td>
+                            <td>${this.escapeHtml(venda.aba_origem || 'N/A')}</td>
                         </tr>
                     `).join('')}
                 </tbody>
@@ -257,50 +255,22 @@ class BillingApp {
         this.showLoading(true);
         
         try {
-            // ✅ CORREÇÃO: Converter dados para formato esperado pelo backend
-            let clients = [];
-            
-            if (Array.isArray(this.fileData)) {
-                // ✅ NOVO FORMATO: Converter para formato padrão
-                clients = this.fileData.filter(item => 
-                    item.dados_fpd && 
-                    item.dados_fpd.first_name && 
-                    item.dados_fpd.cobrado_fpd > 0
-                ).map(item => ({
-                    name: item.dados_fpd.first_name,
-                    phone: item.dados_fpd.documento || 'N/A',
-                    amount: item.dados_fpd.cobrado_fpd || 0,
-                    due_date: item.dados_fpd.data_vencimento_fpd,
-                    protocolo: item.protocolo,
-                    contrato: item.dados_fpd.contrato,
-                    dias_atraso: item.dados_fpd.dias_fpd || 0,
-                    documento: item.dados_fpd.documento,
-                    regional: item.dados_fpd.regional,
-                    territorio: item.dados_fpd.territorio
-                }));
-            } else if (this.fileData.clients) {
-                // ✅ FORMATO ANTIGO: Usar como está
-                clients = this.fileData.clients;
-            }
-            
-            const payload = {
-                clients: clients
-            };
-            
-            const response = await fetch(`${this.apiBase}/billing/validate-clients`, {
+            // ✅ NOVO FORMATO: Enviar dados de vendas para validação
+            const response = await fetch(`${this.apiBase}/vendas/validate`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify(payload)
+                body: JSON.stringify(this.fileData)
             });
 
             const result = await response.json();
 
-            if (response.ok && result.valid) {
-                this.showToast('success', 'Sucesso', `${result.client_count} clientes validados com sucesso`);
+            if (response.ok && result.success) {
+                this.showVendasValidationResults(result);
+                this.showToast('success', 'Sucesso', `Validação concluída: ${result.total_valid} válidos, ${result.total_invalid} inválidos`);
             } else {
-                this.showToast('error', 'Erro de Validação', result.errors ? result.errors.join('; ') : result.message);
+                this.showToast('error', 'Erro', result.error || 'Falha na validação');
             }
         } catch (error) {
             this.showToast('error', 'Erro', 'Falha na validação dos dados');
@@ -310,117 +280,26 @@ class BillingApp {
         this.showLoading(false);
     }
 
-    async sendBatch() {
-        if (!this.fileData) {
-            this.showToast('warning', 'Aviso', 'Nenhum arquivo selecionado');
-            return;
-        }
-
-        const templateId = document.getElementById('template-select').value;
-        const scheduleTime = document.getElementById('schedule-input').value;
-
-        // ✅ CORREÇÃO: Calcular total de clientes corretamente para ambos os formatos
-        let totalClients = 0;
-        if (Array.isArray(this.fileData)) {
-            totalClients = this.fileData.filter(item => 
-                item.dados_fpd && 
-                item.dados_fpd.first_name && 
-                item.dados_fpd.cobrado_fpd > 0
-            ).length;
-        } else if (this.fileData.clients) {
-            totalClients = this.fileData.clients.length;
-        }
-        
-        const confirmed = await this.showConfirmModal(
-            'Confirmar Envio',
-            `Deseja enviar mensagens de cobrança para ${totalClients} clientes usando o template "${templateId}"?`
-        );
-
-        if (!confirmed) return;
-
-        this.showLoading(true);
-
-        try {
-            // ✅ CORREÇÃO: Converter dados para formato esperado pelo backend
-            let clients = [];
-            
-            if (Array.isArray(this.fileData)) {
-                // ✅ NOVO FORMATO: Converter para formato padrão
-                clients = this.fileData.filter(item => 
-                    item.dados_fpd && 
-                    item.dados_fpd.first_name && 
-                    item.dados_fpd.cobrado_fpd > 0
-                ).map(item => ({
-                    name: item.dados_fpd.first_name,
-                    phone: item.dados_fpd.documento || 'N/A',
-                    amount: item.dados_fpd.cobrado_fpd || 0,
-                    due_date: item.dados_fpd.data_vencimento_fpd,
-                    protocolo: item.protocolo,
-                    contrato: item.dados_fpd.contrato,
-                    dias_atraso: item.dados_fpd.dias_fpd || 0,
-                    documento: item.dados_fpd.documento,
-                    regional: item.dados_fpd.regional,
-                    territorio: item.dados_fpd.territorio
-                }));
-            } else if (this.fileData.clients) {
-                // ✅ FORMATO ANTIGO: Usar como está
-                clients = this.fileData.clients;
-            }
-            
-            const payload = {
-                clients: clients,
-                template_id: templateId
-            };
-
-            if (scheduleTime) {
-                payload.schedule_time = scheduleTime;
-            }
-
-            const response = await fetch(`${this.apiBase}/billing/send-batch`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(payload)
-            });
-
-            const result = await response.json();
-
-            if (response.ok && result.success) {
-                this.showResults(result.result);
-                this.showToast('success', 'Sucesso', `Lote enviado: ${result.result.successful} sucessos, ${result.result.failed} falhas`);
-            } else {
-                this.showToast('error', 'Erro', result.message || 'Falha no envio do lote');
-            }
-        } catch (error) {
-            this.showToast('error', 'Erro', 'Falha no envio das mensagens');
-            console.error('Send batch error:', error);
-        }
-
-        this.showLoading(false);
-    }
-
-    showResults(result) {
+    showVendasValidationResults(result) {
         const resultsSection = document.getElementById('results-section');
         const resultsContent = document.getElementById('results-content');
 
-        const successRate = result.total_messages > 0 
-            ? ((result.successful / result.total_messages) * 100).toFixed(1)
-            : 0;
+        const summary = result.processing_summary;
+        const successRate = summary.success_rate.toFixed(1);
 
         resultsContent.innerHTML = `
             <div class="stats-grid" style="margin-bottom: 1.5rem;">
                 <div class="stat-item">
-                    <div class="stat-value">${result.total_messages}</div>
+                    <div class="stat-value">${summary.total_records}</div>
                     <div class="stat-label">Total</div>
                 </div>
                 <div class="stat-item">
-                    <div class="stat-value" style="color: var(--success);">${result.successful}</div>
-                    <div class="stat-label">Sucessos</div>
+                    <div class="stat-value" style="color: var(--success);">${summary.valid_records}</div>
+                    <div class="stat-label">Válidos</div>
                 </div>
                 <div class="stat-item">
-                    <div class="stat-value" style="color: var(--error);">${result.failed}</div>
-                    <div class="stat-label">Falhas</div>
+                    <div class="stat-value" style="color: var(--error);">${summary.invalid_records}</div>
+                    <div class="stat-label">Inválidos</div>
                 </div>
                 <div class="stat-item">
                     <div class="stat-value">${successRate}%</div>
@@ -429,17 +308,158 @@ class BillingApp {
             </div>
             
             <div style="margin-bottom: 1rem;">
-                <strong>Tempo de execução:</strong> ${result.execution_time.toFixed(2)}s
+                <h4>Distribuição por Cidade (Top 5):</h4>
+                <div class="city-stats">
+                    ${Object.entries(summary.cities_distribution)
+                        .slice(0, 5)
+                        .map(([city, count]) => `
+                            <div class="city-stat">
+                                <span class="city-name">${this.escapeHtml(city)}</span>
+                                <span class="city-count">${count}</span>
+                            </div>
+                        `).join('')}
+                </div>
             </div>
 
-            ${result.errors && result.errors.length > 0 ? `
+            <div style="margin-bottom: 1rem;">
+                <h4>Distribuição por FPD:</h4>
+                <div class="fpd-stats">
+                    ${Object.entries(summary.fpd_distribution)
+                        .map(([fpd, count]) => `
+                            <div class="fpd-stat">
+                                <span class="fpd-value">FPD ${fpd}</span>
+                                <span class="fpd-count">${count}</span>
+                            </div>
+                        `).join('')}
+                </div>
+            </div>
+
+            ${result.preview_data && result.preview_data.length > 0 ? `
                 <div style="margin-top: 1rem;">
-                    <h4 style="color: var(--error); margin-bottom: 0.5rem;">Erros:</h4>
+                    <h4>Preview dos Dados Válidos:</h4>
+                    <div class="preview-table-container">
+                        <table class="preview-table">
+                            <thead>
+                                <tr>
+                                    <th>Nome</th>
+                                    <th>Documento</th>
+                                    <th>Telefone</th>
+                                    <th>Cidade</th>
+                                    <th>FPD</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${result.preview_data.map(venda => `
+                                    <tr>
+                                        <td>${this.escapeHtml(venda.nome)}</td>
+                                        <td>${this.escapeHtml(venda.documento)}</td>
+                                        <td>${this.escapeHtml(venda.telefone)}</td>
+                                        <td>${this.escapeHtml(venda.cidade)}</td>
+                                        <td>${venda.fpd}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            ` : ''}
+        `;
+
+        resultsSection.classList.remove('hidden');
+        resultsSection.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    async sendBatch() {
+        if (!this.fileData) {
+            this.showToast('warning', 'Aviso', 'Nenhum arquivo selecionado');
+            return;
+        }
+
+        this.showLoading(true);
+        
+        try {
+            // ✅ NOVO FORMATO: Enviar dados de vendas para processamento
+            const response = await fetch(`${this.apiBase}/vendas/process`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(this.fileData)
+            });
+
+            const result = await response.json();
+
+            if (response.ok && result.success) {
+                this.showVendasProcessingResults(result);
+                this.showToast('success', 'Sucesso', `Processamento concluído: ${result.inserted_count} registros inseridos`);
+            } else {
+                this.showToast('error', 'Erro', result.error || 'Falha no processamento');
+            }
+        } catch (error) {
+            this.showToast('error', 'Erro', 'Falha no processamento dos dados');
+            console.error('Processing error:', error);
+        }
+
+        this.showLoading(false);
+    }
+
+    showVendasProcessingResults(result) {
+        const resultsSection = document.getElementById('results-section');
+        const resultsContent = document.getElementById('results-content');
+
+        const summary = result.processing_summary;
+        const successRate = summary.success_rate.toFixed(1);
+
+        resultsContent.innerHTML = `
+            <div class="stats-grid" style="margin-bottom: 1.5rem;">
+                <div class="stat-item">
+                    <div class="stat-value">${summary.total_records}</div>
+                    <div class="stat-label">Total Processados</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" style="color: var(--success);">${result.inserted_count}</div>
+                    <div class="stat-label">Inseridos no Banco</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" style="color: var(--error);">${summary.invalid_records}</div>
+                    <div class="stat-label">Inválidos</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">${successRate}%</div>
+                    <div class="stat-label">Taxa de Sucesso</div>
+                </div>
+            </div>
+            
+            <div style="margin-bottom: 1rem;">
+                <h4>Resumo do Processamento:</h4>
+                <p><strong>Total de registros:</strong> ${summary.total_records}</p>
+                <p><strong>Registros válidos:</strong> ${summary.valid_records}</p>
+                <p><strong>Registros inseridos:</strong> ${result.inserted_count}</p>
+                <p><strong>Erros de inserção:</strong> ${result.insertion_errors.length}</p>
+            </div>
+
+            ${result.insertion_errors && result.insertion_errors.length > 0 ? `
+                <div style="margin-top: 1rem;">
+                    <h4 style="color: var(--error); margin-bottom: 0.5rem;">Erros de Inserção:</h4>
                     <ul style="margin: 0; padding-left: 1.5rem;">
-                        ${result.errors.map(error => `<li style="color: var(--text-secondary);">${this.escapeHtml(error)}</li>`).join('')}
+                        ${result.insertion_errors.map(error => `<li style="color: var(--text-secondary);">${this.escapeHtml(error)}</li>`).join('')}
                     </ul>
                 </div>
             ` : ''}
+
+            <div style="margin-top: 1rem;">
+                <h4>Distribuição por Cidade:</h4>
+                <div class="city-stats">
+                    ${Object.entries(summary.cities_distribution)
+                        .slice(0, 8)
+                        .map(([city, count]) => `
+                            <div class="city-stat">
+                                <span class="city-name">${this.escapeHtml(city)}</span>
+                                <span class="city-count">${count}</span>
+                            </div>
+                        `).join('')}
+                </div>
+            </div>
         `;
 
         resultsSection.classList.remove('hidden');
