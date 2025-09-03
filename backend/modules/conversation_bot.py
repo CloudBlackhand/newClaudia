@@ -1450,11 +1450,100 @@ class ConversationBot:
 # Instância global da IA
 conversation_bot = ConversationBot()
 
-def process_customer_message(phone: str, message: str, customer_data: Dict[str, Any]) -> Dict[str, Any]:
-    """Função principal para processar mensagem do cliente"""
+def process_customer_message(phone: str, message: str, customer_data: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    """
+    🎯 FUNÇÃO PRINCIPAL PARA PROCESSAR MENSAGEM DO CLIENTE
+    
+    Agora com sistema de dados persistentes (cache + banco SQL)
+    """
     try:
+        # 🗄️ BUSCAR DADOS DO CLIENTE (PERSISTENTE)
+        if CUSTOMER_DATA_AVAILABLE:
+            try:
+                # Tentar buscar dados do cliente no sistema persistente
+                stored_customer = get_customer_data(phone)
+                if stored_customer:
+                    # ✅ CLIENTE ENCONTRADO NO SISTEMA PERSISTENTE
+                    customer_data = {
+                        'name': stored_customer.name,
+                        'phone': stored_customer.phone,
+                        'documento': stored_customer.documento,
+                        'debt_amount': stored_customer.debt_amount,
+                        'days_overdue': stored_customer.days_overdue,
+                        'due_date': stored_customer.due_date,
+                        'protocolo': stored_customer.protocolo,
+                        'contrato': stored_customer.contrato,
+                        'regional': stored_customer.regional,
+                        'territorio': stored_customer.territorio,
+                        'plano': stored_customer.plano,
+                        'valor_mensalidade': stored_customer.valor_mensalidade,
+                        'company': stored_customer.company,
+                        'status': stored_customer.status,
+                        'priority': stored_customer.priority,
+                        'is_customer': stored_customer.is_customer,
+                        'conversation_count': stored_customer.conversation_count,
+                        'payment_promises': stored_customer.payment_promises
+                    }
+                    logger.info(f"🗄️ CLIENTE ENCONTRADO no sistema persistente: {stored_customer.name}")
+                else:
+                    # 👤 NÃO É CLIENTE CADASTRADO - RESPONDER COMO PESSOA COMUM
+                    logger.info(f"👤 Pessoa não cadastrada como cliente: {phone}")
+                    customer_data = {
+                        'name': 'Pessoa',
+                        'phone': phone,
+                        'is_customer': False,
+                        'debt_amount': 0.0,
+                        'days_overdue': 0,
+                        'status': 'non_customer'
+                    }
+            except Exception as e:
+                logger.warning(f"⚠️ Erro ao buscar dados persistentes: {str(e)}")
+                # Usar dados fornecidos como fallback
+                if not customer_data:
+                    customer_data = {'name': 'Cliente', 'phone': phone}
+        
+        # Se não tiver dados, usar default
+        if not customer_data:
+            customer_data = {'name': 'Cliente', 'phone': phone}
+        
         # Processa com a IA REAL
         response = conversation_bot.process_message(phone, message, customer_data)
+        
+        # 💾 SALVAR CONTEXTO DA CONVERSA (PERSISTENTE)
+        if CUSTOMER_DATA_AVAILABLE:
+            try:
+                # Criar contexto persistente
+                context = ConversationContext(
+                    phone=phone,
+                    customer_name=customer_data.get('name', 'Cliente'),
+                    debt_amount=customer_data.get('debt_amount', 0),
+                    days_overdue=customer_data.get('days_overdue', 0),
+                    conversation_history=[{
+                        'timestamp': datetime.now().isoformat(),
+                        'customer_message': message,
+                        'bot_response': response.message,
+                        'intent': response.response_type.value,
+                        'urgency_level': response.urgency_level
+                    }],
+                    cooperation_level=getattr(response, 'cooperation_level', 0.5),
+                    urgency_level=response.urgency_level,
+                    last_intent=response.response_type.value,
+                    last_contact=datetime.now().isoformat()
+                )
+                
+                # Salvar contexto persistente
+                save_conversation_context(phone, context)
+                logger.info(f"💾 Contexto da conversa salvo (persistente): {phone}")
+                
+                # Atualizar interação do cliente
+                update_customer_interaction(phone, {
+                    'intent': response.response_type.value,
+                    'urgency_level': response.urgency_level,
+                    'response_type': response.response_type.value
+                })
+                
+            except Exception as e:
+                logger.warning(f"⚠️ Erro ao salvar contexto persistente: {str(e)}")
         
         # Retorna resposta estruturada
         return {
@@ -1464,7 +1553,9 @@ def process_customer_message(phone: str, message: str, customer_data: Dict[str, 
             'urgency_level': response.urgency_level,
             'next_contact_hours': response.next_contact_hours,
             'escalate': response.escalate,
-            'context_updates': response.context_update
+            'context_updates': response.context_update,
+            'customer_data_persistent': CUSTOMER_DATA_AVAILABLE,
+            'customer_found': customer_data.get('is_customer', False)
         }
         
     except Exception as e:
@@ -1476,7 +1567,9 @@ def process_customer_message(phone: str, message: str, customer_data: Dict[str, 
             'response_type': 'error',
             'urgency_level': 0.5,
             'next_contact_hours': 24,
-            'escalate': True
+            'escalate': True,
+            'customer_data_persistent': CUSTOMER_DATA_AVAILABLE,
+            'customer_found': False
         }
 
 # Função de compatibilidade
