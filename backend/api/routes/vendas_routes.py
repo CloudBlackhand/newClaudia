@@ -8,7 +8,7 @@ from datetime import datetime
 vendas_blueprint = Blueprint('vendas', __name__)
 logger = SmartLogger()
 
-@vendas_blueprint.route('/api/vendas/validate', methods=['POST'])
+@vendas_blueprint.route('/vendas/validate', methods=['POST'])
 def validate_vendas_data():
     """Validar dados de vendas sem inserir no banco"""
     try:
@@ -43,7 +43,7 @@ def validate_vendas_data():
             'error': str(e)
         }), 500
 
-@vendas_blueprint.route('/api/vendas/process', methods=['POST'])
+@vendas_blueprint.route('/vendas/process', methods=['POST'])
 def process_vendas_data():
     """Processa e insere dados de vendas no banco de dados"""
     try:
@@ -84,34 +84,30 @@ def process_vendas_data():
         for venda in processed_vendas:
             if venda.is_valid:
                 try:
-                    # Inserir na tabela customers
+                    # Inserir na tabela customers - NOVA ESTRUTURA APENAS dados_vendas
                     cursor.execute("""
                         INSERT INTO customers (
-                            protocolo, first_name, documento, cobrado_fpd, dias_fpd,
-                            data_vencimento_fpd, contrato, regional, territorio, dsc_plano,
-                            valor_mensalidade, empresa, status, priority, is_customer,
-                            last_contact, conversation_count, payment_promises, last_payment_date
-                        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                            nome, documento, telefone1, telefone2, email, rua_endereco,
+                            cidade, cep, data_nascimento, status, origem_venda,
+                            contrato, data_agenda, obs, aba_origem, spd
+                        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                     """, (
-                        f"VDA_{venda.documento[:8]}",  # Protocolo baseado no documento
                         venda.nome,
                         venda.documento,
-                        float(venda.fpd) if venda.fpd.isdigit() else 0.0,
-                        0,  # dias_fpd - será calculado depois
-                        None,  # data_vencimento_fpd - será calculado depois
-                        venda.aba_origem,  # contrato
-                        venda.cidade,  # regional
-                        venda.endereco,  # territorio
-                        f"Plano FPD {venda.fpd}",  # dsc_plano
-                        0.0,  # valor_mensalidade
-                        "VENDAS",  # empresa
+                        venda.telefone1,
+                        venda.telefone2,
+                        venda.email,
+                        venda.endereco,
+                        venda.cidade,
+                        venda.cep,
+                        venda.data_nascimento,
                         venda.status,
-                        1 if venda.fpd == "1" else 0,  # priority baseado no FPD
-                        True,  # is_customer
-                        None,  # last_contact
-                        0,  # conversation_count
-                        0,  # payment_promises
-                        None  # last_payment_date
+                        venda.aba_origem,  # origem_venda
+                        venda.aba_origem,  # contrato (usando aba_origem como contrato)
+                        venda.fpd,  # data_agenda (usando fpd como data_agenda)
+                        f"FPD: {venda.fpd}",  # obs
+                        venda.aba_origem,
+                        venda.fpd  # spd
                     ))
                     
                     inserted_count += 1
@@ -142,7 +138,7 @@ def process_vendas_data():
             'error': str(e)
         }), 500
 
-@vendas_blueprint.route('/api/vendas/stats', methods=['GET'])
+@vendas_blueprint.route('/vendas/stats', methods=['GET'])
 def get_vendas_stats():
     """Obter estatísticas dos dados de vendas processados"""
     try:
@@ -156,17 +152,16 @@ def get_vendas_stats():
         conn = psycopg2.connect(database_url)
         cursor = conn.cursor()
         
-        # Contar vendas por empresa
+        # Contar total de vendas
         cursor.execute("""
-            SELECT COUNT(*) FROM customers WHERE empresa = 'VENDAS'
+            SELECT COUNT(*) FROM customers
         """)
         vendas_count = cursor.fetchone()[0]
         
-        # Contar por regional (cidade)
+        # Contar por cidade
         cursor.execute("""
-            SELECT regional, COUNT(*) FROM customers 
-            WHERE empresa = 'VENDAS' 
-            GROUP BY regional 
+            SELECT cidade, COUNT(*) FROM customers 
+            GROUP BY cidade 
             ORDER BY COUNT(*) DESC
         """)
         regional_stats = dict(cursor.fetchall())

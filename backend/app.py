@@ -116,8 +116,8 @@ def register_blueprints(app):
         if admin_blueprint:
             app.register_blueprint(admin_blueprint, url_prefix='/api')
         if vendas_blueprint:
-            app.register_blueprint(vendas_blueprint, url_prefix='')
-            logger.info("✅ Vendas blueprint registrado com sucesso")
+            app.register_blueprint(vendas_blueprint, url_prefix='/api')
+            logger.info("✅ Vendas blueprint registrado com sucesso - url_prefix='/api'")
         
         # Rota principal
         @app.route('/')
