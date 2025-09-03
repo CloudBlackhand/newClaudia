@@ -12,36 +12,54 @@ from datetime import datetime
 from typing import Dict, List, Optional, Any
 from dataclasses import dataclass, asdict
 
+# Tentar carregar dotenv
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
+
 # Configuração de logging
 logger = logging.getLogger(__name__)
 
 # Configurações do banco (serão carregadas do Railway)
 DATABASE_URL = os.getenv('DATABASE_URL', 'postgresql://localhost:5432/cobranca')
-DB_HOST = os.getenv('DB_HOST', 'localhost')
-DB_PORT = os.getenv('DB_PORT', '5432')
-DB_NAME = os.getenv('DB_NAME', 'cobranca')
-DB_USER = os.getenv('DB_USER', 'postgres')
-DB_PASSWORD = os.getenv('DB_PASSWORD', '')
+
+# Para desenvolvimento local, usar configurações do Railway
+if 'localhost' in DATABASE_URL or not DATABASE_URL:
+    # Configurações hardcoded do Railway para desenvolvimento (URL pública)
+    DATABASE_URL = 'postgresql://postgres:KQBgHeNvKIVDPRzmrXVgzXtPFLbCeMeX@hopper.proxy.rlwy.net:34660/railway'
+    DB_HOST = 'hopper.proxy.rlwy.net'
+    DB_PORT = '34660'
+    DB_NAME = 'railway'
+    DB_USER = 'postgres'
+    DB_PASSWORD = 'KQBgHeNvKIVDPRzmrXVgzXtPFLbCeMeX'
+else:
+    # Usar variáveis de ambiente
+    DB_HOST = os.getenv('PGHOST', 'localhost')
+    DB_PORT = os.getenv('PGPORT', '5432')
+    DB_NAME = os.getenv('PGDATABASE', 'railway')
+    DB_USER = os.getenv('PGUSER', 'postgres')
+    DB_PASSWORD = os.getenv('PGPASSWORD', '')
 
 @dataclass
 class Customer:
-    """Modelo de dados do cliente para banco"""
-    phone: str
-    name: str
+    """Modelo de dados do cliente para banco (estrutura existente)"""
+    protocolo: str  # Chave principal
+    first_name: str
     documento: str
-    debt_amount: float
-    days_overdue: int
-    due_date: str
-    protocolo: str
+    cobrado_fpd: float  # Valor da dívida
+    dias_fpd: int  # Dias em atraso
+    data_vencimento_fpd: str
     contrato: str
     regional: str
     territorio: str
-    plano: str
+    dsc_plano: str
     valor_mensalidade: float
-    company: str
-    status: str
-    priority: str
-    is_customer: bool
+    empresa: str
+    status: str = 'active'
+    priority: str = 'medium'
+    is_customer: bool = True
     last_contact: Optional[str] = None
     conversation_count: int = 0
     payment_promises: int = 0
@@ -117,120 +135,83 @@ class DatabaseManager:
             self.connected = False
     
     def _create_tables(self):
-        """Cria tabelas necessárias se não existirem"""
+        """Verifica se tabelas existem (não cria novas)"""
         try:
-            # Tabela de clientes
+            # Verificar se tabela customers existe
             self.cursor.execute("""
-                CREATE TABLE IF NOT EXISTS customers (
-                    id SERIAL PRIMARY KEY,
-                    phone VARCHAR(20) UNIQUE NOT NULL,
-                    name VARCHAR(255) NOT NULL,
-                    documento VARCHAR(20),
-                    debt_amount DECIMAL(10,2) DEFAULT 0.0,
-                    days_overdue INTEGER DEFAULT 0,
-                    due_date VARCHAR(20),
-                    protocolo VARCHAR(50),
-                    contrato VARCHAR(50),
-                    regional VARCHAR(100),
-                    territorio VARCHAR(100),
-                    plano VARCHAR(100),
-                    valor_mensalidade DECIMAL(10,2) DEFAULT 0.0,
-                    company VARCHAR(100),
-                    status VARCHAR(50) DEFAULT 'active',
-                    priority VARCHAR(50) DEFAULT 'medium',
-                    is_customer BOOLEAN DEFAULT TRUE,
-                    last_contact TIMESTAMP,
-                    conversation_count INTEGER DEFAULT 0,
-                    payment_promises INTEGER DEFAULT 0,
-                    last_payment_date TIMESTAMP,
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                )
+                SELECT COUNT(*) FROM information_schema.tables 
+                WHERE table_schema = 'public' 
+                AND table_name = 'customers'
             """)
             
-            # Tabela de conversas
+            customers_exists = self.cursor.fetchone()[0] > 0
+            
+            # Verificar se tabela conversations existe
             self.cursor.execute("""
-                CREATE TABLE IF NOT EXISTS conversations (
-                    id SERIAL PRIMARY KEY,
-                    phone VARCHAR(20) UNIQUE NOT NULL,
-                    customer_name VARCHAR(255) NOT NULL,
-                    debt_amount DECIMAL(10,2) DEFAULT 0.0,
-                    days_overdue INTEGER DEFAULT 0,
-                    conversation_history JSONB DEFAULT '[]',
-                    cooperation_level DECIMAL(3,2) DEFAULT 0.5,
-                    lie_probability DECIMAL(3,2) DEFAULT 0.0,
-                    urgency_level DECIMAL(3,2) DEFAULT 0.5,
-                    last_intent VARCHAR(100),
-                    last_sentiment VARCHAR(100),
-                    payment_promises INTEGER DEFAULT 0,
-                    last_contact TIMESTAMP,
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                )
+                SELECT COUNT(*) FROM information_schema.tables 
+                WHERE table_schema = 'public' 
+                AND table_name = 'conversations'
             """)
             
-            # Índices para performance
-            self.cursor.execute("CREATE INDEX IF NOT EXISTS idx_customers_phone ON customers(phone)")
-            self.cursor.execute("CREATE INDEX IF NOT EXISTS idx_conversations_phone ON conversations(phone)")
-            self.cursor.execute("CREATE INDEX IF NOT EXISTS idx_customers_status ON customers(status)")
-            self.cursor.execute("CREATE INDEX IF NOT EXISTS idx_customers_company ON customers(company)")
+            conversations_exists = self.cursor.fetchone()[0] > 0
             
-            self.connection.commit()
-            logger.info("✅ Tabelas criadas/verificadas com sucesso!")
+            if customers_exists and conversations_exists:
+                logger.info("✅ Tabelas existentes verificadas com sucesso!")
+            else:
+                logger.warning("⚠️ Algumas tabelas não existem - usar estrutura atual")
             
         except Exception as e:
-            logger.error(f"❌ Erro ao criar tabelas: {str(e)}")
+            logger.error(f"❌ Erro ao verificar tabelas: {str(e)}")
             self.connected = False
     
     def save_customer_data(self, customer: Customer) -> bool:
-        """Salva dados do cliente no banco"""
+        """Salva dados do cliente no banco (estrutura existente)"""
         try:
             if not self.connected:
                 logger.warning("⚠️ Banco não conectado - usando cache apenas")
                 return False
             
             # Verificar se cliente já existe
-            self.cursor.execute("SELECT id FROM customers WHERE phone = %s", (customer.phone,))
+            self.cursor.execute("SELECT id FROM customers WHERE protocolo = %s", (customer.protocolo,))
             existing = self.cursor.fetchone()
             
             if existing:
                 # Atualizar cliente existente
                 self.cursor.execute("""
                     UPDATE customers SET
-                        name = %s, documento = %s, debt_amount = %s, days_overdue = %s,
-                        due_date = %s, protocolo = %s, contrato = %s, regional = %s,
-                        territorio = %s, plano = %s, valor_mensalidade = %s, company = %s,
+                        first_name = %s, documento = %s, cobrado_fpd = %s, dias_fpd = %s,
+                        data_vencimento_fpd = %s, contrato = %s, regional = %s,
+                        territorio = %s, dsc_plano = %s, valor_mensalidade = %s, empresa = %s,
                         status = %s, priority = %s, is_customer = %s, last_contact = %s,
                         conversation_count = %s, payment_promises = %s, last_payment_date = %s,
                         updated_at = CURRENT_TIMESTAMP
-                    WHERE phone = %s
+                    WHERE protocolo = %s
                 """, (
-                    customer.name, customer.documento, customer.debt_amount, customer.days_overdue,
-                    customer.due_date, customer.protocolo, customer.contrato, customer.regional,
-                    customer.territorio, customer.plano, customer.valor_mensalidade, customer.company,
+                    customer.first_name, customer.documento, customer.cobrado_fpd, customer.dias_fpd,
+                    customer.data_vencimento_fpd, customer.contrato, customer.regional,
+                    customer.territorio, customer.dsc_plano, customer.valor_mensalidade, customer.empresa,
                     customer.status, customer.priority, customer.is_customer, customer.last_contact,
                     customer.conversation_count, customer.payment_promises, customer.last_payment_date,
-                    customer.phone
+                    customer.protocolo
                 ))
-                logger.info(f"🔄 Cliente {customer.name} atualizado no banco")
+                logger.info(f"🔄 Cliente {customer.first_name} atualizado no banco")
             else:
                 # Inserir novo cliente
                 self.cursor.execute("""
                     INSERT INTO customers (
-                        phone, name, documento, debt_amount, days_overdue, due_date,
-                        protocolo, contrato, regional, territorio, plano, valor_mensalidade,
-                        company, status, priority, is_customer, last_contact,
+                        protocolo, first_name, documento, cobrado_fpd, dias_fpd,
+                        data_vencimento_fpd, contrato, regional, territorio, dsc_plano, 
+                        valor_mensalidade, empresa, status, priority, is_customer, last_contact,
                         conversation_count, payment_promises, last_payment_date
-                    ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 """, (
-                    customer.phone, customer.name, customer.documento, customer.debt_amount,
-                    customer.days_overdue, customer.due_date, customer.protocolo, customer.contrato,
-                    customer.regional, customer.territorio, customer.plano, customer.valor_mensalidade,
-                    customer.company, customer.status, customer.priority, customer.is_customer,
-                    customer.last_contact, customer.conversation_count, customer.payment_promises,
-                    customer.last_payment_date
+                    customer.protocolo, customer.first_name, customer.documento, customer.cobrado_fpd,
+                    customer.dias_fpd, customer.data_vencimento_fpd, customer.contrato, customer.regional,
+                    customer.territorio, customer.dsc_plano, customer.valor_mensalidade, customer.empresa,
+                    customer.status, customer.priority, customer.is_customer, customer.last_contact,
+                    customer.conversation_count, customer.payment_promises, customer.last_payment_date
                 ))
-                logger.info(f"✅ Cliente {customer.name} inserido no banco")
+                logger.info(f"✅ Cliente {customer.first_name} inserido no banco")
             
             self.connection.commit()
             return True
@@ -241,39 +222,38 @@ class DatabaseManager:
                 self.connection.rollback()
             return False
     
-    def get_customer_by_phone(self, phone: str) -> Optional[Customer]:
-        """Busca cliente por telefone"""
+    def get_customer_by_protocolo(self, protocolo: str) -> Optional[Customer]:
+        """Busca cliente por protocolo"""
         try:
             if not self.connected:
                 return None
             
             self.cursor.execute("""
-                SELECT * FROM customers WHERE phone = %s
-            """, (phone,))
+                SELECT * FROM customers WHERE protocolo = %s
+            """, (protocolo,))
             
             result = self.cursor.fetchone()
             if result:
                 # Converter resultado para Customer
                 customer = Customer(
-                    phone=result['phone'],
-                    name=result['name'],
+                    protocolo=result['protocolo'],
+                    first_name=result['first_name'] or '',
                     documento=result['documento'] or '',
-                    debt_amount=float(result['debt_amount'] or 0),
-                    days_overdue=int(result['days_overdue'] or 0),
-                    due_date=result['due_date'] or '',
-                    protocolo=result['protocolo'] or '',
-                    contrato=result['contrato'] or '',
+                    cobrado_fpd=float(result['cobrado_fpd'] or 0),
+                    dias_fpd=int(result['dias_fpd'] or 0),
+                    data_vencimento_fpd=result['data_vencimento_fpd'].isoformat() if result['data_vencimento_fpd'] else '',
+                    contrato=str(result['contrato'] or ''),
                     regional=result['regional'] or '',
                     territorio=result['territorio'] or '',
-                    plano=result['plano'] or '',
+                    dsc_plano=result['dsc_plano'] or '',
                     valor_mensalidade=float(result['valor_mensalidade'] or 0),
-                    company=result['company'] or '',
+                    empresa=result['empresa'] or '',
                     status=result['status'] or 'active',
                     priority=result['priority'] or 'medium',
-                    is_customer=bool(result['is_customer']),
+                    is_customer=bool(result['is_customer']) if 'is_customer' in result else True,
                     last_contact=result['last_contact'].isoformat() if result['last_contact'] else None,
-                    conversation_count=int(result['conversation_count'] or 0),
-                    payment_promises=int(result['payment_promises'] or 0),
+                    conversation_count=int(result['conversation_count'] or 0) if 'conversation_count' in result else 0,
+                    payment_promises=int(result['payment_promises'] or 0) if 'payment_promises' in result else 0,
                     last_payment_date=result['last_payment_date'].isoformat() if result['last_payment_date'] else None,
                     created_at=result['created_at'].isoformat() if result['created_at'] else None,
                     updated_at=result['updated_at'].isoformat() if result['updated_at'] else None
@@ -423,15 +403,15 @@ class DatabaseManager:
             logger.error(f"❌ Erro ao buscar clientes no banco: {str(e)}")
             return []
     
-    def get_customers_by_company(self, company: str) -> List[Customer]:
+    def get_customers_by_company(self, empresa: str) -> List[Customer]:
         """Busca clientes por empresa"""
         try:
             if not self.connected:
                 return []
             
             self.cursor.execute("""
-                SELECT * FROM customers WHERE company = %s ORDER BY updated_at DESC
-            """, (company,))
+                SELECT * FROM customers WHERE empresa = %s ORDER BY updated_at DESC
+            """, (empresa,))
             
             results = self.cursor.fetchall()
             customers = []
@@ -469,17 +449,17 @@ class DatabaseManager:
             logger.error(f"❌ Erro ao buscar clientes por empresa: {str(e)}")
             return []
     
-    def delete_customer(self, phone: str) -> bool:
+    def delete_customer(self, protocolo: str) -> bool:
         """Remove cliente do banco"""
         try:
             if not self.connected:
                 return False
             
-            self.cursor.execute("DELETE FROM customers WHERE phone = %s", (phone,))
-            self.cursor.execute("DELETE FROM conversations WHERE phone = %s", (phone,))
+            self.cursor.execute("DELETE FROM customers WHERE protocolo = %s", (protocolo,))
+            self.cursor.execute("DELETE FROM conversations WHERE customer_protocolo = %s", (protocolo,))
             
             self.connection.commit()
-            logger.info(f"🗑️ Cliente {phone} removido do banco")
+            logger.info(f"🗑️ Cliente {protocolo} removido do banco")
             return True
             
         except Exception as e:
@@ -522,11 +502,11 @@ class DatabaseManager:
             conversations_count = self.cursor.fetchone()['total']
             
             # Total de dívidas
-            self.cursor.execute("SELECT SUM(debt_amount) as total FROM customers WHERE debt_amount > 0")
+            self.cursor.execute("SELECT SUM(cobrado_fpd) as total FROM customers WHERE cobrado_fpd > 0")
             total_debt = self.cursor.fetchone()['total'] or 0
             
             # Clientes com dívida
-            self.cursor.execute("SELECT COUNT(*) as total FROM customers WHERE debt_amount > 0")
+            self.cursor.execute("SELECT COUNT(*) as total FROM customers WHERE cobrado_fpd > 0")
             customers_with_debt = self.cursor.fetchone()['total']
             
             return {
@@ -568,9 +548,9 @@ def save_customer_data(customer: Customer) -> bool:
     """Salvar dados do cliente"""
     return db_manager.save_customer_data(customer)
 
-def get_customer_by_phone(phone: str) -> Optional[Customer]:
-    """Buscar cliente por telefone"""
-    return db_manager.get_customer_by_phone(phone)
+def get_customer_by_protocolo(protocolo: str) -> Optional[Customer]:
+    """Buscar cliente por protocolo"""
+    return db_manager.get_customer_by_protocolo(protocolo)
 
 def save_conversation_context(context: Conversation) -> bool:
     """Salvar contexto da conversa"""
@@ -584,13 +564,13 @@ def get_all_customers(limit: int = 1000) -> List[Customer]:
     """Buscar todos os clientes"""
     return db_manager.get_all_customers(limit)
 
-def get_customers_by_company(company: str) -> List[Customer]:
+def get_customers_by_company(empresa: str) -> List[Customer]:
     """Buscar clientes por empresa"""
-    return db_manager.get_customers_by_company(company)
+    return db_manager.get_customers_by_company(empresa)
 
-def delete_customer(phone: str) -> bool:
+def delete_customer(protocolo: str) -> bool:
     """Remover cliente"""
-    return db_manager.delete_customer(phone)
+    return db_manager.delete_customer(protocolo)
 
 def clear_all_data() -> bool:
     """Limpar todos os dados"""
@@ -613,19 +593,18 @@ if __name__ == "__main__":
         
         # Teste de cliente
         test_customer = Customer(
-            phone='11999999999',
-            name='João Silva Teste',
-            documento='123.456.789-00',
-            debt_amount=1500.00,
-            days_overdue=45,
-            due_date='2024-08-15',
             protocolo='12345',
+            first_name='João Silva Teste',
+            documento='123.456.789-00',
+            cobrado_fpd=1500.00,
+            dias_fpd=45,
+            data_vencimento_fpd='2024-08-15',
             contrato='67890',
             regional='Central',
             territorio='São Paulo',
-            plano='Fibra 600M',
+            dsc_plano='Fibra 600M',
             valor_mensalidade=99.99,
-            company='DESKTOP_SF',
+            empresa='DESKTOP_SF',
             status='active',
             priority='high',
             is_customer=True
@@ -636,14 +615,14 @@ if __name__ == "__main__":
         print(f"✅ Cliente salvo: {success}")
         
         # Buscar cliente
-        customer = get_customer_by_phone('11999999999')
+        customer = get_customer_by_protocolo('12345')
         if customer:
-            print(f"✅ Cliente encontrado: {customer.name} - R$ {customer.debt_amount}")
+            print(f"✅ Cliente encontrado: {customer.first_name} - R$ {customer.cobrado_fpd}")
         else:
             print("❌ Cliente não encontrado")
         
         # Limpar teste
-        delete_customer('11999999999')
+        delete_customer('12345')
         print("🗑️ Cliente de teste removido")
         
     else:

@@ -1,68 +1,69 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Script para depurar variáveis de ambiente
+Debug das variáveis de ambiente do Railway
 """
 
 import os
-import sys
-import json
-# Não usar dotenv para simplificar
 
-def print_header(title):
-    """Imprimir cabeçalho"""
-    print("\n" + "=" * 80)
-    print(f" {title} ".center(80, "="))
-    print("=" * 80)
-
-def print_env_var(name, value=None):
-    """Imprimir variável de ambiente"""
-    if value is None:
-        value = os.getenv(name, "NÃO DEFINIDO")
+def debug_environment():
+    """Debug das variáveis de ambiente"""
+    print("🔍 DEBUG DAS VARIÁVEIS DE AMBIENTE")
+    print("=" * 50)
     
-    print(f"{name:30} = {value}")
-
-def main():
-    """Função principal"""
-    print_header("INFORMAÇÕES DO SISTEMA")
-    print(f"Python: {sys.version}")
-    print(f"Diretório atual: {os.getcwd()}")
+    # Variáveis do Railway
+    railway_vars = [
+        'DATABASE_URL',
+        'PGHOST', 
+        'PGPORT',
+        'PGDATABASE',
+        'PGUSER',
+        'PGPASSWORD'
+    ]
     
-    print_header("VARIÁVEIS DE AMBIENTE WAHA")
-    print_env_var("WAHA_BASE_URL")
-    print_env_var("WAHA_SESSION_NAME")
-    print_env_var("WAHA_WEBHOOK_URL")
-    print_env_var("WAHA_API_KEY")
+    for var in railway_vars:
+        value = os.getenv(var)
+        if value:
+            # Mascarar senha
+            if 'PASSWORD' in var:
+                masked_value = value[:10] + "..." if len(value) > 10 else "***"
+                print(f"✅ {var}: {masked_value}")
+            else:
+                print(f"✅ {var}: {value}")
+        else:
+            print(f"❌ {var}: NÃO DEFINIDA")
     
-    print_header("VARIÁVEIS DE AMBIENTE WHATSAPP")
-    print_env_var("WHATSAPP_API_KEY")
-    print_env_var("WHATSAPP_DEFAULT_ENGINE")
-    print_env_var("WHATSAPP_HOOK_EVENTS")
-    print_env_var("WHATSAPP_HOOK_URL")
-    print_env_var("WHATSAPP_START_SESSION")
+    print("\n🔍 VERIFICANDO CONEXÃO:")
     
-    print_header("VARIÁVEIS DE AMBIENTE RAILWAY")
-    print_env_var("RAILWAY_ENVIRONMENT")
-    print_env_var("RAILWAY_PUBLIC_DOMAIN")
-    print_env_var("RAILWAY_SERVICE_WAHAWA_URL")
-    
-    print_header("OUTRAS VARIÁVEIS DE AMBIENTE")
-    print_env_var("API_KEY")
-    print_env_var("DEBUG")
-    print_env_var("SECRET_KEY")
-    
-    print_header("TESTE DE IMPORTAÇÃO DO CONFIG")
+    # Tentar conectar diretamente
     try:
-        from backend.config.settings import Config
-        print("✅ Importação do Config bem-sucedida")
-        print(f"WAHA_BASE_URL (Config): {Config.WAHA_BASE_URL}")
-        print(f"WAHA_SESSION_NAME (Config): {Config.WAHA_SESSION_NAME}")
-        print(f"WAHA_API_KEY (Config): {'*' * len(Config.WAHA_API_KEY) if Config.WAHA_API_KEY else 'NÃO DEFINIDO'}")
+        import psycopg2
         
-        print("\nConfigurações do Waha:")
-        print(json.dumps(Config.get_waha_config(), indent=2))
+        # Usar DATABASE_URL do Railway
+        database_url = os.getenv('DATABASE_URL')
+        if database_url and 'localhost' not in database_url:
+            print(f"🔗 Tentando conectar via DATABASE_URL...")
+            print(f"URL: {database_url[:50]}...")
+            
+            conn = psycopg2.connect(database_url)
+            print("🎉 CONEXÃO BEM-SUCEDIDA!")
+            
+            # Testar query simples
+            cursor = conn.cursor()
+            cursor.execute("SELECT version()")
+            version = cursor.fetchone()
+            print(f"📊 Versão PostgreSQL: {version[0]}")
+            
+            cursor.close()
+            conn.close()
+            
+        else:
+            print("❌ DATABASE_URL não encontrada ou é localhost")
+            
+    except ImportError:
+        print("❌ psycopg2 não instalado")
     except Exception as e:
-        print(f"❌ Erro ao importar Config: {e}")
+        print(f"❌ Erro na conexão: {e}")
 
 if __name__ == "__main__":
-    main()
+    debug_environment()
