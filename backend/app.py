@@ -91,13 +91,13 @@ def register_blueprints(app):
         except Exception as e:
             logger.error(f"❌ Erro ao importar admin blueprint: {e}")
             admin_blueprint = None
-        
+            
         try:
-            from backend.api.routes.vendas_routes import vendas_bp
+            from backend.api.routes.vendas_routes import vendas_blueprint
             logger.info("✅ Vendas blueprint importado com sucesso")
         except Exception as e:
             logger.error(f"❌ Erro ao importar vendas blueprint: {e}")
-            vendas_bp = None
+            vendas_blueprint = None
         
         # Registrar blueprints
         if billing_bp:
@@ -115,8 +115,8 @@ def register_blueprints(app):
             app.register_blueprint(campaign_blueprint, url_prefix='/api')
         if admin_blueprint:
             app.register_blueprint(admin_blueprint, url_prefix='/api')
-        if vendas_bp:
-            app.register_blueprint(vendas_bp, url_prefix='')
+        if vendas_blueprint:
+            app.register_blueprint(vendas_blueprint, url_prefix='')
             logger.info("✅ Vendas blueprint registrado com sucesso")
         
         # Rota principal

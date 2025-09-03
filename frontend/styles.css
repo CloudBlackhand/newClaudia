@@ -969,6 +969,112 @@ select.form-control {
     margin-bottom: var(--spacing-md);
 }
 
+/* Vendas Data Styles */
+.city-stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-sm);
+    margin-top: var(--spacing-sm);
+}
+
+.city-stat {
+    background: var(--primary-light);
+    color: var(--primary);
+    padding: 0.25rem 0.5rem;
+    border-radius: var(--border-radius-sm);
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.city-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--spacing-md);
+    margin-top: var(--spacing-sm);
+}
+
+.city-stat-item {
+    background: var(--background-secondary);
+    padding: var(--spacing-md);
+    border-radius: var(--border-radius);
+    border: 1px solid var(--border-color);
+}
+
+.city-name {
+    font-weight: 600;
+    margin-bottom: var(--spacing-sm);
+    color: var(--text-primary);
+}
+
+.city-counts {
+    display: flex;
+    gap: var(--spacing-xs);
+    align-items: center;
+}
+
+.fpd-badge {
+    padding: 0.25rem 0.5rem;
+    border-radius: var(--border-radius-sm);
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: white;
+}
+
+.fpd-badge.fpd-1 {
+    background: var(--success);
+}
+
+.fpd-badge.fpd-2 {
+    background: var(--warning);
+}
+
+.fpd-badge.fpd-3 {
+    background: var(--error);
+}
+
+.total-count {
+    margin-left: auto;
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.fpd-stats {
+    display: flex;
+    gap: var(--spacing-md);
+    margin-top: var(--spacing-sm);
+}
+
+.fpd-stat {
+    background: var(--background-secondary);
+    padding: 0.5rem 1rem;
+    border-radius: var(--border-radius);
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.status-badge {
+    padding: 0.25rem 0.5rem;
+    border-radius: var(--border-radius-sm);
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.status-badge.status-conectado {
+    background: var(--success);
+    color: white;
+}
+
+.status-badge.status-desconectado {
+    background: var(--error);
+    color: white;
+}
+
+.status-badge.status-pendente {
+    background: var(--warning);
+    color: white;
+}
+
 .stat-item {
     display: flex;
     justify-content: space-between;
@@ -1130,84 +1236,4 @@ select.form-control {
     .conversation-actions {
         align-self: flex-end;
     }
-}
-
-/* Estilos para dados de vendas */
-.city-stats {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: var(--spacing-sm);
-    margin-top: var(--spacing-sm);
-}
-
-.city-stat {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: var(--spacing-sm);
-    background: var(--bg-secondary);
-    border-radius: var(--border-radius);
-    border-left: 3px solid var(--primary);
-}
-
-.city-name {
-    font-weight: 500;
-    color: var(--text-primary);
-}
-
-.city-count {
-    background: var(--primary);
-    color: white;
-    padding: 0.25rem 0.5rem;
-    border-radius: 12px;
-    font-size: 0.875rem;
-    font-weight: 600;
-    min-width: 2rem;
-    text-align: center;
-}
-
-.fpd-stats {
-    display: flex;
-    gap: var(--spacing-md);
-    margin-top: var(--spacing-sm);
-}
-
-.fpd-stat {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: var(--spacing-sm);
-    background: var(--bg-secondary);
-    border-radius: var(--border-radius);
-    min-width: 80px;
-}
-
-.fpd-value {
-    font-size: 0.875rem;
-    color: var(--text-secondary);
-    margin-bottom: 0.25rem;
-}
-
-.fpd-count {
-    font-size: 1.25rem;
-    font-weight: 600;
-    color: var(--primary);
-}
-
-.preview-table-container {
-    max-height: 300px;
-    overflow-y: auto;
-    border: 1px solid var(--border-color);
-    border-radius: var(--border-radius);
-}
-
-.preview-table-container .preview-table {
-    margin: 0;
-}
-
-.preview-table-container .preview-table th {
-    position: sticky;
-    top: 0;
-    background: var(--bg-primary);
-    z-index: 1;
 }

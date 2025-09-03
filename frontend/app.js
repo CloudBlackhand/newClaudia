@@ -150,48 +150,106 @@ class BillingApp {
     displayVendasPreview(data) {
         const previewContent = document.getElementById('preview-content');
         
-        // ✅ NOVO FORMATO: Dados de vendas com "dados_vendas"
-        let vendasList = [];
+        // ✅ NOVO FORMATO: Array com dados_vendas
+        let vendas = [];
         
         if (Array.isArray(data)) {
-            // Processar cada registro
-            for (const record of data) {
-                if (record.dados_vendas && Array.isArray(record.dados_vendas)) {
-                    for (const vendas of record.dados_vendas) {
-                        if (vendas.NOME && vendas.DOCUMENTO && vendas.TELEFONE1) {
-                            vendasList.push({
-                                nome: vendas.NOME,
-                                documento: vendas.DOCUMENTO,
-                                telefone: vendas.TELEFONE1,
-                                cidade: vendas.CIDADE || 'N/A',
-                                fpd: vendas.fpd || '0',
-                                status: vendas.STATUS || 'N/A',
-                                aba_origem: vendas.aba_origem || 'N/A'
-                            });
-                        }
+            // Processar cada item do array
+            for (const item of data) {
+                if (item.dados_vendas && Array.isArray(item.dados_vendas)) {
+                    for (const venda of item.dados_vendas) {
+                        vendas.push({
+                            nome: venda.NOME || 'N/A',
+                            documento: venda.DOCUMENTO || 'N/A',
+                            telefone: venda.TELEFONE1 || 'N/A',
+                            email: venda.EMAIL || 'N/A',
+                            cidade: venda.CIDADE || 'N/A',
+                            fpd: venda.fpd || 'N/A',
+                            aba_origem: venda.aba_origem || 'N/A',
+                            status: venda.STATUS || 'N/A'
+                        });
                     }
                 }
             }
-        }
-        
-        if (vendasList.length === 0) {
+        } else {
             previewContent.innerHTML = `
                 <div class="preview-empty">
                     <i class="fas fa-exclamation-triangle"></i>
-                    <p>Nenhum registro de vendas válido encontrado no arquivo.</p>
-                    <p class="text-muted">Verifique se o arquivo contém a estrutura 'dados_vendas'</p>
+                    <p>Estrutura de arquivo inválida. Formato não reconhecido.</p>
                 </div>
             `;
             return;
         }
         
-        const previewVendas = vendasList.slice(0, 10); // Preview primeiros 10
+        if (vendas.length === 0) {
+            previewContent.innerHTML = `
+                <div class="preview-empty">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <p>Nenhum dado de venda encontrado no arquivo.</p>
+                </div>
+            `;
+            return;
+        }
+        
+        const previewVendas = vendas.slice(0, 10); // Preview primeiros 10
+        
+        // Estatísticas por cidade
+        const cidades = {};
+        const fpdStats = { '1': 0, '2': 0, '3': 0 };
+        
+        vendas.forEach(venda => {
+            const cidade = venda.cidade || 'Sem cidade';
+            cidades[cidade] = (cidades[cidade] || 0) + 1;
+            
+            if (venda.fpd in fpdStats) {
+                fpdStats[venda.fpd]++;
+            }
+        });
         
         previewContent.innerHTML = `
-            <div style="margin-bottom: 1rem;">
-                <strong>Total de registros de vendas:</strong> ${vendasList.length}
-                ${vendasList.length > 10 ? `<span style="color: var(--text-muted);">(mostrando primeiros 10)</span>` : ''}
+            <div style="margin-bottom: 1.5rem;">
+                <h4>📊 Resumo dos Dados de Vendas</h4>
+                <div class="stats-grid" style="margin-bottom: 1rem;">
+                    <div class="stat-item">
+                        <div class="stat-value">${vendas.length}</div>
+                        <div class="stat-label">Total de Vendas</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">${Object.keys(cidades).length}</div>
+                        <div class="stat-label">Cidades</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">${fpdStats['1']}</div>
+                        <div class="stat-label">FPD 1</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">${fpdStats['2']}</div>
+                        <div class="stat-label">FPD 2</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">${fpdStats['3']}</div>
+                        <div class="stat-label">FPD 3</div>
+                    </div>
+                </div>
+                
+                <div style="margin-bottom: 1rem;">
+                    <strong>Top 5 Cidades:</strong>
+                    <div class="city-stats">
+                        ${Object.entries(cidades)
+                            .sort(([,a], [,b]) => b - a)
+                            .slice(0, 5)
+                            .map(([cidade, count]) => 
+                                `<span class="city-stat">${cidade}: ${count}</span>`
+                            ).join(' • ')}
+                    </div>
+                </div>
             </div>
+            
+            <div style="margin-bottom: 1rem;">
+                <strong>Preview dos Dados (primeiros 10):</strong>
+                ${vendas.length > 10 ? `<span style="color: var(--text-muted);">(mostrando primeiros 10)</span>` : ''}
+            </div>
+            
             <table class="preview-table">
                 <thead>
                     <tr>
@@ -201,7 +259,6 @@ class BillingApp {
                         <th>Cidade</th>
                         <th>FPD</th>
                         <th>Status</th>
-                        <th>Origem</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -211,9 +268,8 @@ class BillingApp {
                             <td>${this.escapeHtml(venda.documento || 'N/A')}</td>
                             <td>${this.escapeHtml(venda.telefone || 'N/A')}</td>
                             <td>${this.escapeHtml(venda.cidade || 'N/A')}</td>
-                            <td>${venda.fpd || '0'}</td>
-                            <td>${this.escapeHtml(venda.status || 'N/A')}</td>
-                            <td>${this.escapeHtml(venda.aba_origem || 'N/A')}</td>
+                            <td><span class="fpd-badge fpd-${venda.fpd}">${venda.fpd}</span></td>
+                            <td><span class="status-badge status-${venda.status.toLowerCase()}">${venda.status}</span></td>
                         </tr>
                     `).join('')}
                 </tbody>
@@ -266,11 +322,10 @@ class BillingApp {
 
             const result = await response.json();
 
-            if (response.ok && result.success) {
-                this.showVendasValidationResults(result);
-                this.showToast('success', 'Sucesso', `Validação concluída: ${result.total_valid} válidos, ${result.total_invalid} inválidos`);
+            if (response.ok && result.valid) {
+                this.showToast('success', 'Sucesso', `${result.client_count} clientes validados com sucesso`);
             } else {
-                this.showToast('error', 'Erro', result.error || 'Falha na validação');
+                this.showToast('error', 'Erro de Validação', result.errors ? result.errors.join('; ') : result.message);
             }
         } catch (error) {
             this.showToast('error', 'Erro', 'Falha na validação dos dados');
@@ -280,103 +335,31 @@ class BillingApp {
         this.showLoading(false);
     }
 
-    showVendasValidationResults(result) {
-        const resultsSection = document.getElementById('results-section');
-        const resultsContent = document.getElementById('results-content');
-
-        const summary = result.processing_summary;
-        const successRate = summary.success_rate.toFixed(1);
-
-        resultsContent.innerHTML = `
-            <div class="stats-grid" style="margin-bottom: 1.5rem;">
-                <div class="stat-item">
-                    <div class="stat-value">${summary.total_records}</div>
-                    <div class="stat-label">Total</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-value" style="color: var(--success);">${summary.valid_records}</div>
-                    <div class="stat-label">Válidos</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-value" style="color: var(--error);">${summary.invalid_records}</div>
-                    <div class="stat-label">Inválidos</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-value">${successRate}%</div>
-                    <div class="stat-label">Taxa de Sucesso</div>
-                </div>
-            </div>
-            
-            <div style="margin-bottom: 1rem;">
-                <h4>Distribuição por Cidade (Top 5):</h4>
-                <div class="city-stats">
-                    ${Object.entries(summary.cities_distribution)
-                        .slice(0, 5)
-                        .map(([city, count]) => `
-                            <div class="city-stat">
-                                <span class="city-name">${this.escapeHtml(city)}</span>
-                                <span class="city-count">${count}</span>
-                            </div>
-                        `).join('')}
-                </div>
-            </div>
-
-            <div style="margin-bottom: 1rem;">
-                <h4>Distribuição por FPD:</h4>
-                <div class="fpd-stats">
-                    ${Object.entries(summary.fpd_distribution)
-                        .map(([fpd, count]) => `
-                            <div class="fpd-stat">
-                                <span class="fpd-value">FPD ${fpd}</span>
-                                <span class="fpd-count">${count}</span>
-                            </div>
-                        `).join('')}
-                </div>
-            </div>
-
-            ${result.preview_data && result.preview_data.length > 0 ? `
-                <div style="margin-top: 1rem;">
-                    <h4>Preview dos Dados Válidos:</h4>
-                    <div class="preview-table-container">
-                        <table class="preview-table">
-                            <thead>
-                                <tr>
-                                    <th>Nome</th>
-                                    <th>Documento</th>
-                                    <th>Telefone</th>
-                                    <th>Cidade</th>
-                                    <th>FPD</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${result.preview_data.map(venda => `
-                                    <tr>
-                                        <td>${this.escapeHtml(venda.nome)}</td>
-                                        <td>${this.escapeHtml(venda.documento)}</td>
-                                        <td>${this.escapeHtml(venda.telefone)}</td>
-                                        <td>${this.escapeHtml(venda.cidade)}</td>
-                                        <td>${venda.fpd}</td>
-                                    </tr>
-                                `).join('')}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            ` : ''}
-        `;
-
-        resultsSection.classList.remove('hidden');
-        resultsSection.scrollIntoView({ behavior: 'smooth' });
-    }
-
     async sendBatch() {
         if (!this.fileData) {
             this.showToast('warning', 'Aviso', 'Nenhum arquivo selecionado');
             return;
         }
 
-        this.showLoading(true);
+        // ✅ NOVO FORMATO: Calcular total de vendas
+        let totalVendas = 0;
+        if (Array.isArray(this.fileData)) {
+            for (const item of this.fileData) {
+                if (item.dados_vendas && Array.isArray(item.dados_vendas)) {
+                    totalVendas += item.dados_vendas.length;
+                }
+            }
+        }
         
+        const confirmed = await this.showConfirmModal(
+            'Confirmar Processamento',
+            `Deseja processar e inserir ${totalVendas} registros de vendas no banco de dados?`
+        );
+
+        if (!confirmed) return;
+
+        this.showLoading(true);
+
         try {
             // ✅ NOVO FORMATO: Enviar dados de vendas para processamento
             const response = await fetch(`${this.apiBase}/vendas/process`, {
@@ -390,76 +373,92 @@ class BillingApp {
             const result = await response.json();
 
             if (response.ok && result.success) {
-                this.showVendasProcessingResults(result);
+                this.showVendasResults(result);
                 this.showToast('success', 'Sucesso', `Processamento concluído: ${result.inserted_count} registros inseridos`);
             } else {
-                this.showToast('error', 'Erro', result.error || 'Falha no processamento');
+                this.showToast('error', 'Erro', result.message || 'Falha no processamento');
             }
         } catch (error) {
-            this.showToast('error', 'Erro', 'Falha no processamento dos dados');
-            console.error('Processing error:', error);
+            this.showToast('error', 'Erro', 'Falha no processamento das vendas');
+            console.error('Process vendas error:', error);
         }
 
         this.showLoading(false);
     }
 
-    showVendasProcessingResults(result) {
+    showVendasResults(result) {
         const resultsSection = document.getElementById('results-section');
         const resultsContent = document.getElementById('results-content');
 
         const summary = result.processing_summary;
-        const successRate = summary.success_rate.toFixed(1);
+        const successRate = summary.valid_records > 0 
+            ? ((summary.valid_records / summary.total_records) * 100).toFixed(1)
+            : 0;
 
         resultsContent.innerHTML = `
-            <div class="stats-grid" style="margin-bottom: 1.5rem;">
-                <div class="stat-item">
-                    <div class="stat-value">${summary.total_records}</div>
-                    <div class="stat-label">Total Processados</div>
+            <div style="margin-bottom: 1.5rem;">
+                <h4>📊 Resultado do Processamento de Vendas</h4>
+                <div class="stats-grid" style="margin-bottom: 1rem;">
+                    <div class="stat-item">
+                        <div class="stat-value">${summary.total_records}</div>
+                        <div class="stat-label">Total</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" style="color: var(--success);">${summary.valid_records}</div>
+                        <div class="stat-label">Válidos</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" style="color: var(--error);">${summary.invalid_records}</div>
+                        <div class="stat-label">Inválidos</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">${successRate}%</div>
+                        <div class="stat-label">Taxa de Validação</div>
+                    </div>
                 </div>
-                <div class="stat-item">
-                    <div class="stat-value" style="color: var(--success);">${result.inserted_count}</div>
-                    <div class="stat-label">Inseridos no Banco</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-value" style="color: var(--error);">${summary.invalid_records}</div>
-                    <div class="stat-label">Inválidos</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-value">${successRate}%</div>
-                    <div class="stat-label">Taxa de Sucesso</div>
+                
+                <div style="margin-bottom: 1rem;">
+                    <strong>Registros Inseridos:</strong> ${result.inserted_count}
                 </div>
             </div>
-            
+
             <div style="margin-bottom: 1rem;">
-                <h4>Resumo do Processamento:</h4>
-                <p><strong>Total de registros:</strong> ${summary.total_records}</p>
-                <p><strong>Registros válidos:</strong> ${summary.valid_records}</p>
-                <p><strong>Registros inseridos:</strong> ${result.inserted_count}</p>
-                <p><strong>Erros de inserção:</strong> ${result.insertion_errors.length}</p>
+                <h5>🏙️ Distribuição por Cidade:</h5>
+                <div class="city-stats-grid">
+                    ${Object.entries(summary.cidades)
+                        .sort(([,a], [,b]) => b.total - a.total)
+                        .slice(0, 10)
+                        .map(([cidade, stats]) => `
+                            <div class="city-stat-item">
+                                <div class="city-name">${cidade}</div>
+                                <div class="city-counts">
+                                    <span class="fpd-badge fpd-1">${stats.fpd1}</span>
+                                    <span class="fpd-badge fpd-2">${stats.fpd2}</span>
+                                    <span class="fpd-badge fpd-3">${stats.fpd3}</span>
+                                    <span class="total-count">${stats.total}</span>
+                                </div>
+                            </div>
+                        `).join('')}
+                </div>
+            </div>
+
+            <div style="margin-bottom: 1rem;">
+                <h5>📈 Distribuição por FPD:</h5>
+                <div class="fpd-stats">
+                    <span class="fpd-stat">FPD 1: ${summary.fpd_distribution['1']}</span>
+                    <span class="fpd-stat">FPD 2: ${summary.fpd_distribution['2']}</span>
+                    <span class="fpd-stat">FPD 3: ${summary.fpd_distribution['3']}</span>
+                </div>
             </div>
 
             ${result.insertion_errors && result.insertion_errors.length > 0 ? `
                 <div style="margin-top: 1rem;">
-                    <h4 style="color: var(--error); margin-bottom: 0.5rem;">Erros de Inserção:</h4>
+                    <h5 style="color: var(--error); margin-bottom: 0.5rem;">Erros de Inserção:</h5>
                     <ul style="margin: 0; padding-left: 1.5rem;">
                         ${result.insertion_errors.map(error => `<li style="color: var(--text-secondary);">${this.escapeHtml(error)}</li>`).join('')}
                     </ul>
                 </div>
             ` : ''}
-
-            <div style="margin-top: 1rem;">
-                <h4>Distribuição por Cidade:</h4>
-                <div class="city-stats">
-                    ${Object.entries(summary.cities_distribution)
-                        .slice(0, 8)
-                        .map(([city, count]) => `
-                            <div class="city-stat">
-                                <span class="city-name">${this.escapeHtml(city)}</span>
-                                <span class="city-count">${count}</span>
-                            </div>
-                        `).join('')}
-                </div>
-            </div>
         `;
 
         resultsSection.classList.remove('hidden');
