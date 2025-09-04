@@ -1568,6 +1568,9 @@ Sua fatura de {VALOR} reais venceu há {DIAS_FPD} dias.
 
 Para evitar bloqueios, regularize seu pagamento o quanto antes.
 
+🌐 Acesse nosso portal para consultar e pagar sua fatura:
+https://central.desktop.com.br/bill
+
 Agradecemos sua preferência! 🙏`,
 
             'spd_reminder': `Oi {NOME}! 😊
@@ -1575,6 +1578,9 @@ Agradecemos sua preferência! 🙏`,
 Sua segunda fatura de {VALOR} reais venceu há {DIAS_FPD} dias.
 
 Mantenha seu serviço ativo regularizando o pagamento.
+
+🌐 Consulte e pague sua fatura em:
+https://central.desktop.com.br/bill
 
 Qualquer dúvida, estamos aqui! 📞`,
 
@@ -1584,6 +1590,9 @@ Seu plano {PLANO} foi ativado com sucesso em {CIDADE}.
 
 Valor mensal: R$ {VALOR}
 Vendedor: {VENDEDOR}
+
+🌐 Acesse nosso portal para acompanhar sua conta:
+https://central.desktop.com.br/bill
 
 Aproveite sua internet! 🚀`,
 
@@ -1595,7 +1604,10 @@ Esperamos que esteja bem!
 💰 Valor: R$ {VALOR}
 📅 Vencimento: {VENCIMENTO}
 
-Para efetuar o pagamento ou esclarecer dúvidas, entre em contato conosco.
+🌐 Para consultar e pagar sua fatura, acesse:
+https://central.desktop.com.br/bill
+
+Para esclarecer dúvidas, entre em contato conosco.
 
 Agradecemos sua atenção! 🙏`,
 
@@ -1605,6 +1617,9 @@ Sua cobrança está VENCIDA:
 
 💰 Valor: R$ {VALOR}
 📅 Venceu em: {VENCIMENTO}
+
+🌐 REGULARIZE AGORA através do nosso portal:
+https://central.desktop.com.br/bill
 
 Para evitar maiores complicações, entre em contato URGENTEMENTE para regularizar a situação.
 
@@ -1616,6 +1631,9 @@ Esta é sua ÚLTIMA OPORTUNIDADE para regularizar:
 
 💰 Valor: R$ {VALOR}
 📅 Vencido desde: {VENCIMENTO}
+
+🌐 ACESSE IMEDIATAMENTE nosso portal:
+https://central.desktop.com.br/bill
 
 ⚠️ Próximos passos caso não haja retorno:
 • Inclusão em órgãos de proteção ao crédito
