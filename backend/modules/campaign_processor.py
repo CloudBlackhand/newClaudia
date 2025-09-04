@@ -5,9 +5,9 @@ from datetime import datetime, timedelta
 import re
 from backend.modules.billing_dispatcher import BillingDispatcher
 from backend.modules.conversation_bot import ConversationBot
-from backend.modules.logger_system import SmartLogger, LogCategory
-
-logger = SmartLogger("campaign_processor")
+# Usar logger padrão temporariamente para resolver problema
+import logging
+logger = logging.getLogger(__name__)
 
 class CampaignProcessor:
     """Processa campanhas em massa a partir de arquivos JSON de cruzamento"""
@@ -35,7 +35,7 @@ class CampaignProcessor:
     def process_campaign_file(self, file_path: str, campaign_config: Dict[str, Any]) -> Dict[str, Any]:
         """Processa arquivo de campanha e dispara mensagens"""
         try:
-            logger.info(LogCategory.BILLING, f"🚀 Iniciando processamento de campanha: {file_path}")
+            logger.info( f"🚀 Iniciando processamento de campanha: {file_path}")
             self.campaign_stats['start_time'] = datetime.now()
             
             # Carrega dados do arquivo
@@ -48,7 +48,7 @@ class CampaignProcessor:
             self.campaign_stats['total_contacts'] = len(campaign_data)
             self.campaign_stats['valid_contacts'] = len(valid_contacts)
             
-            logger.info(LogCategory.BILLING, f"📊 Contatos válidos encontrados: {len(valid_contacts)}")
+            logger.info( f"📊 Contatos válidos encontrados: {len(valid_contacts)}")
             
             # Processa cada contato
             results = []
@@ -61,7 +61,7 @@ class CampaignProcessor:
                     else:
                         self.campaign_stats['errors'] += 1
                 except Exception as e:
-                    logger.error(LogCategory.BILLING, f"❌ Erro ao processar contato: {str(e)}")
+                    logger.error( f"❌ Erro ao processar contato: {str(e)}")
                     self.campaign_stats['errors'] += 1
                     results.append({
                         'contact_id': contact.get('protocolo', 'N/A'),
@@ -82,8 +82,8 @@ class CampaignProcessor:
                 'duration_seconds': duration.total_seconds()
             }
             
-            logger.info(LogCategory.BILLING, f"✅ Campanha finalizada: {campaign_id}")
-            logger.info(LogCategory.BILLING, f"📈 Estatísticas: {self.campaign_stats['messages_sent']} mensagens enviadas, {self.campaign_stats['errors']} erros")
+            logger.info( f"✅ Campanha finalizada: {campaign_id}")
+            logger.info( f"📈 Estatísticas: {self.campaign_stats['messages_sent']} mensagens enviadas, {self.campaign_stats['errors']} erros")
             
             return {
                 'campaign_id': campaign_id,
@@ -93,7 +93,7 @@ class CampaignProcessor:
             }
             
         except Exception as e:
-            logger.error(LogCategory.BILLING, f"❌ Erro fatal na campanha: {str(e)}")
+            logger.error( f"❌ Erro fatal na campanha: {str(e)}")
             return {
                 'success': False,
                 'error': str(e)
@@ -108,11 +108,11 @@ class CampaignProcessor:
             if not isinstance(data, list):
                 raise ValueError("Arquivo deve conter uma lista de contatos")
             
-            logger.info(LogCategory.BILLING, f"📁 Carregados {len(data)} registros do arquivo")
+            logger.info( f"📁 Carregados {len(data)} registros do arquivo")
             return data
             
         except Exception as e:
-            logger.error(LogCategory.BILLING, f"❌ Erro ao carregar arquivo: {str(e)}")
+            logger.error( f"❌ Erro ao carregar arquivo: {str(e)}")
             raise
     
     def _filter_valid_contacts(self, contacts: List[Dict[str, Any]], config: Dict[str, Any]) -> List[Dict[str, Any]]:
@@ -132,7 +132,7 @@ class CampaignProcessor:
                     valid_contacts.append(contact_info)
                     
             except Exception as e:
-                logger.warning(LogCategory.BILLING, f"⚠️ Erro ao filtrar contato: {str(e)}")
+                logger.warning( f"⚠️ Erro ao filtrar contato: {str(e)}")
                 continue
         
         return valid_contacts
@@ -181,7 +181,7 @@ class CampaignProcessor:
             return contact_info
             
         except Exception as e:
-            logger.warning(LogCategory.BILLING, f"⚠️ Erro ao extrair dados do contato: {str(e)}")
+            logger.warning( f"⚠️ Erro ao extrair dados do contato: {str(e)}")
             return None
     
     def _extract_phone(self, phone_str: str) -> Optional[str]:
@@ -237,7 +237,7 @@ class CampaignProcessor:
             return True
             
         except Exception as e:
-            logger.warning(LogCategory.BILLING, f"⚠️ Erro ao aplicar filtros: {str(e)}")
+            logger.warning( f"⚠️ Erro ao aplicar filtros: {str(e)}")
             return False
     
     def _process_single_contact(self, contact: Dict[str, Any], config: Dict[str, Any]) -> Dict[str, Any]:
@@ -265,7 +265,7 @@ class CampaignProcessor:
             }
             
         except Exception as e:
-            logger.error(LogCategory.BILLING, f"❌ Erro ao processar contato {contact.get('protocolo', 'N/A')}: {str(e)}")
+            logger.error( f"❌ Erro ao processar contato {contact.get('protocolo', 'N/A')}: {str(e)}")
             return {
                 'contact_id': contact.get('protocolo', 'N/A'),
                 'success': False,
@@ -303,7 +303,7 @@ class CampaignProcessor:
             return message
             
         except Exception as e:
-            logger.error(LogCategory.BILLING, f"❌ Erro ao gerar mensagem: {str(e)}")
+            logger.error( f"❌ Erro ao gerar mensagem: {str(e)}")
             return config.get('fallback_message', 'Olá! Temos uma mensagem importante para você.')
     
     def get_campaign_status(self, campaign_id: str) -> Optional[Dict[str, Any]]:
@@ -344,7 +344,7 @@ class CampaignProcessor:
     def process_adaptive_campaign(self, file_path: str, campaign_config: Dict[str, Any]) -> Dict[str, Any]:
         """Processa campanha com aprendizado adaptativo"""
         try:
-            logger.info(LogCategory.BILLING, f"🧠 Iniciando campanha adaptativa: {file_path}")
+            logger.info( f"🧠 Iniciando campanha adaptativa: {file_path}")
             
             # Carregar dados da campanha
             campaign_data = self._load_campaign_data(file_path)
@@ -372,7 +372,7 @@ class CampaignProcessor:
                 'adaptations_applied': self.real_time_adaptation.get(campaign_id, [])
             }
             
-            logger.info(LogCategory.BILLING, f"✅ Campanha adaptativa finalizada: {campaign_id}")
+            logger.info( f"✅ Campanha adaptativa finalizada: {campaign_id}")
             
             return {
                 'campaign_id': campaign_id,
@@ -383,7 +383,7 @@ class CampaignProcessor:
             }
             
         except Exception as e:
-            logger.error(LogCategory.BILLING, f"❌ Erro na campanha adaptativa: {str(e)}")
+            logger.error( f"❌ Erro na campanha adaptativa: {str(e)}")
             return {
                 'success': False,
                 'error': str(e)
@@ -456,7 +456,7 @@ class CampaignProcessor:
                     valid_contacts.append(contact_info)
                     
             except Exception as e:
-                logger.warning(LogCategory.BILLING, f"⚠️ Erro na análise comportamental: {str(e)}")
+                logger.warning( f"⚠️ Erro na análise comportamental: {str(e)}")
                 continue
         
         return valid_contacts
@@ -562,10 +562,10 @@ class CampaignProcessor:
                     adaptation = self._analyze_real_time_performance(results[-10:])
                     if adaptation:
                         self.real_time_adaptation[campaign_id].append(adaptation)
-                        logger.info(LogCategory.BILLING, f"🔄 Adaptação aplicada: {adaptation}")
+                        logger.info( f"🔄 Adaptação aplicada: {adaptation}")
                 
             except Exception as e:
-                logger.error(LogCategory.BILLING, f"❌ Erro ao processar contato {contact.get('protocolo', 'N/A')}: {str(e)}")
+                logger.error( f"❌ Erro ao processar contato {contact.get('protocolo', 'N/A')}: {str(e)}")
                 results.append({
                     'contact_id': contact.get('protocolo', 'N/A'),
                     'success': False,

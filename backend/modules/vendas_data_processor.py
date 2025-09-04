@@ -3,9 +3,9 @@ import re
 from datetime import datetime
 from typing import List, Dict, Any, Tuple
 from dataclasses import dataclass
-from .logger_system import SmartLogger, LogCategory
-
-logger = SmartLogger("vendas_data_processor")
+# Usar logger padrão temporariamente para resolver problema
+import logging
+logger = logging.getLogger(__name__)
 
 @dataclass
 class VendasData:
@@ -50,18 +50,18 @@ class VendasDataProcessor:
     def process_vendas_json(self, json_content: str) -> Tuple[List[VendasData], List[str]]:
         """Processa conteúdo JSON de vendas"""
         try:
-            self.logger.info(LogCategory.SYSTEM, f"🔍 Iniciando processamento JSON - Tamanho: {len(json_content)} chars")
+            self.logger.info( f"🔍 Iniciando processamento JSON - Tamanho: {len(json_content)} chars")
             data = json.loads(json_content)
-            self.logger.info(LogCategory.SYSTEM, f"🔍 JSON parseado - Tipo: {type(data)}, Tamanho: {len(data) if isinstance(data, list) else 'N/A'}")
+            self.logger.info( f"🔍 JSON parseado - Tipo: {type(data)}, Tamanho: {len(data) if isinstance(data, list) else 'N/A'}")
             vendas_data = []
             errors = []
             
             # Aceitar tanto lista quanto dicionário
             if isinstance(data, dict):
-                self.logger.info(LogCategory.SYSTEM, f"🔍 Formato dicionário detectado - procurando 'dados_vendas'")
+                self.logger.info( f"🔍 Formato dicionário detectado - procurando 'dados_vendas'")
                 if 'dados_vendas' in data:
                     data = data['dados_vendas']
-                    self.logger.info(LogCategory.SYSTEM, f"🔍 Extraído dados_vendas - {len(data)} itens")
+                    self.logger.info( f"🔍 Extraído dados_vendas - {len(data)} itens")
                 else:
                     self.logger.error(LogCategory.SYSTEM, f"❌ Dicionário sem 'dados_vendas' - chaves disponíveis: {list(data.keys())}")
                     return [], ["Formato inválido: dicionário deve conter 'dados_vendas'"]
@@ -69,17 +69,17 @@ class VendasDataProcessor:
                 self.logger.error(LogCategory.SYSTEM, f"❌ Formato inválido: esperado lista ou dict, recebido {type(data)}")
                 return [], ["Formato inválido: deve ser uma lista ou dicionário com 'dados_vendas'"]
             
-            self.logger.info(LogCategory.SYSTEM, f"🔍 Processando {len(data)} itens...")
+            self.logger.info( f"🔍 Processando {len(data)} itens...")
             
             for idx, item in enumerate(data):
                 try:
                     if idx < 3:  # Log apenas os primeiros 3 itens para debug
-                        self.logger.info(LogCategory.SYSTEM, f"🔍 Item {idx}: {list(item.keys()) if isinstance(item, dict) else type(item)}")
+                        self.logger.info( f"🔍 Item {idx}: {list(item.keys()) if isinstance(item, dict) else type(item)}")
                     
                     # Verificar se é formato antigo (com dados_vendas) ou novo (dados diretos)
                     if 'dados_vendas' in item and item['dados_vendas']:
                         # Formato antigo: item tem dados_vendas
-                        self.logger.info(LogCategory.SYSTEM, f"🔍 Item {idx}: Formato antigo - {len(item['dados_vendas'])} vendas")
+                        self.logger.info( f"🔍 Item {idx}: Formato antigo - {len(item['dados_vendas'])} vendas")
                         for venda in item['dados_vendas']:
                             vendas_item = self._process_venda_item(venda, idx)
                             if vendas_item.is_valid:
@@ -89,7 +89,7 @@ class VendasDataProcessor:
                     else:
                         # Formato novo: item já são os dados de venda
                         if idx < 3:
-                            self.logger.info(LogCategory.SYSTEM, f"🔍 Item {idx}: Formato novo - processando diretamente")
+                            self.logger.info( f"🔍 Item {idx}: Formato novo - processando diretamente")
                         vendas_item = self._process_venda_item(item, idx)
                         if vendas_item.is_valid:
                             vendas_data.append(vendas_item)
@@ -99,7 +99,7 @@ class VendasDataProcessor:
                 except Exception as e:
                     errors.append(f"Erro ao processar item {idx}: {str(e)}")
             
-            self.logger.info(LogCategory.SYSTEM, f"Processamento concluído: {len(vendas_data)} vendas válidas, {len(errors)} erros")
+            self.logger.info( f"Processamento concluído: {len(vendas_data)} vendas válidas, {len(errors)} erros")
             return vendas_data, errors
             
         except json.JSONDecodeError as e:
@@ -112,7 +112,7 @@ class VendasDataProcessor:
         errors = []
         
         if index < 3:  # Log apenas os primeiros 3 para debug
-            self.logger.info(LogCategory.SYSTEM, f"🔍 Processando venda {index}: campos disponíveis: {list(venda.keys())}")
+            self.logger.info( f"🔍 Processando venda {index}: campos disponíveis: {list(venda.keys())}")
         
         # Extrair e validar campos - MAIS PERMISSIVO
         nome = self._clean_string(venda.get('NOME', ''))
@@ -148,7 +148,7 @@ class VendasDataProcessor:
         
         # Log para debug
         if index < 3:
-            self.logger.info(LogCategory.SYSTEM, f"🔍 Item {index}: FPD='{fpd}', SPD='{spd}' -> Usando {priority_type}='{priority_value}'")
+            self.logger.info( f"🔍 Item {index}: FPD='{fpd}', SPD='{spd}' -> Usando {priority_type}='{priority_value}'")
         
         # Validar valor de prioridade - MAIS PERMISSIVO
         if priority_value not in ['1', '2', '3']:

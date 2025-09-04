@@ -29,15 +29,9 @@ import difflib
 from collections import Counter
 
 # Importar sistema de logging
-try:
-    from backend.modules.logger_system import LogCategory, SmartLogger
-    logger = SmartLogger("conversation_bot")
-except ImportError:
-    # Fallback se não conseguir importar
-    import logging
-    logger = logging.getLogger(__name__)
-    class LogCategory:
-        CONVERSATION = "conversation"
+# Usar logger padrão temporariamente para resolver problema
+import logging
+logger = logging.getLogger(__name__)
 
 # Verificar disponibilidade de dados persistentes
 try:
@@ -731,7 +725,7 @@ class AdvancedNLPProcessor:
         """ANÁLISE ULTRA AVANÇADA da mensagem do cliente - 20+ SISTEMAS DE ANÁLISE"""
         message_lower = message.lower()
         
-        logger.info(LogCategory.CONVERSATION, f"🔍 INICIANDO ANÁLISE ULTRA AVANÇADA: {message[:50]}...")
+        logger.info(f"🔍 INICIANDO ANÁLISE ULTRA AVANÇADA: {message[:50]}...")
         
         # 0. NORMALIZAR TEXTO E DETECTAR ALFABETIZAÇÃO
         normalized_message = self.text_normalizer.normalize_text(message)
@@ -744,8 +738,8 @@ class AdvancedNLPProcessor:
         context.simple_language_needed = literacy_level in [LiteracyLevel.ANALFABETO_TOTAL, LiteracyLevel.ANALFABETO_FUNCIONAL]
         context.communication_preference = self.text_normalizer.suggest_communication_method(literacy_level)
         
-        logger.info(LogCategory.CONVERSATION, f"📚 Nível de alfabetização detectado: {literacy_level.value}")
-        logger.info(LogCategory.CONVERSATION, f"📝 Erros no texto: {text_errors['error_count']}, Score: {text_errors['quality_score']:.2f}")
+        logger.info(f"📚 Nível de alfabetização detectado: {literacy_level.value}")
+        logger.info(f"📝 Erros no texto: {text_errors['error_count']}, Score: {text_errors['quality_score']:.2f}")
         
         # 1. DETECTAR INTENÇÃO REAL (usando texto normalizado)
         intent = self._detect_intent_advanced(normalized_message)
@@ -808,7 +802,7 @@ class AdvancedNLPProcessor:
             contextual_analysis, behavioral_prediction, confusion_level
         )
         
-        logger.info(LogCategory.CONVERSATION, f"🧠 ANÁLISE COMPLETA: Intent={intent.value}, Confusão={confusion_level:.2f}, Pergunta={is_question}")
+        logger.info(f"🧠 ANÁLISE COMPLETA: Intent={intent.value}, Confusão={confusion_level:.2f}, Pergunta={is_question}")
         
         return AnalysisResult(
             intent=intent,
@@ -1365,10 +1359,10 @@ class AdvancedNLPProcessor:
             # Aprender padrões de sucesso/falha
             self._learn_success_failure_patterns(conversation_data)
             
-            logger.info(LogCategory.CONVERSATION, f"🎓 Aprendizado registrado para {phone}: {outcome}")
+            logger.info( f"🎓 Aprendizado registrado para {phone}: {outcome}")
             
         except Exception as e:
-            logger.error(LogCategory.CONVERSATION, f"❌ Erro no aprendizado: {e}")
+            logger.error( f"❌ Erro no aprendizado: {e}")
     
     def _update_client_behavior_profile(self, phone: str, conversation_data: Dict[str, Any]):
         """Atualiza perfil comportamental do cliente"""
@@ -1778,7 +1772,7 @@ class ResponseGenerator:
             )
             
         except Exception as e:
-            logger.error(LogCategory.CONVERSATION, f"❌ Erro na resposta adaptativa: {e}")
+            logger.error( f"❌ Erro na resposta adaptativa: {e}")
             # Fallback para método padrão
             return self.generate_response(analysis, context)
     
@@ -1933,7 +1927,7 @@ class ConversationBot:
     def process_message(self, phone: str, message: str, customer_data: Dict[str, Any]) -> BotResponse:
         """Processa mensagem do cliente com INTELIGÊNCIA REAL + APRENDIZADO AVANÇADO"""
         
-        logger.info(LogCategory.CONVERSATION, f"🔍 Analisando mensagem de {phone}: {message[:50]}...")
+        logger.info( f"🔍 Analisando mensagem de {phone}: {message[:50]}...")
         
         # Carrega ou cria contexto
         context = self._get_or_create_context(phone, customer_data)
@@ -1944,11 +1938,11 @@ class ConversationBot:
         # PREDIÇÃO COMPORTAMENTAL DO CLIENTE
         client_prediction = self.nlp_processor.predict_client_behavior(phone, analysis.intent.value)
         
-        logger.info(LogCategory.CONVERSATION, f"🧠 Análise: Intent={analysis.intent.value}, "
+        logger.info( f"🧠 Análise: Intent={analysis.intent.value}, "
                    f"Sentiment={analysis.sentiment.value}, "
                    f"Cooperação={analysis.cooperation_score:.2f}, "
                    f"Estado={analysis.emotional_state}")
-        logger.info(LogCategory.CONVERSATION, f"🔮 Predição: Cooperação={client_prediction['cooperation_likelihood']:.2f}, "
+        logger.info( f"🔮 Predição: Cooperação={client_prediction['cooperation_likelihood']:.2f}, "
                    f"Pagamento={client_prediction['payment_likelihood']:.2f}, "
                    f"Confiança={client_prediction['confidence']:.2f}")
         
@@ -1976,7 +1970,7 @@ class ConversationBot:
                 'adaptive_used': True
             })
             
-            logger.info(LogCategory.CONVERSATION, f"🎓 Qualidade: {quality_scores.get('overall', 0):.2f}")
+            logger.info( f"🎓 Qualidade: {quality_scores.get('overall', 0):.2f}")
         
         # ATUALIZA CONTEXTO COM DADOS DE APRENDIZADO
         enhanced_context_update = response.context_update.copy()
@@ -1994,14 +1988,14 @@ class ConversationBot:
         # ADICIONA À HISTÓRIA COM DADOS DE APRENDIZADO
         self._add_to_history_with_learning(phone, message, response.message, analysis, client_prediction)
         
-        logger.info(LogCategory.CONVERSATION, f"💬 Resposta adaptativa gerada: {response.response_type.value}")
+        logger.info( f"💬 Resposta adaptativa gerada: {response.response_type.value}")
         
         return response
     
     def generate_general_response(self, phone: str, message: str) -> BotResponse:
         """Gera resposta para pessoas não cadastradas como clientes"""
         try:
-            logger.info(LogCategory.CONVERSATION, f"👤 Gerando resposta geral para não-cliente: {phone}")
+            logger.info( f"👤 Gerando resposta geral para não-cliente: {phone}")
             
             # Análise básica da mensagem
             message_lower = message.lower().strip()
@@ -2043,11 +2037,11 @@ class ConversationBot:
                 confidence=0.8
             )
             
-            logger.info(LogCategory.CONVERSATION, f"✅ Resposta geral gerada para {phone}: {response_type.value}")
+            logger.info( f"✅ Resposta geral gerada para {phone}: {response_type.value}")
             return response
             
         except Exception as e:
-            logger.error(LogCategory.CONVERSATION, f"❌ Erro ao gerar resposta geral: {str(e)}")
+            logger.error( f"❌ Erro ao gerar resposta geral: {str(e)}")
             # Resposta de fallback
             fallback_response = BotResponse(
                 message="Obrigado por entrar em contato! Como posso ajudá-lo?",
@@ -2072,7 +2066,7 @@ class ConversationBot:
                 payment_promises=int(customer_data.get('payment_promises', 0)),
                 conversation_history=[]
             )
-            logger.info(LogCategory.CONVERSATION, f"📋 Novo contexto criado para {phone}")
+            logger.info( f"📋 Novo contexto criado para {phone}")
         
         return self.active_contexts[phone]
     
@@ -2084,7 +2078,7 @@ class ConversationBot:
                 if hasattr(context, key):
                     setattr(context, key, value)
                     
-            logger.info(LogCategory.CONVERSATION, f"📊 Contexto atualizado para {phone}")
+            logger.info( f"📊 Contexto atualizado para {phone}")
     
     def _add_to_history(self, phone: str, customer_message: str, bot_response: str):
         """Adiciona interação ao histórico"""
@@ -2142,7 +2136,7 @@ class ConversationBot:
         """Limpa contexto de uma conversa"""
         if phone in self.active_contexts:
             del self.active_contexts[phone]
-            logger.info(LogCategory.CONVERSATION, f"🗑️ Contexto limpo para {phone}")
+            logger.info( f"🗑️ Contexto limpo para {phone}")
             return True
         return False
     
@@ -2200,7 +2194,7 @@ class ConversationBot:
                 'quality_scores': {}
             })
             
-            logger.info(LogCategory.CONVERSATION, f"🎓 Reação do cliente {phone} atualizada: {reaction}")
+            logger.info( f"🎓 Reação do cliente {phone} atualizada: {reaction}")
     
     def analyze_campaign_performance(self, campaign_data: Dict[str, Any]) -> Dict[str, Any]:
         """Analisa performance de uma campanha"""
@@ -2254,10 +2248,10 @@ class ConversationBot:
             if self.learning_engine:
                 self.learning_engine.learn_from_conversation_outcome(conversation_data)
             
-            logger.info(LogCategory.CONVERSATION, f"🎓 Feedback processado para {phone}: {outcome}")
+            logger.info( f"🎓 Feedback processado para {phone}: {outcome}")
             
         except Exception as e:
-            logger.error(LogCategory.CONVERSATION, f"❌ Erro ao processar feedback: {e}")
+            logger.error( f"❌ Erro ao processar feedback: {e}")
     
     def get_adaptive_insights(self) -> Dict[str, Any]:
         """Obtém insights do sistema adaptativo"""
@@ -2354,10 +2348,10 @@ def process_customer_message(phone: str, message: str, customer_data: Optional[D
                         'conversation_count': stored_customer.conversation_count,
                         'payment_promises': stored_customer.payment_promises
                     }
-                    logger.info(LogCategory.CONVERSATION, f"🗄️ CLIENTE ENCONTRADO no sistema persistente: {stored_customer.name}")
+                    logger.info( f"🗄️ CLIENTE ENCONTRADO no sistema persistente: {stored_customer.name}")
                 else:
                     # 👤 NÃO É CLIENTE CADASTRADO - RESPONDER COMO PESSOA COMUM
-                    logger.info(LogCategory.CONVERSATION, f"👤 Pessoa não cadastrada como cliente: {phone}")
+                    logger.info( f"👤 Pessoa não cadastrada como cliente: {phone}")
                     customer_data = {
                         'name': 'Pessoa',
                         'phone': phone,
@@ -2403,7 +2397,7 @@ def process_customer_message(phone: str, message: str, customer_data: Optional[D
                 
                 # Salvar contexto persistente
                 save_conversation_context(phone, context)
-                logger.info(LogCategory.CONVERSATION, f"💾 Contexto da conversa salvo (persistente): {phone}")
+                logger.info( f"💾 Contexto da conversa salvo (persistente): {phone}")
                 
                 # Atualizar interação do cliente
                 update_customer_interaction(phone, {
@@ -2429,7 +2423,7 @@ def process_customer_message(phone: str, message: str, customer_data: Optional[D
         }
         
     except Exception as e:
-        logger.error(LogCategory.CONVERSATION, f"❌ Erro ao processar mensagem: {str(e)}")
+        logger.error( f"❌ Erro ao processar mensagem: {str(e)}")
         return {
             'success': False,
             'error': str(e),

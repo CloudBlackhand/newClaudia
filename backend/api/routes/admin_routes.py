@@ -8,16 +8,16 @@ from flask import Blueprint, request, jsonify
 import psycopg2
 import redis
 import os
-from backend.modules.logger_system import SmartLogger, LogCategory
-
-logger = SmartLogger("admin_routes")
+# Usar logger padrão temporariamente para resolver problema
+import logging
+logger = logging.getLogger(__name__)
 admin_blueprint = Blueprint('admin', __name__)
 
 @admin_blueprint.route('/admin/init-database', methods=['POST'])
 def init_database():
     """Inicializar banco de dados e Redis"""
     try:
-        logger.info(LogCategory.SYSTEM, "Iniciando configuração do banco de dados")
+        logger.info( "Iniciando configuração do banco de dados")
         
         # Verificar variáveis de ambiente
         database_url = os.getenv('DATABASE_URL')
@@ -36,12 +36,12 @@ def init_database():
             }), 500
         
         # 1. Conectar ao PostgreSQL
-        logger.info(LogCategory.SYSTEM, "Conectando ao PostgreSQL...")
+        logger.info( "Conectando ao PostgreSQL...")
         conn = psycopg2.connect(database_url)
         cursor = conn.cursor()
         
         # 2. Criar tabelas básicas
-        logger.info(LogCategory.SYSTEM, "Criando tabelas...")
+        logger.info( "Criando tabelas...")
         
         # Tabela de contextos de conversa
         cursor.execute("""
@@ -113,7 +113,7 @@ def init_database():
         """)
         
         # Criar índices
-        logger.info(LogCategory.SYSTEM, "Criando índices...")
+        logger.info( "Criando índices...")
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_conversation_phone ON conversation_contexts(phone);")
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_campaigns_id ON campaigns(campaign_id);")
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_messages_campaign ON messages(campaign_id);")
@@ -122,17 +122,17 @@ def init_database():
         
         # Commit das mudanças
         conn.commit()
-        logger.info(LogCategory.SYSTEM, "Tabelas criadas com sucesso!")
+        logger.info( "Tabelas criadas com sucesso!")
         
         # 3. Conectar ao Redis
-        logger.info(LogCategory.SYSTEM, "Conectando ao Redis...")
+        logger.info( "Conectando ao Redis...")
         redis_client = redis.from_url(redis_url)
         
         # Testar conexão Redis
         redis_client.ping()
         
         # 4. Configurar estruturas iniciais do Redis
-        logger.info(LogCategory.SYSTEM, "Configurando Redis...")
+        logger.info( "Configurando Redis...")
         redis_client.set("system:initialized", "true")
         redis_client.set("system:version", "2.0")
         redis_client.set("campaigns:active_count", "0")
@@ -140,7 +140,7 @@ def init_database():
         redis_client.set("messages:failed_today", "0")
         
         # 5. Inserir dados de exemplo
-        logger.info(LogCategory.SYSTEM, "Inserindo dados de exemplo...")
+        logger.info( "Inserindo dados de exemplo...")
         
         # Exemplo de contexto de conversa
         cursor.execute("""
@@ -175,7 +175,7 @@ def init_database():
         cursor.close()
         conn.close()
         
-        logger.info(LogCategory.SYSTEM, "Inicialização do banco de dados concluída com sucesso!")
+        logger.info( "Inicialização do banco de dados concluída com sucesso!")
         
         return jsonify({
             'success': True,
@@ -190,7 +190,7 @@ def init_database():
         })
         
     except Exception as e:
-        logger.error(LogCategory.SYSTEM, f"Erro ao inicializar banco de dados: {e}")
+        logger.error( f"Erro ao inicializar banco de dados: {e}")
         return jsonify({
             'success': False,
             'error': str(e)
@@ -308,14 +308,14 @@ def test_waha():
         result = asyncio.run(test_connection())
         
         if result['success']:
-            logger.info(LogCategory.SYSTEM, f"Teste Waha bem-sucedido: {result.get('status', 'unknown')}")
+            logger.info( f"Teste Waha bem-sucedido: {result.get('status', 'unknown')}")
         else:
-            logger.error(LogCategory.SYSTEM, f"Teste Waha falhou: {result.get('error', 'unknown')}")
+            logger.error( f"Teste Waha falhou: {result.get('error', 'unknown')}")
         
         return jsonify(result)
         
     except Exception as e:
-        logger.error(LogCategory.SYSTEM, f"Erro no teste Waha: {e}")
+        logger.error( f"Erro no teste Waha: {e}")
         return jsonify({
             'success': False,
             'error': str(e)
@@ -325,7 +325,7 @@ def test_waha():
 def get_database_stats():
     """Obter estatísticas do banco de dados"""
     try:
-        logger.info(LogCategory.SYSTEM, "Buscando estatísticas do banco de dados")
+        logger.info( "Buscando estatísticas do banco de dados")
         
         # Conectar ao banco
         database_url = os.getenv('DATABASE_URL')
@@ -349,7 +349,7 @@ def get_database_stats():
         cursor.close()
         conn.close()
         
-        logger.info(LogCategory.SYSTEM, f"Estatísticas: {clients_count} clientes, {conversations_count} conversas")
+        logger.info( f"Estatísticas: {clients_count} clientes, {conversations_count} conversas")
         
         return jsonify({
             'success': True,
@@ -359,7 +359,7 @@ def get_database_stats():
         })
         
     except Exception as e:
-        logger.error(LogCategory.SYSTEM, f"Erro ao buscar estatísticas: {e}")
+        logger.error( f"Erro ao buscar estatísticas: {e}")
         return jsonify({
             'success': False,
             'error': str(e)
@@ -369,7 +369,7 @@ def get_database_stats():
 def clear_database():
     """Limpar todos os dados do banco de dados"""
     try:
-        logger.warning(LogCategory.SYSTEM, "INICIANDO LIMPEZA COMPLETA DO BANCO DE DADOS")
+        logger.warning( "INICIANDO LIMPEZA COMPLETA DO BANCO DE DADOS")
         
         # Conectar ao banco
         database_url = os.getenv('DATABASE_URL')
@@ -390,10 +390,10 @@ def clear_database():
         conversations_before = cursor.fetchone()[0]
         
         # Limpar todas as tabelas
-        logger.warning(LogCategory.SYSTEM, "Limpando tabela customers...")
+        logger.warning( "Limpando tabela customers...")
         cursor.execute("DELETE FROM customers")
         
-        logger.warning(LogCategory.SYSTEM, "Limpando tabela conversation_contexts...")
+        logger.warning( "Limpando tabela conversation_contexts...")
         cursor.execute("DELETE FROM conversation_contexts")
         
         # Resetar sequências
@@ -408,7 +408,7 @@ def clear_database():
         
         total_removed = clients_before + conversations_before
         
-        logger.warning(LogCategory.SYSTEM, f"BANCO LIMPO! {total_removed} registros removidos")
+        logger.warning( f"BANCO LIMPO! {total_removed} registros removidos")
         
         return jsonify({
             'success': True,
@@ -421,7 +421,7 @@ def clear_database():
         })
         
     except Exception as e:
-        logger.error(LogCategory.SYSTEM, f"Erro ao limpar banco: {e}")
+        logger.error( f"Erro ao limpar banco: {e}")
         return jsonify({
             'success': False,
             'error': str(e)
@@ -431,7 +431,7 @@ def clear_database():
 def export_database():
     """Exportar todos os dados do banco como JSON"""
     try:
-        logger.info(LogCategory.SYSTEM, "Iniciando exportação do banco de dados")
+        logger.info( "Iniciando exportação do banco de dados")
         
         # Conectar ao banco
         database_url = os.getenv('DATABASE_URL')
@@ -506,7 +506,7 @@ def export_database():
             'conversations': conversations
         }
         
-        logger.info(LogCategory.SYSTEM, f"Exportação concluída: {len(clients)} clientes, {len(conversations)} conversas")
+        logger.info( f"Exportação concluída: {len(clients)} clientes, {len(conversations)} conversas")
         
         # Retornar como arquivo JSON para download
         from flask import Response
@@ -521,7 +521,7 @@ def export_database():
         return response
         
     except Exception as e:
-        logger.error(LogCategory.SYSTEM, f"Erro ao exportar banco: {e}")
+        logger.error( f"Erro ao exportar banco: {e}")
         return jsonify({
             'success': False,
             'error': str(e)

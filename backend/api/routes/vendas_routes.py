@@ -1,5 +1,4 @@
 from flask import Blueprint, request, jsonify
-from backend.modules.logger_system import SmartLogger, LogCategory
 from backend.modules.vendas_data_processor import VendasDataProcessor
 import os
 import json
@@ -7,7 +6,9 @@ import psycopg2
 from datetime import datetime
 
 vendas_blueprint = Blueprint('vendas', __name__)
-logger = SmartLogger("vendas_routes")
+# Usar logger padrão temporariamente para resolver problema
+import logging
+logger = logging.getLogger(__name__)
 
 @vendas_blueprint.route('/vendas/validate', methods=['POST'])
 def validate_vendas_data():
@@ -38,7 +39,7 @@ def validate_vendas_data():
         })
         
     except Exception as e:
-        logger.error(LogCategory.SYSTEM, f"Erro ao validar dados de vendas: {e}")
+        logger.error( f"Erro ao validar dados de vendas: {e}")
         return jsonify({
             'success': False,
             'error': str(e)
@@ -48,7 +49,7 @@ def validate_vendas_data():
 def process_vendas_data():
     """Processa e insere dados de vendas no banco de dados"""
     try:
-        logger.info(LogCategory.SYSTEM, "Iniciando processamento de dados de vendas")
+        logger.info( "Iniciando processamento de dados de vendas")
         
         # Verificar se há dados no request
         if not request.is_json:
@@ -116,7 +117,7 @@ def process_vendas_data():
                     
                 except Exception as e:
                     insertion_errors.append(f"Erro ao inserir {venda.nome}: {str(e)}")
-                    logger.error(LogCategory.SYSTEM, f"Erro ao inserir venda {venda.nome}: {e}")
+                    logger.error( f"Erro ao inserir venda {venda.nome}: {e}")
                     # Rollback da transação atual e continuar
                     conn.rollback()
                     # Reconectar para continuar
@@ -128,7 +129,7 @@ def process_vendas_data():
         cursor.close()
         conn.close()
         
-        logger.info(LogCategory.SYSTEM, f"Processamento concluído: {inserted_count} vendas inseridas")
+        logger.info( f"Processamento concluído: {inserted_count} vendas inseridas")
         
         return jsonify({
             'success': True,
@@ -139,7 +140,7 @@ def process_vendas_data():
         })
         
     except Exception as e:
-        logger.error(LogCategory.SYSTEM, f"Erro ao processar dados de vendas: {e}")
+        logger.error( f"Erro ao processar dados de vendas: {e}")
         return jsonify({
             'success': False,
             'error': str(e)
@@ -201,7 +202,7 @@ def list_customers():
         cursor.close()
         conn.close()
         
-        logger.info(LogCategory.SYSTEM, f"Listagem de clientes: {len(customers_list)} registros encontrados")
+        logger.info( f"Listagem de clientes: {len(customers_list)} registros encontrados")
         
         return jsonify({
             'success': True,
@@ -211,7 +212,7 @@ def list_customers():
         })
         
     except Exception as e:
-        logger.error(LogCategory.SYSTEM, f"Erro ao listar clientes: {e}")
+        logger.error( f"Erro ao listar clientes: {e}")
         return jsonify({
             'success': False,
             'error': str(e)
@@ -278,7 +279,7 @@ def get_vendas_stats():
         })
         
     except Exception as e:
-        logger.error(LogCategory.SYSTEM, f"Erro ao obter estatísticas de vendas: {e}")
+        logger.error( f"Erro ao obter estatísticas de vendas: {e}")
         return jsonify({
             'success': False,
             'error': str(e)
