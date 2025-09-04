@@ -59,12 +59,18 @@ class VendasDataProcessor:
             
             for idx, item in enumerate(data):
                 try:
-                    # Extrair dados de vendas
-                    if 'dados_vendas' not in item or not item['dados_vendas']:
-                        continue
-                    
-                    for venda in item['dados_vendas']:
-                        vendas_item = self._process_venda_item(venda, idx)
+                    # Verificar se é formato antigo (com dados_vendas) ou novo (dados diretos)
+                    if 'dados_vendas' in item and item['dados_vendas']:
+                        # Formato antigo: item tem dados_vendas
+                        for venda in item['dados_vendas']:
+                            vendas_item = self._process_venda_item(venda, idx)
+                            if vendas_item.is_valid:
+                                vendas_data.append(vendas_item)
+                            else:
+                                errors.extend(vendas_item.validation_errors)
+                    else:
+                        # Formato novo: item já são os dados de venda
+                        vendas_item = self._process_venda_item(item, idx)
                         if vendas_item.is_valid:
                             vendas_data.append(vendas_item)
                         else:
