@@ -56,9 +56,18 @@ class VendasDataProcessor:
             vendas_data = []
             errors = []
             
-            if not isinstance(data, list):
-                self.logger.error(LogCategory.SYSTEM, f"❌ Formato inválido: esperado lista, recebido {type(data)}")
-                return [], ["Formato inválido: deve ser uma lista"]
+            # Aceitar tanto lista quanto dicionário
+            if isinstance(data, dict):
+                self.logger.info(LogCategory.SYSTEM, f"🔍 Formato dicionário detectado - procurando 'dados_vendas'")
+                if 'dados_vendas' in data:
+                    data = data['dados_vendas']
+                    self.logger.info(LogCategory.SYSTEM, f"🔍 Extraído dados_vendas - {len(data)} itens")
+                else:
+                    self.logger.error(LogCategory.SYSTEM, f"❌ Dicionário sem 'dados_vendas' - chaves disponíveis: {list(data.keys())}")
+                    return [], ["Formato inválido: dicionário deve conter 'dados_vendas'"]
+            elif not isinstance(data, list):
+                self.logger.error(LogCategory.SYSTEM, f"❌ Formato inválido: esperado lista ou dict, recebido {type(data)}")
+                return [], ["Formato inválido: deve ser uma lista ou dicionário com 'dados_vendas'"]
             
             self.logger.info(LogCategory.SYSTEM, f"🔍 Processando {len(data)} itens...")
             
