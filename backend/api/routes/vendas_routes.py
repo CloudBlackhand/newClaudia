@@ -117,6 +117,11 @@ def process_vendas_data():
                 except Exception as e:
                     insertion_errors.append(f"Erro ao inserir {venda.nome}: {str(e)}")
                     logger.error(LogCategory.SYSTEM, f"Erro ao inserir venda {venda.nome}: {e}")
+                    # Rollback da transação atual e continuar
+                    conn.rollback()
+                    # Reconectar para continuar
+                    conn = psycopg2.connect(database_url)
+                    cursor = conn.cursor()
         
         # Commit das alterações
         conn.commit()
