@@ -2,6 +2,7 @@ from flask import Blueprint, request, jsonify
 from backend.modules.logger_system import SmartLogger, LogCategory
 from backend.modules.vendas_data_processor import VendasDataProcessor
 import os
+import json
 import psycopg2
 from datetime import datetime
 
@@ -24,7 +25,7 @@ def validate_vendas_data():
         processor = VendasDataProcessor()
         
         # Processar dados
-        processed_vendas, errors = processor.process_vendas_json(str(vendas_data))
+        processed_vendas, errors = processor.process_vendas_json(json.dumps(vendas_data))
         
         # Obter resumo do processamento
         summary = processor.get_processing_summary(processed_vendas)
@@ -62,7 +63,7 @@ def process_vendas_data():
         processor = VendasDataProcessor()
         
         # Processar dados
-        processed_vendas, errors = processor.process_vendas_json(str(vendas_data))
+        processed_vendas, errors = processor.process_vendas_json(json.dumps(vendas_data))
         
         # Obter resumo do processamento
         summary = processor.get_processing_summary(processed_vendas)
