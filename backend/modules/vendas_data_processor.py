@@ -114,7 +114,7 @@ class VendasDataProcessor:
         if index < 3:  # Log apenas os primeiros 3 para debug
             self.logger.info(LogCategory.SYSTEM, f"🔍 Processando venda {index}: campos disponíveis: {list(venda.keys())}")
         
-        # Extrair e validar campos
+        # Extrair e validar campos - MAIS PERMISSIVO
         nome = self._clean_string(venda.get('NOME', ''))
         if not nome:
             errors.append(f"Item {index}: NOME é obrigatório")
@@ -123,7 +123,9 @@ class VendasDataProcessor:
         
         documento = self._clean_documento(venda.get('DOCUMENTO', ''))
         if not documento:
-            errors.append(f"Item {index}: DOCUMENTO é obrigatório")
+            # Em vez de rejeitar, usar um documento padrão
+            documento = f"DOC_{index}_{venda.get('NOME', 'UNKNOWN')[:10]}"
+            self.logger.warning(LogCategory.SYSTEM, f"⚠️ Item {index}: DOCUMENTO vazio, usando padrão: {documento}")
         
         telefone1 = self._clean_telefone(venda.get('TELEFONE1', ''))
         telefone2 = self._clean_telefone(venda.get('TELEFONE2', ''))
@@ -148,13 +150,21 @@ class VendasDataProcessor:
         if index < 3:
             self.logger.info(LogCategory.SYSTEM, f"🔍 Item {index}: FPD='{fpd}', SPD='{spd}' -> Usando {priority_type}='{priority_value}'")
         
-        # Validar valor de prioridade
+        # Validar valor de prioridade - MAIS PERMISSIVO
         if priority_value not in ['1', '2', '3']:
-            errors.append(f"Item {index}: FPD/SPD deve ser 1, 2 ou 3 (FPD: {fpd}, SPD: {spd})")
+            # Em vez de rejeitar, usar valor padrão
+            priority_value = '1'  # FPD 1 como padrão
+            self.logger.warning(LogCategory.SYSTEM, f"⚠️ Item {index}: FPD/SPD inválido ({fpd}/{spd}), usando FPD=1 como padrão")
         
-        # Validar telefone principal
+        # Validar telefone principal - MAIS PERMISSIVO
         if not telefone1 or telefone1 == '#ERROR!':
-            errors.append(f"Item {index}: TELEFONE1 é obrigatório e válido")
+            # Em vez de rejeitar, usar telefone2 ou deixar vazio
+            if telefone2 and telefone2 != '#ERROR!':
+                telefone1 = telefone2
+                self.logger.warning(LogCategory.SYSTEM, f"⚠️ Item {index}: Usando TELEFONE2 como principal")
+            else:
+                self.logger.warning(LogCategory.SYSTEM, f"⚠️ Item {index}: TELEFONE1 inválido, continuando sem telefone")
+                # Não adicionar erro, apenas warning
         
         return VendasData(
             nome=nome,
