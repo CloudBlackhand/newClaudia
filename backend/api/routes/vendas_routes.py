@@ -90,8 +90,8 @@ def process_vendas_data():
                         INSERT INTO customers (
                             nome, documento, telefone1, telefone2, email, rua_endereco,
                             cidade, cep, data_nascimento, status, origem_venda,
-                            contrato, data_agenda, obs, aba_origem, spd
-                        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                            contrato, data_agenda, obs, aba_origem, fpd, spd
+                        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                     """, (
                         venda.nome,
                         venda.documento,
@@ -108,7 +108,8 @@ def process_vendas_data():
                         venda.fpd,  # data_agenda (usando fpd como data_agenda)
                         f"FPD: {venda.fpd}",  # obs
                         venda.aba_origem,
-                        venda.fpd  # spd
+                        venda.fpd,  # fpd (campo correto)
+                        venda.fpd  # spd (mantendo compatibilidade)
                     ))
                     
                     inserted_count += 1
@@ -158,7 +159,7 @@ def list_customers():
             SELECT 
                 id, nome, documento, telefone1, telefone2, email, 
                 rua_endereco, cidade, cep, data_nascimento, status, 
-                origem_venda, contrato, data_agenda, obs, aba_origem, spd,
+                origem_venda, contrato, data_agenda, obs, aba_origem, fpd, spd,
                 created_at, updated_at
             FROM customers 
             ORDER BY created_at DESC
@@ -186,9 +187,10 @@ def list_customers():
                 'data_agenda': customer[13],
                 'obs': customer[14],
                 'aba_origem': customer[15],
-                'spd': customer[16],
-                'created_at': customer[17].isoformat() if customer[17] else None,
-                'updated_at': customer[18].isoformat() if customer[18] else None
+                'fpd': customer[16],  # Campo FPD
+                'spd': customer[17],  # Campo SPD
+                'created_at': customer[18].isoformat() if customer[18] else None,
+                'updated_at': customer[19].isoformat() if customer[19] else None
             })
         
         cursor.close()
@@ -238,13 +240,23 @@ def get_vendas_stats():
         """)
         regional_stats = dict(cursor.fetchall())
         
-        # Contar por FPD (spd)
+        # Contar por FPD
+        cursor.execute("""
+            SELECT fpd, COUNT(*) FROM customers 
+            WHERE fpd IS NOT NULL AND fpd != ''
+            GROUP BY fpd 
+            ORDER BY fpd
+        """)
+        fpd_stats = dict(cursor.fetchall())
+        
+        # Contar por SPD também
         cursor.execute("""
             SELECT spd, COUNT(*) FROM customers 
+            WHERE spd IS NOT NULL AND spd != ''
             GROUP BY spd 
             ORDER BY spd
         """)
-        fpd_stats = dict(cursor.fetchall())
+        spd_stats = dict(cursor.fetchall())
         
         cursor.close()
         conn.close()
@@ -255,6 +267,7 @@ def get_vendas_stats():
                 'total_vendas': vendas_count,
                 'por_cidade': regional_stats,
                 'por_fpd': fpd_stats,
+                'por_spd': spd_stats,
                 'timestamp': datetime.now().isoformat()
             }
         })
