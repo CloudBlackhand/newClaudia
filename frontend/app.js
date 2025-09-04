@@ -1564,7 +1564,7 @@ class BillingApp {
         this.messageTemplates = {
             'fpd_reminder': `Olá {NOME}! 👋
 
-Sua fatura de {VALOR} reais venceu há {DIAS_FPD} dias.
+Sua fatura venceu há {DIAS_FPD} dias.
 
 Para evitar bloqueios, regularize seu pagamento o quanto antes.
 
@@ -1575,7 +1575,7 @@ Agradecemos sua preferência! 🙏`,
 
             'spd_reminder': `Oi {NOME}! 😊
 
-Sua segunda fatura de {VALOR} reais venceu há {DIAS_FPD} dias.
+Sua segunda fatura venceu há {DIAS_FPD} dias.
 
 Mantenha seu serviço ativo regularizando o pagamento.
 
@@ -1588,7 +1588,6 @@ Qualquer dúvida, estamos aqui! 📞`,
 
 Seu plano {PLANO} foi ativado com sucesso em {CIDADE}.
 
-Valor mensal: R$ {VALOR}
 Vendedor: {VENDEDOR}
 
 🌐 Acesse nosso portal para acompanhar sua conta:
@@ -1600,9 +1599,7 @@ Aproveite sua internet! 🚀`,
 
 Esperamos que esteja bem! 
 
-📋 Temos uma cobrança pendente em seu nome:
-💰 Valor: R$ {VALOR}
-📅 Vencimento: {VENCIMENTO}
+📋 Temos uma cobrança pendente em seu nome.
 
 🌐 Para consultar e pagar sua fatura, acesse:
 https://central.desktop.com.br/bill
@@ -1613,10 +1610,7 @@ Agradecemos sua atenção! 🙏`,
 
             'urgent_reminder': `Atenção {NOME}! ⚠️
 
-Sua cobrança está VENCIDA:
-
-💰 Valor: R$ {VALOR}
-📅 Venceu em: {VENCIMENTO}
+Sua cobrança está VENCIDA.
 
 🌐 REGULARIZE AGORA através do nosso portal:
 https://central.desktop.com.br/bill
@@ -1627,10 +1621,7 @@ Para evitar maiores complicações, entre em contato URGENTEMENTE para regulariz
 
             'final_notice': `🚨 AVISO FINAL - {NOME}
 
-Esta é sua ÚLTIMA OPORTUNIDADE para regularizar:
-
-💰 Valor: R$ {VALOR}
-📅 Vencido desde: {VENCIMENTO}
+Esta é sua ÚLTIMA OPORTUNIDADE para regularizar sua situação.
 
 🌐 ACESSE IMEDIATAMENTE nosso portal:
 https://central.desktop.com.br/bill
