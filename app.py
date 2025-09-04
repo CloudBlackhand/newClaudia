@@ -2,15 +2,20 @@
 # -*- coding: utf-8 -*-
 """
 Sistema de Cobrança Inteligente
-Arquivo principal para Railway
+Launcher para Railway - Versão Simplificada
 """
 
 import os
 import sys
 import logging
-from flask import Flask, jsonify
+from flask import Flask, jsonify, send_from_directory
 from flask_cors import CORS
 from dotenv import load_dotenv
+
+# Adicionar diretório atual ao path ANTES de qualquer importação
+current_dir = os.path.dirname(os.path.abspath(__file__))
+if current_dir not in sys.path:
+    sys.path.insert(0, current_dir)
 
 # Carregar variáveis de ambiente
 load_dotenv()
@@ -56,96 +61,66 @@ def create_app():
 
 def register_blueprints(app):
     """Registrar blueprints da aplicação"""
-    try:
-        # Adicionar diretório atual ao path para importações
-        import sys
-        import os
-        current_dir = os.path.dirname(os.path.abspath(__file__))
-        if current_dir not in sys.path:
-            sys.path.insert(0, current_dir)
-        
-        # Importar blueprints
+    logger.info("🔄 Tentando importar blueprints...")
+    
+    # Lista de blueprints para tentar importar
+    blueprints_config = [
+        ('backend.api.routes.billing_routes', 'billing_bp', '/api/billing'),
+        ('backend.api.routes.conversation_routes', 'conversation_bp', '/api/conversation'),
+        ('backend.api.routes.webhook_routes', 'webhook_bp', ''),
+        ('backend.api.routes.campaign_routes', 'campaign_blueprint', '/api'),
+        ('backend.api.routes.admin_routes', 'admin_blueprint', '/api'),
+        ('backend.api.routes.vendas_routes', 'vendas_blueprint', '/api')
+    ]
+    
+    registered_count = 0
+    
+    for module_path, blueprint_name, url_prefix in blueprints_config:
         try:
-            from backend.api.routes.billing_routes import billing_bp
-            logger.info("✅ Billing blueprint importado com sucesso")
-        except Exception as e:
-            logger.error(f"❌ Erro ao importar billing blueprint: {e}")
-            billing_bp = None
+            # Importar o módulo
+            module = __import__(module_path, fromlist=[blueprint_name])
+            blueprint = getattr(module, blueprint_name)
             
-        try:
-            from backend.api.routes.conversation_routes import conversation_bp
-            logger.info("✅ Conversation blueprint importado com sucesso")
-        except Exception as e:
-            logger.error(f"❌ Erro ao importar conversation blueprint: {e}")
-            conversation_bp = None
+            # Registrar blueprint
+            app.register_blueprint(blueprint, url_prefix=url_prefix)
+            logger.info(f"✅ {blueprint_name} registrado com sucesso - url_prefix='{url_prefix}'")
+            registered_count += 1
             
-        try:
-            from backend.api.routes.webhook_routes import webhook_bp
-            logger.info("✅ Webhook blueprint importado com sucesso")
         except Exception as e:
-            logger.error(f"❌ Erro ao importar webhook blueprint: {e}")
-            webhook_bp = None
-            
+            logger.error(f"❌ Erro ao importar {module_path}.{blueprint_name}: {e}")
+            continue
+    
+    logger.info(f"✅ {registered_count} blueprints registrados com sucesso")
+    
+    # Rota principal
+    @app.route('/')
+    def index():
         try:
-            from backend.api.routes.campaign_routes import campaign_blueprint
-            logger.info("✅ Campaign blueprint importado com sucesso")
-        except Exception as e:
-            logger.error(f"❌ Erro ao importar campaign blueprint: {e}")
-            campaign_blueprint = None
-            
-        try:
-            from backend.api.routes.admin_routes import admin_blueprint
-            logger.info("✅ Admin blueprint importado com sucesso")
-        except Exception as e:
-            logger.error(f"❌ Erro ao importar admin blueprint: {e}")
-            admin_blueprint = None
-            
-        try:
-            from backend.api.routes.vendas_routes import vendas_blueprint
-            logger.info("✅ Vendas blueprint importado com sucesso")
-        except Exception as e:
-            logger.error(f"❌ Erro ao importar vendas blueprint: {e}")
-            vendas_blueprint = None
-        
-        # Registrar blueprints
-        if billing_bp:
-            app.register_blueprint(billing_bp, url_prefix='/api/billing')
-        if conversation_bp:
-            app.register_blueprint(conversation_bp, url_prefix='/api/conversation')
-        # CORREÇÃO DEFINITIVA: Registrar webhook sem prefixo
-        if webhook_bp:
-            app.register_blueprint(webhook_bp, url_prefix='')
-            logger.info("✅ Webhook blueprint registrado com sucesso - url_prefix=''")
-            logger.info(f"✅ Rotas disponíveis: {[rule.rule for rule in app.url_map.iter_rules()]}")
-        else:
-            logger.error("❌ Webhook blueprint é None - não foi registrado!")
-        if campaign_blueprint:
-            app.register_blueprint(campaign_blueprint, url_prefix='/api')
-        if admin_blueprint:
-            app.register_blueprint(admin_blueprint, url_prefix='/api')
-        if vendas_blueprint:
-            app.register_blueprint(vendas_blueprint, url_prefix='/api')
-            logger.info("✅ Vendas blueprint registrado com sucesso - url_prefix='/api'")
-        
-        # Rota principal
-        @app.route('/')
-        def index():
-            return app.send_static_file('index.html')
-        
-        # Rota de health check
-        @app.route('/health')
-        def health_check():
+            return send_from_directory('frontend', 'index.html')
+        except:
             return jsonify({
-                'status': 'healthy',
-                'service': 'Sistema de Cobrança Inteligente',
-                'version': '1.0.0'
-            }), 200
-        
-        logger.info("✅ Blueprints registrados com sucesso")
-        
-    except Exception as e:
-        logger.error(f"❌ Erro ao registrar blueprints: {e}")
-        raise
+                'message': 'Sistema de Cobrança Inteligente',
+                'status': 'running',
+                'frontend': 'not_found'
+            })
+    
+    # Servir arquivos estáticos
+    @app.route('/<path:filename>')
+    def static_files(filename):
+        try:
+            return send_from_directory('frontend', filename)
+        except:
+            return jsonify({'error': 'File not found'}), 404
+    
+    # Rota de health check
+    @app.route('/health')
+    def health_check():
+        return jsonify({
+            'status': 'healthy',
+            'service': 'Sistema de Cobrança Inteligente',
+            'version': '1.0.0',
+            'blueprints_registered': registered_count
+        }), 200
 
 def register_error_handlers(app):
     """Registrar handlers de erro personalizados"""
