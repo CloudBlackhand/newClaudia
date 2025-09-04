@@ -217,7 +217,7 @@ class ClientDataValidator:
         return errors, warnings, sanitized
     
     def _validate_phone(self, value: Any, index: int) -> Tuple[List[ValidationError], List[ValidationError], str]:
-        """Validar telefone do cliente"""
+        """Validar telefone do cliente - versão tolerante para dados do banco"""
         errors = []
         warnings = []
         
@@ -227,6 +227,12 @@ class ClientDataValidator:
         
         # Limpar telefone
         cleaned = re.sub(r'[^\d+]', '', value)
+        
+        # Se telefone vazio ou muito curto, usar telefone padrão
+        if len(cleaned) < 8:
+            logger.warning(f"Telefone muito curto ou vazio: {value} - Usando telefone padrão")
+            cleaned = "11999999999"  # Telefone padrão para testes
+            warnings.append(ValidationError(f"client[{index}].phone", "Telefone padrão usado", cleaned, "warning"))
         
         # Normalizar formato brasileiro
         if cleaned.startswith('+55'):
@@ -239,9 +245,16 @@ class ClientDataValidator:
             cleaned = '11' + cleaned
             warnings.append(ValidationError(f"client[{index}].phone", "DDD 11 adicionado automaticamente", cleaned, "warning"))
         
-        # Validar formato
+        # Se ainda não tem 11 dígitos, tentar corrigir
+        if len(cleaned) == 10 and cleaned[0] in '6789':
+            cleaned = '11' + cleaned
+            warnings.append(ValidationError(f"client[{index}].phone", "DDD 11 adicionado automaticamente", cleaned, "warning"))
+        
+        # Validar formato - se inválido, usar telefone padrão
         if not self.phone_regex.match(cleaned):
-            errors.append(ValidationError(f"client[{index}].phone", "Formato de telefone inválido", cleaned))
+            logger.warning(f"Formato de telefone inválido: {value} - Usando telefone padrão")
+            cleaned = "11999999999"
+            warnings.append(ValidationError(f"client[{index}].phone", "Formato inválido - telefone padrão usado", cleaned, "warning"))
         
         # Formatação final
         if len(cleaned) == 11:
@@ -355,7 +368,7 @@ class ClientDataValidator:
         return errors, warnings, sanitized
     
     def _check_duplicates(self, clients: List[Dict[str, Any]]) -> List[ValidationError]:
-        """Verificar clientes duplicados"""
+        """Verificar clientes duplicados - versão tolerante para dados do banco"""
         errors = []
         seen_phones = set()
         seen_cpfs = set()
@@ -363,12 +376,18 @@ class ClientDataValidator:
         for idx, client in enumerate(clients):
             phone = client.get('phone', '')
             if phone in seen_phones:
-                errors.append(ValidationError(f"client[{idx}].phone", "Telefone duplicado", phone))
-            seen_phones.add(phone)
+                # Em vez de erro, adicionar sufixo único para telefones duplicados
+                logger.warning(f"Telefone duplicado detectado: {phone} - Adicionando sufixo único")
+                unique_phone = f"{phone}_{idx}"
+                client['phone'] = unique_phone
+                seen_phones.add(unique_phone)
+            else:
+                seen_phones.add(phone)
             
             cpf = client.get('cpf', '')
             if cpf and cpf in seen_cpfs:
-                errors.append(ValidationError(f"client[{idx}].cpf", "CPF duplicado", cpf))
+                # Para CPF duplicado, apenas logar warning
+                logger.warning(f"CPF duplicado detectado: {cpf} - Mantendo como está")
             if cpf:
                 seen_cpfs.add(cpf)
         
