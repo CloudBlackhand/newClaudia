@@ -25,6 +25,9 @@ webhook_bp = Blueprint('webhook', __name__)
 conversation_bot = None
 waha_client = None
 
+# Cache para evitar processar a mesma mensagem múltiplas vezes
+processed_messages = set()
+
 def get_services():
     """Obter instâncias dos serviços"""
     global conversation_bot, waha_client
@@ -148,6 +151,23 @@ def handle_message_event(webhook_data: Dict[str, Any]):
                 'error': 'Falha ao parsear mensagem'
             }), 400
         
+        # Verificar se já processamos esta mensagem
+        message_id = message.id
+        if message_id in processed_messages:
+            logger.info(f"Mensagem já processada, ignorando: {message_id}")
+            return jsonify({
+                'status': 'ignored',
+                'message': 'Mensagem já processada'
+            }), 200
+        
+        # Adicionar ao cache de mensagens processadas
+        processed_messages.add(message_id)
+        
+        # Limitar o cache para evitar crescimento excessivo
+        if len(processed_messages) > 1000:
+            # Remover as mensagens mais antigas (simples implementação)
+            processed_messages.clear()
+        
         # Ignorar mensagens próprias
         if message.from_me:
             logger.debug("Mensagem própria ignorada")
@@ -167,7 +187,7 @@ def handle_message_event(webhook_data: Dict[str, Any]):
         # Extrair telefone limpo
         phone = message.sender.replace('@c.us', '')
         
-        logger.info(f"Mensagem incoming de {phone}: {message.content[:50]}...")
+        logger.info(f"📨 Processando mensagem {message_id} de {phone}: {message.content[:50]}...")
         
         # Verificar se é cliente antes de processar
         
