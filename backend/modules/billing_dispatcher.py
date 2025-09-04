@@ -489,15 +489,20 @@ class BillingDispatcher:
             logger.debug(LogCategory.BILLING, f"✍️ Simulando 'escrevendo...': {writing_delay:.2f}s")
             await asyncio.sleep(writing_delay)
             
+            # Debug: verificar se Waha está configurado
+            logger.info(LogCategory.BILLING, f"🔍 Waha configurado: {self.waha is not None}")
+            if self.waha:
+                logger.info(LogCategory.BILLING, f"🔍 Waha base URL: {self.waha.base_url}")
+            
             if not self.waha:
                 # Modo simulação/desenvolvimento
-                logger.info(LogCategory.BILLING, f"📤 [SIMULAÇÃO] Enviando para {message.phone}")
+                logger.warning(LogCategory.BILLING, f"⚠️ [SIMULAÇÃO] Waha não configurado - Enviando para {message.phone}")
                 logger.info(LogCategory.BILLING, f"📝 Conteúdo: {message.content[:100]}...")
                 await asyncio.sleep(0.5)  # Simular delay de rede
                 return True
             
             # 3. Integração real com Waha (agora síncrona)
-            logger.info(LogCategory.BILLING, f"📤 Enviando mensagem real para {message.phone}")
+            logger.info(LogCategory.BILLING, f"📤 [REAL] Enviando mensagem real para {message.phone}")
             success = self.waha.send_text_message(
                 phone=message.phone,
                 text=message.content
