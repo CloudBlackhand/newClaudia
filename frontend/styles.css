@@ -1237,3 +1237,120 @@ select.form-control {
         align-self: flex-end;
     }
 }
+
+/* Customers Tab Styles */
+.customers-list {
+    min-height: 400px;
+}
+
+.table-container {
+    overflow-x: auto;
+    border-radius: var(--border-radius);
+    border: 1px solid var(--border-color);
+}
+
+.customers-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+}
+
+.customers-table th {
+    background: var(--bg-tertiary);
+    padding: 1rem 0.75rem;
+    text-align: left;
+    font-weight: 600;
+    color: var(--text-primary);
+    border-bottom: 2px solid var(--border-color);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.customers-table td {
+    padding: 0.75rem;
+    border-bottom: 1px solid var(--border-color);
+    vertical-align: middle;
+}
+
+.customers-table tr:hover {
+    background: var(--bg-secondary);
+}
+
+.customer-id {
+    font-weight: 600;
+    color: var(--primary);
+    font-family: monospace;
+}
+
+.customer-name {
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.customer-document {
+    font-family: monospace;
+    color: var(--text-secondary);
+}
+
+.customer-phone {
+    font-family: monospace;
+    color: var(--text-secondary);
+}
+
+.customer-city {
+    color: var(--text-secondary);
+}
+
+.fpd-badge {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    color: white;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-align: center;
+    min-width: 60px;
+}
+
+.status-active {
+    color: var(--success);
+    font-weight: 600;
+}
+
+.customer-date {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+}
+
+.empty-state, .error-state {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: var(--text-muted);
+}
+
+.empty-state i, .error-state i {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+}
+
+.empty-state p, .error-state p {
+    margin: 0.5rem 0;
+}
+
+.error-state {
+    color: var(--error);
+}
+
+/* Mobile adjustments for customers table */
+@media (max-width: 768px) {
+    .customers-table {
+        font-size: 0.8rem;
+    }
+    
+    .customers-table th,
+    .customers-table td {
+        padding: 0.5rem 0.25rem;
+    }
+}

@@ -46,6 +46,10 @@
                     <i class="fas fa-file-invoice"></i>
                     <span>Cobrança</span>
                 </button>
+                <button class="tab-button" data-tab="customers">
+                    <i class="fas fa-users"></i>
+                    <span>Pessoas</span>
+                </button>
                 <button class="tab-button" data-tab="conversation">
                     <i class="fas fa-comments"></i>
                     <span>Conversas</span>
@@ -136,6 +140,68 @@
                             </div>
                             <div class="card-body">
                                 <div id="results-content"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Customers Tab -->
+                <div id="customers-tab" class="tab-pane">
+                    <div class="section-header">
+                        <h2>👥 Lista de Pessoas para Cobrança</h2>
+                        <p>Visualize e gerencie todas as pessoas cadastradas no sistema</p>
+                    </div>
+
+                    <div class="grid">
+                        <!-- Customers List -->
+                        <div class="card full-width">
+                            <div class="card-header">
+                                <h3><i class="fas fa-list"></i> Lista de Pessoas</h3>
+                                <div class="button-group">
+                                    <button id="refresh-customers-btn" class="btn btn-secondary">
+                                        <i class="fas fa-sync-alt"></i>
+                                        Atualizar
+                                    </button>
+                                    <button id="export-customers-btn" class="btn btn-secondary">
+                                        <i class="fas fa-download"></i>
+                                        Exportar
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div id="customers-list" class="customers-list">
+                                    <div class="loading-state">
+                                        <i class="fas fa-spinner fa-spin"></i>
+                                        <p>Carregando lista de pessoas...</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Statistics -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h3><i class="fas fa-chart-pie"></i> Estatísticas</h3>
+                            </div>
+                            <div class="card-body">
+                                <div id="customers-stats" class="stats-grid">
+                                    <div class="stat-item">
+                                        <div class="stat-value" id="total-customers">--</div>
+                                        <div class="stat-label">Total de Pessoas</div>
+                                    </div>
+                                    <div class="stat-item">
+                                        <div class="stat-value" id="fpd1-count">--</div>
+                                        <div class="stat-label">FPD 1 (Urgente)</div>
+                                    </div>
+                                    <div class="stat-item">
+                                        <div class="stat-value" id="fpd2-count">--</div>
+                                        <div class="stat-label">FPD 2 (Médio)</div>
+                                    </div>
+                                    <div class="stat-item">
+                                        <div class="stat-value" id="fpd3-count">--</div>
+                                        <div class="stat-label">FPD 3 (Baixo)</div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>

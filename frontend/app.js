@@ -46,6 +46,10 @@ class BillingApp {
         document.getElementById('refresh-conversations').addEventListener('click', this.loadConversations.bind(this));
         document.getElementById('test-ai-btn').addEventListener('click', this.testAI.bind(this));
         
+        // Customers features
+        document.getElementById('refresh-customers-btn').addEventListener('click', this.loadCustomers.bind(this));
+        document.getElementById('export-customers-btn').addEventListener('click', this.exportCustomers.bind(this));
+        
         // Modal
         document.getElementById('modal-close').addEventListener('click', this.closeModal.bind(this));
         document.getElementById('modal-cancel').addEventListener('click', this.closeModal.bind(this));
@@ -82,6 +86,9 @@ class BillingApp {
 
         // Load tab-specific data
         switch(tabName) {
+            case 'customers':
+                this.loadCustomers();
+                break;
             case 'conversation':
                 this.loadConversations();
                 break;
@@ -1321,6 +1328,182 @@ class BillingApp {
         } finally {
             this.showLoading(false);
         }
+    }
+
+    async loadCustomers() {
+        try {
+            const customersList = document.getElementById('customers-list');
+            customersList.innerHTML = `
+                <div class="loading-state">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <p>Carregando lista de pessoas...</p>
+                </div>
+            `;
+            
+            const response = await fetch(`${this.apiBase}/vendas/list`);
+            
+            if (response.ok) {
+                const data = await response.json();
+                
+                if (data.success && data.customers) {
+                    this.displayCustomersList(data.customers);
+                    this.updateCustomersStats(data.customers);
+                } else {
+                    throw new Error('Resposta inválida do servidor');
+                }
+            } else {
+                const error = await response.json();
+                throw new Error(error.error || 'Erro ao carregar lista de clientes');
+            }
+        } catch (error) {
+            console.error('Load customers error:', error);
+            document.getElementById('customers-list').innerHTML = `
+                <div class="error-state">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <p>Erro ao carregar lista: ${error.message}</p>
+                </div>
+            `;
+        }
+    }
+
+    displayCustomersList(customers) {
+        const customersList = document.getElementById('customers-list');
+        
+        if (customers.length === 0) {
+            customersList.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-users"></i>
+                    <p>Nenhuma pessoa cadastrada ainda</p>
+                    <p>Faça upload de dados na aba "Cobrança"</p>
+                </div>
+            `;
+            return;
+        }
+
+        let tableHTML = `
+            <div class="table-container">
+                <table class="customers-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nome</th>
+                            <th>Documento</th>
+                            <th>Telefone</th>
+                            <th>Cidade</th>
+                            <th>FPD</th>
+                            <th>Status</th>
+                            <th>Cadastrado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+        `;
+        
+        customers.forEach(customer => {
+            const fpdColor = customer.spd === '1' ? '#e53e3e' : customer.spd === '2' ? '#dd6b20' : '#38a169';
+            const fpdText = customer.spd === '1' ? 'FPD 1' : customer.spd === '2' ? 'FPD 2' : 'FPD 3';
+            const createdDate = customer.created_at ? new Date(customer.created_at).toLocaleDateString('pt-BR') : '-';
+            
+            tableHTML += `
+                <tr>
+                    <td class="customer-id">${customer.id}</td>
+                    <td class="customer-name">${customer.nome || '-'}</td>
+                    <td class="customer-document">${customer.documento || '-'}</td>
+                    <td class="customer-phone">${customer.telefone1 || '-'}</td>
+                    <td class="customer-city">${customer.cidade || '-'}</td>
+                    <td class="customer-fpd">
+                        <span class="fpd-badge" style="background: ${fpdColor}">
+                            ${fpdText}
+                        </span>
+                    </td>
+                    <td class="customer-status">
+                        <span class="status-active">✓ Ativo</span>
+                    </td>
+                    <td class="customer-date">${createdDate}</td>
+                </tr>
+            `;
+        });
+        
+        tableHTML += `
+                    </tbody>
+                </table>
+            </div>
+        `;
+        
+        customersList.innerHTML = tableHTML;
+    }
+
+    updateCustomersStats(customers) {
+        const total = customers.length;
+        const fpd1 = customers.filter(c => c.spd === '1').length;
+        const fpd2 = customers.filter(c => c.spd === '2').length;
+        const fpd3 = customers.filter(c => c.spd === '3').length;
+        
+        document.getElementById('total-customers').textContent = total;
+        document.getElementById('fpd1-count').textContent = fpd1;
+        document.getElementById('fpd2-count').textContent = fpd2;
+        document.getElementById('fpd3-count').textContent = fpd3;
+    }
+
+    async exportCustomers() {
+        try {
+            this.showLoading(true);
+            
+            const response = await fetch(`${this.apiBase}/vendas/list`);
+            
+            if (response.ok) {
+                const data = await response.json();
+                
+                if (data.success && data.customers) {
+                    // Converter para CSV
+                    const csvContent = this.convertToCSV(data.customers);
+                    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `pessoas_cobranca_${new Date().toISOString().split('T')[0]}.csv`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    window.URL.revokeObjectURL(url);
+                    
+                    this.showToast('success', 'Exportação Concluída', 'Lista de pessoas exportada com sucesso!');
+                } else {
+                    throw new Error('Resposta inválida do servidor');
+                }
+            } else {
+                const error = await response.json();
+                throw new Error(error.error || 'Erro ao exportar dados');
+            }
+        } catch (error) {
+            console.error('Export customers error:', error);
+            this.showToast('error', 'Erro', `Falha ao exportar: ${error.message}`);
+        } finally {
+            this.showLoading(false);
+        }
+    }
+
+    convertToCSV(customers) {
+        const headers = ['ID', 'Nome', 'Documento', 'Telefone1', 'Telefone2', 'Email', 'Cidade', 'CEP', 'FPD', 'Status', 'Data Cadastro'];
+        const csvRows = [headers.join(',')];
+        
+        customers.forEach(customer => {
+            const row = [
+                customer.id,
+                `"${customer.nome || ''}"`,
+                customer.documento || '',
+                customer.telefone1 || '',
+                customer.telefone2 || '',
+                `"${customer.email || ''}"`,
+                `"${customer.cidade || ''}"`,
+                customer.cep || '',
+                customer.spd || '',
+                `"${customer.status || ''}"`,
+                customer.created_at ? new Date(customer.created_at).toLocaleDateString('pt-BR') : ''
+            ];
+            csvRows.push(row.join(','));
+        });
+        
+        return csvRows.join('\n');
     }
 }
 
