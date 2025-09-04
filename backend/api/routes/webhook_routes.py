@@ -199,6 +199,8 @@ def handle_message_event(webhook_data: Dict[str, Any]):
                 asyncio.set_event_loop(loop)
             
             async def send_response():
+                # Inicializar sessão se necessário
+                await waha.start_session()
                 return await waha.send_text_message(phone, response.message)
             
             sent = loop.run_until_complete(send_response())

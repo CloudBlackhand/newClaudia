@@ -84,6 +84,7 @@ class WahaIntegration:
     async def start_session(self):
         """Inicializar sessão HTTP"""
         if not self.session:
+            # Criar timeout dentro do contexto assíncrono
             timeout = aiohttp.ClientTimeout(total=30)
             self.session = aiohttp.ClientSession(timeout=timeout)
             logger.debug(LogCategory.WHATSAPP, "Sessão HTTP iniciada")
