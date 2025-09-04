@@ -58,42 +58,42 @@ def register_blueprints(app):
     try:
         # Importar blueprints
         try:
-            from backend.api.routes.billing_routes import billing_bp
+            from api.routes.billing_routes import billing_bp
             logger.info("✅ Billing blueprint importado com sucesso")
         except Exception as e:
             logger.error(f"❌ Erro ao importar billing blueprint: {e}")
             billing_bp = None
             
         try:
-            from backend.api.routes.conversation_routes import conversation_bp
+            from api.routes.conversation_routes import conversation_bp
             logger.info("✅ Conversation blueprint importado com sucesso")
         except Exception as e:
             logger.error(f"❌ Erro ao importar conversation blueprint: {e}")
             conversation_bp = None
             
         try:
-            from backend.api.routes.webhook_routes import webhook_bp
+            from api.routes.webhook_routes import webhook_bp
             logger.info("✅ Webhook blueprint importado com sucesso")
         except Exception as e:
             logger.error(f"❌ Erro ao importar webhook blueprint: {e}")
             webhook_bp = None
             
         try:
-            from backend.api.routes.campaign_routes import campaign_blueprint
+            from api.routes.campaign_routes import campaign_blueprint
             logger.info("✅ Campaign blueprint importado com sucesso")
         except Exception as e:
             logger.error(f"❌ Erro ao importar campaign blueprint: {e}")
             campaign_blueprint = None
             
         try:
-            from backend.api.routes.admin_routes import admin_blueprint
+            from api.routes.admin_routes import admin_blueprint
             logger.info("✅ Admin blueprint importado com sucesso")
         except Exception as e:
             logger.error(f"❌ Erro ao importar admin blueprint: {e}")
             admin_blueprint = None
             
         try:
-            from backend.api.routes.vendas_routes import vendas_blueprint
+            from api.routes.vendas_routes import vendas_blueprint
             logger.info("✅ Vendas blueprint importado com sucesso")
         except Exception as e:
             logger.error(f"❌ Erro ao importar vendas blueprint: {e}")
