@@ -190,7 +190,7 @@ class RateLimiter:
         self.min_delay = 5  # Mínimo 5 segundos entre mensagens
         self.max_delay = 60  # Máximo 1 minuto entre mensagens
     
-    async def wait_if_needed(self):
+    def wait_if_needed(self):
         """Aguardar com tempo variado e simulação humana"""
         now = time.time()
         
@@ -205,7 +205,7 @@ class RateLimiter:
             
             if wait_time > 0:
                 logger.info(LogCategory.BILLING, f"Rate limit atingido, aguardando {wait_time:.2f}s")
-                await asyncio.sleep(wait_time)
+                time.sleep(wait_time)
         
         # Tempo variado entre mensagens (5s a 1min)
         if self.sent_times:
@@ -220,12 +220,12 @@ class RateLimiter:
                 
                 if actual_delay > 0:
                     logger.info(LogCategory.BILLING, f"Delay inteligente: {actual_delay:.2f}s")
-                    await asyncio.sleep(actual_delay)
+                    time.sleep(actual_delay)
         
         # Registrar envio atual
         self.sent_times.append(time.time())
     
-    async def simulate_human_typing(self, message: str):
+    def simulate_human_typing(self, message: str):
         """Simular digitação humana para evitar detecção"""
         try:
             # Calcular tempo de digitação baseado no tamanho da mensagem
@@ -239,12 +239,12 @@ class RateLimiter:
             for i in range(0, len(message), chunk_size):
                 chunk = message[i:i + chunk_size]
                 chunk_time = (len(chunk) / len(message)) * typing_time
-                await asyncio.sleep(chunk_time)
+                time.sleep(chunk_time)
                 
         except Exception as e:
             logger.warning(LogCategory.BILLING, f"Erro na simulação de digitação: {e}")
             # Fallback: delay simples
-            await asyncio.sleep(2)
+            time.sleep(2)
 
 class BillingDispatcher:
     """Dispatcher principal de mensagens de cobrança"""
@@ -427,7 +427,7 @@ class BillingDispatcher:
         logger.info(LogCategory.BILLING, f"📊 Mensagens criadas: {len(messages)} | Grupos ignorados: {skipped_groups}")
         return messages
     
-    async def dispatch_batch(self, messages: List[BillingMessage]) -> BatchResult:
+    def dispatch_batch(self, messages: List[BillingMessage]) -> BatchResult:
         """Disparar lote de mensagens"""
         start_time = time.time()
         
@@ -453,10 +453,10 @@ class BillingDispatcher:
                         continue
                 
                 # Respeitar rate limit
-                await self.rate_limiter.wait_if_needed()
+                self.rate_limiter.wait_if_needed()
                 
                 # Enviar mensagem
-                success = await self._send_single_message(message)
+                success = self._send_single_message(message)
                 
                 if success:
                     successful += 1
@@ -496,7 +496,7 @@ class BillingDispatcher:
         logger.info(LogCategory.BILLING, "Batch dispatch concluído", details=asdict(result))
         return result
     
-    async def _send_single_message(self, message: BillingMessage) -> bool:
+    def _send_single_message(self, message: BillingMessage) -> bool:
         """Enviar uma única mensagem com simulação humana"""
         try:
             # 🚫 VALIDAÇÃO FINAL ANTI-GRUPOS
@@ -510,13 +510,13 @@ class BillingDispatcher:
             
             # 1. Simular digitação humana ANTES de enviar
             logger.info(LogCategory.BILLING, f"🤖 Simulando digitação para {message.phone}")
-            await self.rate_limiter.simulate_human_typing(message.content)
+            self.rate_limiter.simulate_human_typing(message.content)
             
             # 2. Delay adicional para simular "escrevendo..."
             import random
             writing_delay = random.uniform(1, 3)  # 1-3 segundos
             logger.debug(LogCategory.BILLING, f"✍️ Simulando 'escrevendo...': {writing_delay:.2f}s")
-            await asyncio.sleep(writing_delay)
+            time.sleep(writing_delay)
             
             # Debug: verificar se Waha está configurado
             logger.info(LogCategory.BILLING, f"🔍 Waha configurado: {self.waha is not None}")
@@ -527,7 +527,7 @@ class BillingDispatcher:
                 # Modo simulação/desenvolvimento
                 logger.warning(LogCategory.BILLING, f"⚠️ [SIMULAÇÃO] Waha não configurado - Enviando para {message.phone}")
                 logger.info(LogCategory.BILLING, f"📝 Conteúdo: {message.content[:100]}...")
-                await asyncio.sleep(0.5)  # Simular delay de rede
+                time.sleep(0.5)  # Simular delay de rede
                 return True
             
             # 3. Integração real com Waha (agora síncrona)
@@ -552,7 +552,7 @@ class BillingDispatcher:
             logger.error(LogCategory.BILLING, f"💥 Erro ao enviar mensagem para {message.phone}: {e}")
             return False
     
-    async def retry_failed_messages(self) -> BatchResult:
+    def retry_failed_messages(self) -> BatchResult:
         """Reenviar mensagens falhadas"""
         failed_messages = [msg for msg in self.pending_messages if msg.status == MessageStatus.FAILED]
         
@@ -566,7 +566,7 @@ class BillingDispatcher:
         
         if retry_messages:
             logger.info(LogCategory.BILLING, f"Reenviando {len(retry_messages)} mensagens falhadas")
-            return await self.dispatch_batch(retry_messages)
+            return self.dispatch_batch(retry_messages)
         
         return BatchResult(0, 0, 0, 0, 0, [])
     

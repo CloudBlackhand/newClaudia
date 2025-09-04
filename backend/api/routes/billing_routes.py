@@ -30,12 +30,9 @@ def get_billing_dispatcher():
         # Inicializar integração com Waha se configurada
         if Config.WAHA_BASE_URL:
             waha_client = WahaIntegration()
-            logger.info(LogCategory.BILLING, f"✅ Waha client criado: {waha_client.base_url}")
-        else:
-            logger.warning(LogCategory.BILLING, "⚠️ WAHA_BASE_URL não configurado - modo simulação")
         
         billing_dispatcher = BillingDispatcher(waha_client)
-        logger.info(LogCategory.BILLING, f"✅ Billing Dispatcher inicializado com Waha: {waha_client is not None}")
+        logger.info(LogCategory.BILLING, "Billing Dispatcher inicializado")
     
     return billing_dispatcher
 
@@ -120,26 +117,8 @@ def send_billing_batch():
             schedule_time=schedule_datetime
         )
         
-        # Enviar mensagens de forma assíncrona
-        async def send_messages():
-            return await dispatcher.dispatch_batch(messages)
-        
-        # Executar envio - usar loop existente ou criar novo
-        try:
-            loop = asyncio.get_event_loop()
-            if loop.is_closed():
-                loop = asyncio.new_event_loop()
-                asyncio.set_event_loop(loop)
-        except RuntimeError:
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-        
-        try:
-            result = loop.run_until_complete(send_messages())
-        except Exception as e:
-            logger.error(LogCategory.BILLING, f"Erro no envio assíncrono: {e}")
-            # Fallback: tentar envio síncrono
-            result = await send_messages()
+        # Enviar mensagens (agora síncrono)
+        result = dispatcher.dispatch_batch(messages)
         
         logger.billing_event('batch_sent', 'system', {
             'total_messages': result.total_messages,
