@@ -30,9 +30,12 @@ def get_billing_dispatcher():
         # Inicializar integração com Waha se configurada
         if Config.WAHA_BASE_URL:
             waha_client = WahaIntegration()
+            logger.info(LogCategory.BILLING, f"✅ Waha client criado: {waha_client.base_url}")
+        else:
+            logger.warning(LogCategory.BILLING, "⚠️ WAHA_BASE_URL não configurado - modo simulação")
         
         billing_dispatcher = BillingDispatcher(waha_client)
-        logger.info(LogCategory.BILLING, "Billing Dispatcher inicializado")
+        logger.info(LogCategory.BILLING, f"✅ Billing Dispatcher inicializado com Waha: {waha_client is not None}")
     
     return billing_dispatcher
 
