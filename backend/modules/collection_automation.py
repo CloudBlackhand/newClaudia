@@ -108,9 +108,16 @@ class CollectionAutomation:
         # Credenciais dos sites (devem vir de variáveis de ambiente)
         self.site_credentials = self._load_site_credentials()
         
+        # SISTEMA DE APRENDIZADO INTEGRADO
+        self.learning_integration = True
+        self.automation_insights = {}
+        self.validation_patterns = {}
+        self.adaptive_validation_rules = {}
+        self.learning_confidence_scores = {}
+        
         if WEB_AUTOMATION_AVAILABLE:
             self.web_engine = WebAutomationEngine()
-            logger.info("🤖 Collection Automation inicializado!")
+            logger.info("🤖 Collection Automation com Aprendizado Integrado inicializado!")
         else:
             logger.warning("⚠️ Web Automation não disponível - funcionalidade limitada")
     
@@ -373,7 +380,10 @@ class CollectionAutomation:
             "engine_active": self.web_engine is not None,
             "authenticated_sites": len([s for s in self.active_sessions.values() if s.get("status") == "active"]),
             "consultation_queue": len(self.consultation_queue),
-            "results_cached": len(self.results_cache)
+            "results_cached": len(self.results_cache),
+            "learning_integration_active": self.learning_integration,
+            "automation_insights_count": len(self.automation_insights),
+            "validation_patterns_count": len(self.validation_patterns)
         }
 
 

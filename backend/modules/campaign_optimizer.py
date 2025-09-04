@@ -23,7 +23,14 @@ class CampaignOptimizer:
         self.message_effectiveness = {}
         self.optimization_history = []
         
-        logger.info(LogCategory.CONVERSATION, "✅ Otimizador de Campanhas inicializado")
+        # SISTEMA DE APRENDIZADO INTEGRADO
+        self.learning_integration = True
+        self.conversation_insights = {}
+        self.client_behavior_patterns = {}
+        self.adaptive_campaign_rules = {}
+        self.real_time_optimization = {}
+        
+        logger.info(LogCategory.CONVERSATION, "✅ Otimizador de Campanhas com Aprendizado Integrado inicializado")
     
     def analyze_campaign_performance(self, campaign_data: Dict[str, Any]) -> Dict[str, Any]:
         """Analisa performance de uma campanha de cobrança"""
@@ -548,3 +555,260 @@ class CampaignOptimizer:
                     quality_trends['overall_quality_trend'] = 'declining'
         
         return quality_trends
+    
+    # ===== SISTEMA DE APRENDIZADO INTEGRADO =====
+    
+    def integrate_conversation_insights(self, conversation_insights: Dict[str, Any]):
+        """Integra insights das conversas para otimização de campanhas"""
+        try:
+            self.conversation_insights.update(conversation_insights)
+            
+            # Extrair padrões comportamentais
+            if 'client_profiles' in conversation_insights:
+                self._extract_behavioral_patterns(conversation_insights['client_profiles'])
+            
+            # Atualizar regras adaptativas
+            self._update_adaptive_rules(conversation_insights)
+            
+            logger.info(LogCategory.CONVERSATION, f"🎓 Insights de conversa integrados: {len(conversation_insights)} dados")
+            
+        except Exception as e:
+            logger.error(LogCategory.CONVERSATION, f"❌ Erro ao integrar insights: {e}")
+    
+    def _extract_behavioral_patterns(self, client_profiles: Dict[str, Any]):
+        """Extrai padrões comportamentais dos perfis de clientes"""
+        patterns = {
+            'high_cooperation_clients': [],
+            'resistant_clients': [],
+            'payment_likely_clients': [],
+            'escalation_risk_clients': [],
+            'optimal_timing_patterns': {},
+            'preferred_communication_styles': {}
+        }
+        
+        for phone, profile in client_profiles.items():
+            # Clientes cooperativos
+            if profile.get('cooperation_level', 0.5) > 0.7:
+                patterns['high_cooperation_clients'].append({
+                    'phone': phone,
+                    'cooperation_level': profile['cooperation_level'],
+                    'common_intents': profile.get('common_intents', {})
+                })
+            
+            # Clientes resistentes
+            if profile.get('cooperation_level', 0.5) < 0.3:
+                patterns['resistant_clients'].append({
+                    'phone': phone,
+                    'cooperation_level': profile['cooperation_level'],
+                    'escalation_frequency': profile.get('escalation_frequency', 0.0)
+                })
+            
+            # Clientes com alta probabilidade de pagamento
+            if profile.get('payment_likelihood', 0.3) > 0.6:
+                patterns['payment_likely_clients'].append({
+                    'phone': phone,
+                    'payment_likelihood': profile['payment_likelihood'],
+                    'total_conversations': profile.get('total_conversations', 0)
+                })
+            
+            # Clientes com risco de escalação
+            if profile.get('escalation_frequency', 0.0) > 0.3:
+                patterns['escalation_risk_clients'].append({
+                    'phone': phone,
+                    'escalation_frequency': profile['escalation_frequency'],
+                    'cooperation_level': profile.get('cooperation_level', 0.5)
+                })
+        
+        self.client_behavior_patterns = patterns
+        logger.info(LogCategory.CONVERSATION, f"📊 Padrões comportamentais extraídos: {len(patterns)} categorias")
+    
+    def _update_adaptive_rules(self, insights: Dict[str, Any]):
+        """Atualiza regras adaptativas baseadas nos insights"""
+        rules = {
+            'template_selection_rules': {},
+            'timing_optimization_rules': {},
+            'escalation_prevention_rules': {},
+            'personalization_rules': {}
+        }
+        
+        # Regras de seleção de template
+        if 'response_effectiveness' in insights:
+            for response_type, data in insights['response_effectiveness'].items():
+                if data.get('success_rate', 0) > 0.7:
+                    rules['template_selection_rules'][response_type] = {
+                        'priority': 'high',
+                        'success_rate': data['success_rate'],
+                        'use_case': 'high_cooperation_clients'
+                    }
+        
+        # Regras de timing
+        if 'optimal_timing_patterns' in self.client_behavior_patterns:
+            timing_data = self.client_behavior_patterns['optimal_timing_patterns']
+            rules['timing_optimization_rules'] = {
+                'best_hours': timing_data.get('best_hours', []),
+                'best_days': timing_data.get('best_days', []),
+                'avoid_hours': timing_data.get('avoid_hours', [])
+            }
+        
+        # Regras de prevenção de escalação
+        if 'escalation_risk_clients' in self.client_behavior_patterns:
+            escalation_clients = self.client_behavior_patterns['escalation_risk_clients']
+            if escalation_clients:
+                rules['escalation_prevention_rules'] = {
+                    'max_contacts_per_day': 1,
+                    'preferred_response_type': 'cobranca_educada',
+                    'escalation_threshold': 0.3
+                }
+        
+        self.adaptive_campaign_rules = rules
+        logger.info(LogCategory.CONVERSATION, f"📋 Regras adaptativas atualizadas: {len(rules)} categorias")
+    
+    def optimize_campaign_in_real_time(self, campaign_id: str, current_performance: Dict[str, Any]) -> Dict[str, Any]:
+        """Otimiza campanha em tempo real baseado no aprendizado"""
+        try:
+            optimization = {
+                'campaign_id': campaign_id,
+                'timestamp': datetime.utcnow(),
+                'optimizations_applied': [],
+                'performance_improvement': 0.0,
+                'recommendations': []
+            }
+            
+            # Analisar performance atual
+            response_rate = current_performance.get('response_rate', 0.0)
+            payment_rate = current_performance.get('payment_rate', 0.0)
+            escalation_rate = current_performance.get('escalation_rate', 0.0)
+            
+            # Otimização de templates
+            if response_rate < 0.5:
+                best_templates = self._get_best_performing_templates()
+                if best_templates:
+                    optimization['optimizations_applied'].append('template_optimization')
+                    optimization['recommendations'].append(f"Usar templates: {', '.join(best_templates[:3])}")
+            
+            # Otimização de timing
+            if payment_rate < 0.2:
+                optimal_timing = self._get_optimal_timing()
+                if optimal_timing:
+                    optimization['optimizations_applied'].append('timing_optimization')
+                    optimization['recommendations'].append(f"Enviar nos horários: {optimal_timing}")
+            
+            # Prevenção de escalação
+            if escalation_rate > 0.3:
+                escalation_prevention = self._get_escalation_prevention_strategy()
+                if escalation_prevention:
+                    optimization['optimizations_applied'].append('escalation_prevention')
+                    optimization['recommendations'].append(escalation_prevention)
+            
+            # Personalização baseada em perfis
+            personalization_strategy = self._get_personalization_strategy()
+            if personalization_strategy:
+                optimization['optimizations_applied'].append('personalization')
+                optimization['recommendations'].append(personalization_strategy)
+            
+            # Calcular melhoria esperada
+            optimization['performance_improvement'] = self._calculate_expected_improvement(optimization)
+            
+            # Salvar otimização
+            self.real_time_optimization[campaign_id] = optimization
+            
+            logger.info(LogCategory.CONVERSATION, f"⚡ Otimização em tempo real aplicada para {campaign_id}")
+            
+            return optimization
+            
+        except Exception as e:
+            logger.error(LogCategory.CONVERSATION, f"❌ Erro na otimização em tempo real: {e}")
+            return {'error': str(e)}
+    
+    def _get_best_performing_templates(self) -> List[str]:
+        """Obtém templates com melhor performance"""
+        if not self.conversation_insights.get('response_effectiveness'):
+            return []
+        
+        templates = []
+        for template, data in self.conversation_insights['response_effectiveness'].items():
+            if data.get('success_rate', 0) > 0.6:
+                templates.append(template)
+        
+        # Ordenar por taxa de sucesso
+        templates.sort(key=lambda x: self.conversation_insights['response_effectiveness'][x]['success_rate'], reverse=True)
+        return templates
+    
+    def _get_optimal_timing(self) -> str:
+        """Obtém timing ótimo baseado no aprendizado"""
+        if not self.adaptive_campaign_rules.get('timing_optimization_rules'):
+            return "9h-11h, 14h-16h"
+        
+        timing_rules = self.adaptive_campaign_rules['timing_optimization_rules']
+        best_hours = timing_rules.get('best_hours', [])
+        
+        if best_hours:
+            hours_str = ', '.join([f"{h}h" for h in best_hours[:3]])
+            return hours_str
+        
+        return "9h-11h, 14h-16h"
+    
+    def _get_escalation_prevention_strategy(self) -> str:
+        """Obtém estratégia de prevenção de escalação"""
+        if not self.adaptive_campaign_rules.get('escalation_prevention_rules'):
+            return "Usar abordagem mais educada e reduzir frequência de contato"
+        
+        rules = self.adaptive_campaign_rules['escalation_prevention_rules']
+        return f"Limitar a {rules.get('max_contacts_per_day', 1)} contato por dia, usar {rules.get('preferred_response_type', 'cobranca_educada')}"
+    
+    def _get_personalization_strategy(self) -> str:
+        """Obtém estratégia de personalização"""
+        if not self.client_behavior_patterns:
+            return "Personalizar mensagens baseado no perfil do cliente"
+        
+        high_coop_count = len(self.client_behavior_patterns.get('high_cooperation_clients', []))
+        resistant_count = len(self.client_behavior_patterns.get('resistant_clients', []))
+        
+        if high_coop_count > resistant_count:
+            return "Focar em abordagem educada - maioria dos clientes são cooperativos"
+        elif resistant_count > high_coop_count:
+            return "Focar em abordagem direta - muitos clientes resistentes"
+        else:
+            return "Usar abordagem balanceada - perfil misto de clientes"
+    
+    def _calculate_expected_improvement(self, optimization: Dict[str, Any]) -> float:
+        """Calcula melhoria esperada da otimização"""
+        improvement = 0.0
+        
+        for opt_type in optimization['optimizations_applied']:
+            if opt_type == 'template_optimization':
+                improvement += 0.15  # 15% de melhoria esperada
+            elif opt_type == 'timing_optimization':
+                improvement += 0.10  # 10% de melhoria esperada
+            elif opt_type == 'escalation_prevention':
+                improvement += 0.20  # 20% de melhoria esperada
+            elif opt_type == 'personalization':
+                improvement += 0.12  # 12% de melhoria esperada
+        
+        return min(improvement, 0.5)  # Máximo 50% de melhoria
+    
+    def get_learning_integration_status(self) -> Dict[str, Any]:
+        """Retorna status da integração de aprendizado"""
+        return {
+            'learning_integration_active': self.learning_integration,
+            'conversation_insights_count': len(self.conversation_insights),
+            'behavioral_patterns_count': len(self.client_behavior_patterns),
+            'adaptive_rules_count': len(self.adaptive_campaign_rules),
+            'real_time_optimizations': len(self.real_time_optimization),
+            'integration_confidence': self._calculate_integration_confidence()
+        }
+    
+    def _calculate_integration_confidence(self) -> float:
+        """Calcula confiança na integração de aprendizado"""
+        confidence = 0.0
+        
+        if self.conversation_insights:
+            confidence += 0.3
+        if self.client_behavior_patterns:
+            confidence += 0.3
+        if self.adaptive_campaign_rules:
+            confidence += 0.2
+        if self.real_time_optimization:
+            confidence += 0.2
+        
+        return confidence

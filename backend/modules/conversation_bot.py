@@ -25,6 +25,8 @@ import random
 from pathlib import Path
 import asyncio
 import statistics
+import difflib
+from collections import Counter
 
 # Configuração de logging
 logger = logging.getLogger(__name__)
@@ -36,6 +38,20 @@ except ImportError:
     # Fallback se não conseguir importar
     class LogCategory:
         CONVERSATION = "conversation"
+
+# Verificar disponibilidade de dados persistentes
+try:
+    from backend.database.database_manager import get_customer_data, save_conversation_context, update_customer_interaction
+    CUSTOMER_DATA_AVAILABLE = True
+except ImportError:
+    CUSTOMER_DATA_AVAILABLE = False
+    # Funções dummy para compatibilidade
+    def get_customer_data(phone: str):
+        return None
+    def save_conversation_context(phone: str, context):
+        pass
+    def update_customer_interaction(phone: str, data: dict):
+        pass
 
 # Importar módulos de aprendizado
 try:
@@ -92,10 +108,23 @@ class ResponseType(Enum):
     ESCLARECER_DUVIDA = "esclarecer_duvida"
     CONFIRMAR_DADOS = "confirmar_dados"
     NOME_INCORRETO_RESPOSTA = "nome_incorreto_resposta"
+    COBRANCA_SIMPLES = "cobranca_simples"
+    EXPLICACAO_BASICA = "explicacao_basica"
+    AJUDA_LEITURA = "ajuda_leitura"
+    CONFIRMACAO_FACIL = "confirmacao_facil"
+    INSTRUCAO_PASSO_A_PASSO = "instrucao_passo_a_passo"
     RESPOSTA_EDUCADA = "resposta_educada"
     CUMPRIMENTO_RESPOSTA = "cumprimento_resposta"
     DESPEDIDA_RESPOSTA = "despedida_resposta"
     IGNORAR_ENROLACAO = "ignorar_enrolacao"
+
+
+class LiteracyLevel(Enum):
+    """Níveis de alfabetização dos clientes"""
+    ALFABETIZADO = "alfabetizado"
+    ALFABETIZADO_BASICO = "alfabetizado_basico"
+    ANALFABETO_FUNCIONAL = "analfabeto_funcional"
+    ANALFABETO_TOTAL = "analfabeto_total"
 
 @dataclass
 class ConversationContext:
@@ -111,6 +140,11 @@ class ConversationContext:
     cooperation_level: float = 0.5
     lie_probability: float = 0.0
     urgency_level: float = 0.5
+    literacy_level: LiteracyLevel = LiteracyLevel.ALFABETIZADO
+    communication_preference: str = "texto"
+    needs_help_reading: bool = False
+    text_errors_count: int = 0
+    simple_language_needed: bool = False
 
 @dataclass 
 class AnalysisResult:
@@ -125,6 +159,10 @@ class AnalysisResult:
     emotional_state: str
     recommended_response: ResponseType
     confidence: float
+    literacy_level: LiteracyLevel
+    text_quality_score: float
+    needs_simple_language: bool
+    communication_issues: List[str]
 
 @dataclass
 class BotResponse:
@@ -137,10 +175,207 @@ class BotResponse:
     context_update: Dict[str, Any]
     confidence: float = 0.8
 
+class TextNormalizer:
+    """Classe para normalização de texto e detecção de erros de escrita"""
+    
+    def __init__(self):
+        # Dicionário de correções comuns para analfabetos
+        self.common_corrections = {
+            # Erros fonéticos comuns
+            'vc': 'você', 'voce': 'você', 'vcs': 'vocês', 'voceis': 'vocês',
+            'nao': 'não', 'naum': 'não', 'nao': 'não',
+            'pq': 'porque', 'porq': 'porque', 'por que': 'porque',
+            'q': 'que', 'ke': 'que', 'ki': 'que',
+            'tbm': 'também', 'tambem': 'também',
+            'mt': 'muito', 'mto': 'muito',
+            'hj': 'hoje', 'hoje': 'hoje',
+            'ontem': 'ontem', 'onte': 'ontem',
+            'amanha': 'amanhã', 'amanha': 'amanhã',
+            'agora': 'agora', 'agr': 'agora',
+            'depois': 'depois', 'dps': 'depois',
+            'antes': 'antes', 'antes': 'antes',
+            'dinheiro': 'dinheiro', 'grana': 'dinheiro', 'money': 'dinheiro',
+            'pagar': 'pagar', 'pago': 'pagar',
+            'conta': 'conta', 'fatura': 'conta',
+            'debito': 'débito', 'debito': 'débito',
+            'credito': 'crédito', 'credito': 'crédito',
+            'banco': 'banco', 'bco': 'banco',
+            'cartao': 'cartão', 'cartao': 'cartão',
+            'pix': 'pix', 'PIX': 'pix',
+            'boleto': 'boleto', 'boleto': 'boleto',
+            'parcela': 'parcela', 'parcelas': 'parcelas',
+            'desconto': 'desconto', 'desconto': 'desconto',
+            'negociar': 'negociar', 'negociar': 'negociar',
+            'ajuda': 'ajuda', 'ajudar': 'ajudar',
+            'problema': 'problema', 'problemas': 'problemas',
+            'dificuldade': 'dificuldade', 'dificuldades': 'dificuldades',
+            'entender': 'entender', 'entendi': 'entender',
+            'explicar': 'explicar', 'explicacao': 'explicação',
+            'sim': 'sim', 's': 'sim', 'ss': 'sim',
+            'nao': 'não', 'n': 'não', 'nn': 'não',
+            'talvez': 'talvez', 'talvez': 'talvez',
+            'depends': 'depende', 'depende': 'depende',
+            'pode': 'pode', 'pode ser': 'pode ser',
+            'nao sei': 'não sei', 'n sei': 'não sei',
+            'nao entendo': 'não entendo', 'n entendo': 'não entendo',
+            'nao consigo': 'não consigo', 'n consigo': 'não consigo',
+            'preciso': 'preciso', 'preciso de': 'preciso de',
+            'quero': 'quero', 'quero saber': 'quero saber',
+            'como': 'como', 'como fazer': 'como fazer',
+            'onde': 'onde', 'onde pagar': 'onde pagar',
+            'quando': 'quando', 'quando pagar': 'quando pagar',
+            'quanto': 'quanto', 'quanto custa': 'quanto custa',
+            'por favor': 'por favor', 'pf': 'por favor',
+            'obrigado': 'obrigado', 'obrigada': 'obrigada',
+            'desculpa': 'desculpa', 'desculpe': 'desculpe',
+            'com licenca': 'com licença', 'com licenca': 'com licença',
+        }
+        
+        # Padrões de erros comuns
+        self.error_patterns = [
+            r'[^a-zA-ZáàâãéèêíìîóòôõúùûçÁÀÂÃÉÈÊÍÌÎÓÒÔÕÚÙÛÇ\s]',  # Caracteres especiais
+            r'\b\w{1,2}\b',  # Palavras muito curtas
+            r'(.)\1{2,}',  # Repetição de caracteres
+            r'\b\w*[aeiou]{3,}\w*\b',  # Muitas vogais seguidas
+            r'\b\w*[bcdfghjklmnpqrstvwxyz]{4,}\w*\b',  # Muitas consoantes seguidas
+        ]
+        
+        # Palavras-chave que indicam dificuldade de leitura
+        self.reading_difficulty_indicators = [
+            'nao entendo', 'n entendo', 'nao sei ler', 'n sei ler',
+            'nao consigo ler', 'n consigo ler', 'difícil de ler',
+            'muito difícil', 'mto difícil', 'complicado',
+            'pode explicar', 'pode falar', 'pode ligar',
+            'nao vejo', 'n vejo', 'letra pequena',
+            'muito texto', 'mto texto', 'texto grande'
+        ]
+    
+    def normalize_text(self, text: str) -> str:
+        """Normaliza texto com erros de escrita"""
+        if not text:
+            return text
+            
+        # Converter para minúsculas
+        normalized = text.lower().strip()
+        
+        # Aplicar correções comuns
+        words = normalized.split()
+        corrected_words = []
+        
+        for word in words:
+            # Remover caracteres especiais desnecessários
+            clean_word = re.sub(r'[^\w]', '', word)
+            
+            # Aplicar correção se existir
+            if clean_word in self.common_corrections:
+                corrected_words.append(self.common_corrections[clean_word])
+            else:
+                corrected_words.append(word)
+        
+        return ' '.join(corrected_words)
+    
+    def detect_text_errors(self, text: str) -> Dict[str, Any]:
+        """Detecta erros no texto"""
+        errors = {
+            'error_count': 0,
+            'error_types': [],
+            'error_positions': [],
+            'quality_score': 1.0
+        }
+        
+        if not text:
+            return errors
+        
+        # Contar caracteres especiais desnecessários
+        special_chars = len(re.findall(r'[^a-zA-ZáàâãéèêíìîóòôõúùûçÁÀÂÃÉÈÊÍÌÎÓÒÔÕÚÙÛÇ\s.,!?]', text))
+        if special_chars > 0:
+            errors['error_count'] += special_chars
+            errors['error_types'].append('caracteres_especiais')
+        
+        # Contar palavras muito curtas (provavelmente abreviações)
+        short_words = len(re.findall(r'\b\w{1,2}\b', text))
+        if short_words > 2:
+            errors['error_count'] += short_words - 2
+            errors['error_types'].append('abreviacoes_excessivas')
+        
+        # Contar repetições de caracteres
+        repetitions = len(re.findall(r'(.)\1{2,}', text))
+        if repetitions > 0:
+            errors['error_count'] += repetitions
+            errors['error_types'].append('repeticao_caracteres')
+        
+        # Calcular score de qualidade (0-1, onde 1 é perfeito)
+        total_chars = len(text)
+        if total_chars > 0:
+            errors['quality_score'] = max(0, 1 - (errors['error_count'] / total_chars))
+        
+        return errors
+    
+    def detect_literacy_level(self, text: str, context: ConversationContext) -> LiteracyLevel:
+        """Detecta o nível de alfabetização baseado no texto"""
+        if not text:
+            return LiteracyLevel.ANALFABETO_TOTAL
+        
+        # Normalizar texto
+        normalized = self.normalize_text(text)
+        
+        # Detectar indicadores de dificuldade de leitura
+        difficulty_indicators = sum(1 for indicator in self.reading_difficulty_indicators 
+                                  if indicator in normalized)
+        
+        # Analisar erros no texto
+        errors = self.detect_text_errors(text)
+        
+        # Calcular score de alfabetização
+        literacy_score = 0
+        
+        # Score baseado na qualidade do texto
+        literacy_score += errors['quality_score'] * 0.4
+        
+        # Score baseado no comprimento e complexidade
+        word_count = len(normalized.split())
+        if word_count > 10:
+            literacy_score += 0.2
+        elif word_count > 5:
+            literacy_score += 0.1
+        
+        # Score baseado na presença de indicadores de dificuldade
+        if difficulty_indicators > 0:
+            literacy_score -= difficulty_indicators * 0.2
+        
+        # Score baseado no histórico do cliente
+        if hasattr(context, 'text_errors_count') and context.text_errors_count > 5:
+            literacy_score -= 0.2
+        
+        # Determinar nível de alfabetização
+        if literacy_score >= 0.8:
+            return LiteracyLevel.ALFABETIZADO
+        elif literacy_score >= 0.6:
+            return LiteracyLevel.ALFABETIZADO_BASICO
+        elif literacy_score >= 0.3:
+            return LiteracyLevel.ANALFABETO_FUNCIONAL
+        else:
+            return LiteracyLevel.ANALFABETO_TOTAL
+    
+    def suggest_communication_method(self, literacy_level: LiteracyLevel) -> str:
+        """Sugere o melhor método de comunicação baseado no nível de alfabetização"""
+        if literacy_level == LiteracyLevel.ANALFABETO_TOTAL:
+            return "voz"
+        elif literacy_level == LiteracyLevel.ANALFABETO_FUNCIONAL:
+            return "voz_com_texto_simples"
+        elif literacy_level == LiteracyLevel.ALFABETIZADO_BASICO:
+            return "texto_simples"
+        else:
+            return "texto"
+
+
 class AdvancedNLPProcessor:
     """Processador de Linguagem Natural ULTRA AVANÇADO focado em cobrança"""
     
     def __init__(self):
+        # Inicializar normalizador de texto
+        self.text_normalizer = TextNormalizer()
+        
         # Padrões básicos
         self.intent_patterns = self._load_intent_patterns()
         self.sentiment_indicators = self._load_sentiment_indicators()
@@ -157,12 +392,24 @@ class AdvancedNLPProcessor:
         self.greeting_patterns = self._load_greeting_patterns()
         self.doubt_patterns = self._load_doubt_patterns()
         
-        # Histórico de aprendizado
+        # SISTEMA DE APRENDIZADO CONTÍNUO AVANÇADO
         self.learned_patterns = {}
         self.success_correlations = {}
         self.failure_patterns = {}
+        self.response_effectiveness = {}  # Efetividade de cada tipo de resposta
+        self.client_behavior_profiles = {}  # Perfis comportamentais dos clientes
+        self.conversation_outcomes = {}  # Resultados das conversas
+        self.adaptive_templates = {}  # Templates que se adaptam
+        self.pattern_confidence_scores = {}  # Confiança nos padrões aprendidos
+        self.feedback_learning_queue = []  # Fila de feedback para aprendizado
+        self.contextual_memory = {}  # Memória contextual por cliente
         
-        logger.info("🧠 NLP ULTRA AVANÇADO INICIALIZADO - 15+ SISTEMAS DE ANÁLISE!")
+        # SISTEMA DE PREDIÇÃO AVANÇADA
+        self.intent_prediction_model = {}
+        self.sentiment_evolution_tracking = {}
+        self.payment_likelihood_predictor = {}
+        
+        logger.info("🧠 NLP ULTRA AVANÇADO INICIALIZADO - 20+ SISTEMAS DE ANÁLISE + APRENDIZADO CONTÍNUO!")
         
     def _load_intent_patterns(self) -> Dict[IntentType, List[str]]:
         """Padrões para detectar intenções reais do cliente"""
@@ -486,17 +733,31 @@ class AdvancedNLPProcessor:
         
         logger.info(f"🔍 INICIANDO ANÁLISE ULTRA AVANÇADA: {message[:50]}...")
         
-        # 1. DETECTAR INTENÇÃO REAL
-        intent = self._detect_intent_advanced(message_lower)
+        # 0. NORMALIZAR TEXTO E DETECTAR ALFABETIZAÇÃO
+        normalized_message = self.text_normalizer.normalize_text(message)
+        text_errors = self.text_normalizer.detect_text_errors(message)
+        literacy_level = self.text_normalizer.detect_literacy_level(message, context)
         
-        # 2. ANALISAR SENTIMENTO 
-        sentiment = self._analyze_sentiment_advanced(message_lower)
+        # Atualizar contexto com informações de alfabetização
+        context.literacy_level = literacy_level
+        context.text_errors_count += text_errors['error_count']
+        context.simple_language_needed = literacy_level in [LiteracyLevel.ANALFABETO_TOTAL, LiteracyLevel.ANALFABETO_FUNCIONAL]
+        context.communication_preference = self.text_normalizer.suggest_communication_method(literacy_level)
+        
+        logger.info(f"📚 Nível de alfabetização detectado: {literacy_level.value}")
+        logger.info(f"📝 Erros no texto: {text_errors['error_count']}, Score: {text_errors['quality_score']:.2f}")
+        
+        # 1. DETECTAR INTENÇÃO REAL (usando texto normalizado)
+        intent = self._detect_intent_advanced(normalized_message)
+        
+        # 2. ANALISAR SENTIMENTO (usando texto normalizado)
+        sentiment = self._analyze_sentiment_advanced(normalized_message)
         
         # 3. CALCULAR PROBABILIDADE DE MENTIRA
-        lie_probability = self._calculate_lie_probability(message_lower, context)
+        lie_probability = self._calculate_lie_probability(normalized_message, context)
         
         # 4. AVALIAR NÍVEL DE COOPERAÇÃO
-        cooperation_score = self._evaluate_cooperation_advanced(message_lower, context)
+        cooperation_score = self._evaluate_cooperation_advanced(normalized_message, context)
         
         # 5. DETERMINAR URGÊNCIA
         urgency_level = self._calculate_urgency(context, intent, sentiment)
@@ -559,7 +820,11 @@ class AdvancedNLPProcessor:
             excuse_indicators=excuse_indicators,
             emotional_state=emotional_state,
             recommended_response=recommended_response,
-            confidence=confidence
+            confidence=confidence,
+            literacy_level=literacy_level,
+            text_quality_score=text_errors['quality_score'],
+            needs_simple_language=context.simple_language_needed,
+            communication_issues=text_errors['error_types']
         )
     
     def _detect_intent(self, message: str) -> IntentType:
@@ -1053,6 +1318,196 @@ class AdvancedNLPProcessor:
             confidence += 0.1
         
         return min(confidence, 1.0)
+    
+    # ===== SISTEMA DE APRENDIZADO CONTÍNUO AVANÇADO =====
+    
+    def learn_from_conversation_outcome(self, phone: str, conversation_data: Dict[str, Any]):
+        """Aprende com o resultado de uma conversa completa"""
+        try:
+            outcome = conversation_data.get('outcome', 'unknown')
+            intent_sequence = conversation_data.get('intent_sequence', [])
+            response_sequence = conversation_data.get('response_sequence', [])
+            final_result = conversation_data.get('final_result', {})
+            
+            # Atualizar efetividade das respostas
+            for i, response_type in enumerate(response_sequence):
+                if response_type not in self.response_effectiveness:
+                    self.response_effectiveness[response_type] = {
+                        'total_uses': 0,
+                        'successful_outcomes': 0,
+                        'success_rate': 0.0,
+                        'contexts': []
+                    }
+                
+                self.response_effectiveness[response_type]['total_uses'] += 1
+                
+                # Considerar sucesso se pagamento foi feito ou cliente cooperou
+                if outcome in ['payment_made', 'cooperative_response', 'information_provided']:
+                    self.response_effectiveness[response_type]['successful_outcomes'] += 1
+                
+                # Calcular nova taxa de sucesso
+                total = self.response_effectiveness[response_type]['total_uses']
+                successful = self.response_effectiveness[response_type]['successful_outcomes']
+                self.response_effectiveness[response_type]['success_rate'] = successful / total
+                
+                # Armazenar contexto da resposta
+                context = {
+                    'phone': phone,
+                    'intent': intent_sequence[i] if i < len(intent_sequence) else 'unknown',
+                    'outcome': outcome,
+                    'timestamp': datetime.now().isoformat()
+                }
+                self.response_effectiveness[response_type]['contexts'].append(context)
+            
+            # Atualizar perfil comportamental do cliente
+            self._update_client_behavior_profile(phone, conversation_data)
+            
+            # Aprender padrões de sucesso/falha
+            self._learn_success_failure_patterns(conversation_data)
+            
+            logger.info(f"🎓 Aprendizado registrado para {phone}: {outcome}")
+            
+        except Exception as e:
+            logger.error(f"❌ Erro no aprendizado: {e}")
+    
+    def _update_client_behavior_profile(self, phone: str, conversation_data: Dict[str, Any]):
+        """Atualiza perfil comportamental do cliente"""
+        if phone not in self.client_behavior_profiles:
+            self.client_behavior_profiles[phone] = {
+                'total_conversations': 0,
+                'common_intents': {},
+                'response_patterns': {},
+                'cooperation_level': 0.5,
+                'payment_likelihood': 0.3,
+                'preferred_communication_style': 'neutral',
+                'escalation_frequency': 0.0,
+                'last_updated': datetime.now().isoformat()
+            }
+        
+        profile = self.client_behavior_profiles[phone]
+        profile['total_conversations'] += 1
+        
+        # Atualizar intenções comuns
+        intents = conversation_data.get('intent_sequence', [])
+        for intent in intents:
+            if intent not in profile['common_intents']:
+                profile['common_intents'][intent] = 0
+            profile['common_intents'][intent] += 1
+        
+        # Atualizar nível de cooperação
+        outcome = conversation_data.get('outcome', 'unknown')
+        if outcome in ['cooperative_response', 'payment_made']:
+            profile['cooperation_level'] = min(1.0, profile['cooperation_level'] + 0.1)
+        elif outcome in ['aggressive_response', 'escalated']:
+            profile['cooperation_level'] = max(0.0, profile['cooperation_level'] - 0.1)
+        
+        # Atualizar probabilidade de pagamento
+        if outcome == 'payment_made':
+            profile['payment_likelihood'] = min(1.0, profile['payment_likelihood'] + 0.2)
+        elif outcome in ['payment_denied', 'aggressive_response']:
+            profile['payment_likelihood'] = max(0.0, profile['payment_likelihood'] - 0.1)
+        
+        profile['last_updated'] = datetime.now().isoformat()
+    
+    def _learn_success_failure_patterns(self, conversation_data: Dict[str, Any]):
+        """Aprende padrões de sucesso e falha"""
+        outcome = conversation_data.get('outcome', 'unknown')
+        intent_sequence = conversation_data.get('intent_sequence', [])
+        response_sequence = conversation_data.get('response_sequence', [])
+        
+        # Padrões de sucesso
+        if outcome in ['payment_made', 'cooperative_response']:
+            pattern_key = f"{'->'.join(intent_sequence)}->{outcome}"
+            if pattern_key not in self.success_correlations:
+                self.success_correlations[pattern_key] = 0
+            self.success_correlations[pattern_key] += 1
+        
+        # Padrões de falha
+        elif outcome in ['payment_denied', 'escalated', 'no_response']:
+            pattern_key = f"{'->'.join(intent_sequence)}->{outcome}"
+            if pattern_key not in self.failure_patterns:
+                self.failure_patterns[pattern_key] = 0
+            self.failure_patterns[pattern_key] += 1
+    
+    def predict_client_behavior(self, phone: str, current_intent: str) -> Dict[str, Any]:
+        """Prediz comportamento do cliente baseado no histórico"""
+        prediction = {
+            'cooperation_likelihood': 0.5,
+            'payment_likelihood': 0.3,
+            'escalation_risk': 0.2,
+            'preferred_response_type': 'cobranca_educada',
+            'confidence': 0.5
+        }
+        
+        if phone in self.client_behavior_profiles:
+            profile = self.client_behavior_profiles[phone]
+            prediction['cooperation_likelihood'] = profile['cooperation_level']
+            prediction['payment_likelihood'] = profile['payment_likelihood']
+            
+            # Calcular risco de escalação
+            if profile['total_conversations'] > 3:
+                escalation_count = sum(1 for outcome in profile.get('outcomes', []) 
+                                     if outcome == 'escalated')
+                prediction['escalation_risk'] = escalation_count / profile['total_conversations']
+            
+            # Determinar tipo de resposta preferido
+            if profile['cooperation_level'] > 0.7:
+                prediction['preferred_response_type'] = 'cobranca_educada'
+            elif profile['cooperation_level'] < 0.3:
+                prediction['preferred_response_type'] = 'cobranca_direta'
+            else:
+                prediction['preferred_response_type'] = 'cobranca_informativa'
+            
+            prediction['confidence'] = min(1.0, profile['total_conversations'] * 0.2)
+        
+        return prediction
+    
+    def get_adaptive_response_recommendation(self, analysis: AnalysisResult, 
+                                           client_prediction: Dict[str, Any]) -> ResponseType:
+        """Recomenda resposta adaptativa baseada no aprendizado"""
+        # Usar predição do cliente se confiança for alta
+        if client_prediction['confidence'] > 0.7:
+            preferred_type = client_prediction['preferred_response_type']
+            try:
+                return ResponseType(preferred_type)
+            except ValueError:
+                pass
+        
+        # Usar análise padrão se predição não for confiável
+        return analysis.recommended_response
+    
+    def get_learning_insights(self) -> Dict[str, Any]:
+        """Retorna insights do sistema de aprendizado"""
+        insights = {
+            'total_learned_patterns': len(self.learned_patterns),
+            'success_correlations_count': len(self.success_correlations),
+            'failure_patterns_count': len(self.failure_patterns),
+            'response_effectiveness': {},
+            'top_successful_responses': [],
+            'client_profiles_count': len(self.client_behavior_profiles),
+            'learning_confidence': 0.0
+        }
+        
+        # Análise de efetividade das respostas
+        for response_type, data in self.response_effectiveness.items():
+            if data['total_uses'] >= 5:  # Mínimo de 5 usos
+                insights['response_effectiveness'][response_type] = {
+                    'success_rate': data['success_rate'],
+                    'total_uses': data['total_uses']
+                }
+        
+        # Top respostas bem-sucedidas
+        successful_responses = [(rt, data['success_rate']) 
+                              for rt, data in self.response_effectiveness.items()
+                              if data['total_uses'] >= 5]
+        successful_responses.sort(key=lambda x: x[1], reverse=True)
+        insights['top_successful_responses'] = successful_responses[:5]
+        
+        # Calcular confiança geral do aprendizado
+        total_patterns = len(self.learned_patterns) + len(self.success_correlations) + len(self.failure_patterns)
+        insights['learning_confidence'] = min(1.0, total_patterns / 100)  # Normalizado
+        
+        return insights
 
 class ResponseGenerator:
     """Gerador INTELIGENTE de respostas focadas em cobrança"""
@@ -1060,75 +1515,107 @@ class ResponseGenerator:
     def __init__(self):
         self.response_templates = self._load_response_templates()
         self.personalization_data = self._load_personalization_data()
+        
+        # SISTEMA DE TEMPLATES ADAPTATIVOS
+        self.adaptive_templates = {}  # Templates que se adaptam baseado no aprendizado
+        self.template_performance = {}  # Performance de cada template
+        self.contextual_variations = {}  # Variações contextuais dos templates
+        self.personalization_engine = {}  # Engine de personalização avançada
     
     def _load_response_templates(self) -> Dict[ResponseType, List[str]]:
         """Templates de resposta por tipo - COBRANÇA EDUCADA MAS EFICAZ"""
         return {
             ResponseType.COBRANCA_EDUCADA: [
-                "Olá {name}! Espero que esteja bem. Tenho uma pendência de R$ {amount} em seu nome, vencida há {days} dias. Poderia fazer o pagamento? Obrigado!",
-                "Oi {name}! Tudo bem? Estou entrando em contato sobre uma pendência de R$ {amount}. Para quitar, entre em contato conosco. Agradeço sua atenção!",
-                "Bom dia/tarde {name}! Identificamos uma pendência de R$ {amount} vencida há {days} dias. Para regularizar, entre em contato. Desde já, obrigado!"
+                "Olá {name}! Espero que esteja bem. Temos uma pendência em seu nome que precisa ser regularizada. Poderia entrar em contato conosco? Obrigado!",
+                "Oi {name}! Tudo bem? Estou entrando em contato sobre uma pendência em seu nome. Para regularizar, entre em contato conosco. Agradeço sua atenção!",
+                "Bom dia/tarde {name}! Identificamos uma pendência em seu nome que precisa ser quitada. Para regularizar, entre em contato. Desde já, obrigado!"
             ],
             ResponseType.COBRANCA_DIRETA: [
-                "{name}, você tem uma pendência de R$ {amount} vencida há {days} dias. Para quitar, entre em contato conosco.",
-                "{name}, débito de R$ {amount} em aberto há {days} dias. Entre em contato para pagamento.",
-                "{name}, pendência de R$ {amount} precisa ser quitada. Entre em contato conosco."
+                "{name}, você tem uma pendência em seu nome que precisa ser quitada. Entre em contato conosco.",
+                "{name}, há um débito em aberto em seu nome. Entre em contato para regularizar.",
+                "{name}, você tem uma pendência que precisa ser quitada. Entre em contato conosco."
             ],
             ResponseType.COBRANCA_INFORMATIVA: [
-                "{name}, para esclarecer: você tem uma pendência de R$ {amount} vencida há {days} dias. Entre em contato conosco para pagamento. Caso tenha dúvidas, estou aqui para ajudar.",
-                "Oi {name}! Estou entrando em contato sobre uma cobrança de R$ {amount}. Vencimento foi há {days} dias. Para quitar, entre em contato conosco. Se precisar de mais informações, me avise!",
-                "{name}, informo que há uma pendência de R$ {amount} em seu nome. Para regularizar a situação, entre em contato. Qualquer dúvida, pode perguntar!"
+                "{name}, para esclarecer: você tem uma pendência em seu nome que precisa ser regularizada. Entre em contato conosco. Caso tenha dúvidas, estou aqui para ajudar.",
+                "Oi {name}! Estou entrando em contato sobre uma cobrança em seu nome. Para quitar, entre em contato conosco. Se precisar de mais informações, me avise!",
+                "{name}, informo que há uma pendência em seu nome. Para regularizar a situação, entre em contato. Qualquer dúvida, pode perguntar!"
             ],
             ResponseType.REJEITAR_PARCELAMENTO: [
-                "{name}, entendo sua situação, mas nossa política não permite parcelamento. O valor de R$ {amount} deve ser pago integralmente. Entre em contato conosco.",
-                "Compreendo {name}, porém não trabalhamos com parcelamento. R$ {amount} deve ser quitado à vista. Entre em contato conosco.",
-                "{name}, infelizmente não é possível parcelar. O pagamento de R$ {amount} deve ser integral. Entre em contato conosco."
+                "{name}, entendo sua situação, mas nossa política não permite parcelamento. A pendência deve ser quitada integralmente. Entre em contato conosco.",
+                "Compreendo {name}, porém não trabalhamos com parcelamento. A pendência deve ser quitada à vista. Entre em contato conosco.",
+                "{name}, infelizmente não é possível parcelar. O pagamento deve ser integral. Entre em contato conosco."
             ],
             ResponseType.REJEITAR_DESCONTO: [
-                "{name}, o valor de R$ {amount} já está correto e não pode ser alterado. Entre em contato conosco para pagamento.",
-                "Entendo {name}, mas o valor de R$ {amount} é fixo. Para quitar, entre em contato conosco.",
-                "{name}, não é possível conceder desconto. Valor a pagar: R$ {amount}. Entre em contato conosco."
+                "{name}, o valor da pendência já está correto e não pode ser alterado. Entre em contato conosco para pagamento.",
+                "Entendo {name}, mas o valor da pendência é fixo. Para quitar, entre em contato conosco.",
+                "{name}, não é possível conceder desconto. Entre em contato conosco para pagamento."
             ],
             ResponseType.CONFIRMAR_PAGAMENTO: [
-                "Perfeito {name}! Assim que efetuar o pagamento de R$ {amount}, por favor envie o comprovante aqui. Obrigado!",
-                "Ótimo {name}! Aguardo o pagamento de R$ {amount}. Não esqueça de enviar o comprovante!",
-                "Excelente {name}! Faça o pagamento de R$ {amount} e me envie o comprovante para confirmarmos."
+                "Perfeito {name}! Assim que efetuar o pagamento, por favor envie o comprovante aqui. Obrigado!",
+                "Ótimo {name}! Aguardo o pagamento da pendência. Não esqueça de enviar o comprovante!",
+                "Excelente {name}! Faça o pagamento e me envie o comprovante para confirmarmos."
             ],
             ResponseType.ESCLARECER_DUVIDA: [
-                "Claro {name}! Posso ajudá-lo com sua dúvida. Sobre a pendência de R$ {amount}, entre em contato conosco para pagamento. O que mais gostaria de saber?",
-                "Sem problema {name}! Estou aqui para esclarecer. A cobrança é de R$ {amount}, vencida há {days} dias. Entre em contato conosco. Tem alguma outra pergunta?",
-                "Claro que posso ajudar {name}! A pendência de R$ {amount} pode ser quitada. Entre em contato conosco. Em que mais posso auxiliá-lo?"
+                "Claro {name}! Posso ajudá-lo com sua dúvida. Sobre a pendência em seu nome, entre em contato conosco para pagamento. O que mais gostaria de saber?",
+                "Sem problema {name}! Estou aqui para esclarecer. A cobrança em seu nome pode ser quitada. Entre em contato conosco. Tem alguma outra pergunta?",
+                "Claro que posso ajudar {name}! A pendência em seu nome pode ser quitada. Entre em contato conosco. Em que mais posso auxiliá-lo?"
             ],
             ResponseType.CONFIRMAR_DADOS: [
-                "Sim {name}, sua cobrança está correta. Seu contato está aqui no nome de {name} referente ao valor de R$ {amount}. Para quitar, entre em contato conosco.",
-                "Confirmo {name}, os dados estão corretos. A pendência de R$ {amount} está mesmo em seu nome. Entre em contato para pagamento.",
-                "Exato {name}, sua cobrança está certa. Valor: R$ {amount}, vencida há {days} dias. Para regularizar, entre em contato conosco."
+                "Sim {name}, sua cobrança está correta. Seu contato está aqui no nome de {name}. Para quitar, entre em contato conosco.",
+                "Confirmo {name}, os dados estão corretos. A pendência está mesmo em seu nome. Entre em contato para pagamento.",
+                "Exato {name}, sua cobrança está certa. Para regularizar, entre em contato conosco."
             ],
             ResponseType.NOME_INCORRETO_RESPOSTA: [
-                "Entendo! Se o nome {name} não é seu, peço que repasse esta mensagem para a pessoa correta ou nos informe o nome correto. A pendência de R$ {amount} está registrada neste número.",
-                "Compreendo. Se você não é {name}, por favor repasse esta cobrança para a pessoa correta. O valor de R$ {amount} está vinculado a este número. Para quitar, entre em contato conosco.",
-                "Entendo sua situação. Se este não é seu nome, pedimos que encaminhe para {name} ou nos informe quem é o responsável. Pendência: R$ {amount}.",
-                "Obrigado pelo esclarecimento. Se você não é {name}, peça para a pessoa correta entrar em contato conosco para fazer o pagamento de R$ {amount}."
+                "Entendo! Se o nome {name} não é seu, peço que repasse esta mensagem para a pessoa correta ou nos informe o nome correto. A pendência está registrada neste número.",
+                "Compreendo. Se você não é {name}, por favor repasse esta cobrança para a pessoa correta. A pendência está vinculada a este número. Para quitar, entre em contato conosco.",
+                "Entendo sua situação. Se este não é seu nome, pedimos que encaminhe para {name} ou nos informe quem é o responsável pela pendência.",
+                "Obrigado pelo esclarecimento. Se você não é {name}, peça para a pessoa correta entrar em contato conosco para fazer o pagamento."
             ],
             ResponseType.RESPOSTA_EDUCADA: [
-                "Obrigado pela sua mensagem {name}! Sobre a pendência de R$ {amount}, entre em contato conosco para pagamento.",
-                "Agradeço o contato {name}! Para quitar os R$ {amount} em aberto, entre em contato conosco.",
-                "Muito obrigado {name}! A pendência de R$ {amount} pode ser quitada. Entre em contato conosco."
+                "Obrigado pela sua mensagem {name}! Sobre a pendência em seu nome, entre em contato conosco para pagamento.",
+                "Agradeço o contato {name}! Para quitar a pendência em aberto, entre em contato conosco.",
+                "Muito obrigado {name}! A pendência em seu nome pode ser quitada. Entre em contato conosco."
             ],
             ResponseType.CUMPRIMENTO_RESPOSTA: [
-                "Olá {name}! Tudo bem sim, obrigado! Estou entrando em contato sobre uma pendência de R$ {amount}. Entre em contato conosco.",
-                "Oi {name}! Tudo ótimo, obrigado por perguntar! Você tem uma cobrança de R$ {amount} para quitar. Entre em contato conosco.",
-                "Bom dia/tarde {name}! Tudo bem sim! Sobre sua pendência de R$ {amount}, entre em contato conosco."
+                "Olá {name}! Tudo bem sim, obrigado! Estou entrando em contato sobre uma pendência em seu nome. Entre em contato conosco.",
+                "Oi {name}! Tudo ótimo, obrigado por perguntar! Você tem uma cobrança para quitar. Entre em contato conosco.",
+                "Bom dia/tarde {name}! Tudo bem sim! Sobre sua pendência, entre em contato conosco."
             ],
             ResponseType.DESPEDIDA_RESPOSTA: [
-                "Obrigado {name}! Não esqueça da pendência de R$ {amount}. Entre em contato conosco. Tenha um ótimo dia!",
-                "Até mais {name}! Lembre-se de quitar os R$ {amount}. Entre em contato conosco. Abraço!",
-                "Tchau {name}! Aguardo o pagamento de R$ {amount}. Entre em contato conosco. Até breve!"
+                "Obrigado {name}! Não esqueça da pendência em seu nome. Entre em contato conosco. Tenha um ótimo dia!",
+                "Até mais {name}! Lembre-se de quitar a pendência. Entre em contato conosco. Abraço!",
+                "Tchau {name}! Aguardo o pagamento da pendência. Entre em contato conosco. Até breve!"
             ],
             ResponseType.IGNORAR_ENROLACAO: [
-                "{name}, vamos focar no importante: sua pendência de R$ {amount}. Entre em contato conosco.",
-                "Entendo {name}, mas o que importa agora é quitar os R$ {amount}. Entre em contato conosco.",
-                "{name}, o foco é regularizar sua situação: R$ {amount}. Entre em contato conosco."
+                "{name}, vamos focar no importante: sua pendência. Entre em contato conosco.",
+                "Entendo {name}, mas o que importa agora é quitar a pendência. Entre em contato conosco.",
+                "{name}, o foco é regularizar sua situação. Entre em contato conosco."
+            ],
+            # TEMPLATES SIMPLIFICADOS PARA ANALFABETOS
+            ResponseType.COBRANCA_SIMPLES: [
+                "Oi {name}! Você tem uma conta para pagar. Pode resolver?",
+                "Olá {name}! Tem uma pendência para quitar. Pode fazer hoje?",
+                "Oi {name}! Precisa pagar uma conta. Pode resolver?"
+            ],
+            ResponseType.EXPLICACAO_BASICA: [
+                "Oi {name}! Vou explicar simples: você tem uma conta. Precisa pagar.",
+                "Olá {name}! É assim: tem uma pendência. Tem que pagar.",
+                "Oi {name}! Vou falar claro: tem uma conta. Precisa quitar."
+            ],
+            ResponseType.AJUDA_LEITURA: [
+                "Oi {name}! Se não entendeu, posso ligar para você. Você tem uma conta.",
+                "Olá {name}! Se tem dificuldade para ler, posso falar por telefone. Tem uma pendência.",
+                "Oi {name}! Se não consegue ler bem, posso explicar por voz. Você tem uma conta."
+            ],
+            ResponseType.CONFIRMACAO_FACIL: [
+                "Oi {name}! Você entendeu? Tem uma conta. Pode pagar?",
+                "Olá {name}! Ficou claro? Tem que pagar. Pode fazer?",
+                "Oi {name}! Entendeu? Precisa quitar. Pode resolver?"
+            ],
+            ResponseType.INSTRUCAO_PASSO_A_PASSO: [
+                "Oi {name}! Vou te ajudar passo a passo: 1) Você tem uma conta. 2) Precisa pagar. 3) Pode fazer hoje?",
+                "Olá {name}! Vou explicar devagar: 1) Tem uma pendência. 2) Tem que pagar. 3) Pode resolver?",
+                "Oi {name}! Vou te guiar: 1) Tem uma conta. 2) Precisa quitar. 3) Pode pagar agora?"
             ]
         }
     
@@ -1144,8 +1631,21 @@ class ResponseGenerator:
     def generate_response(self, analysis: AnalysisResult, context: ConversationContext) -> BotResponse:
         """Gera resposta INTELIGENTE baseada na análise"""
         
-        # Seleciona template baseado na recomendação
-        templates = self.response_templates[analysis.recommended_response]
+        # ADAPTAÇÃO PARA ANALFABETOS - Seleciona template baseado no nível de alfabetização
+        if analysis.needs_simple_language:
+            # Para analfabetos, usa templates simplificados
+            if analysis.literacy_level == LiteracyLevel.ANALFABETO_TOTAL:
+                response_type = ResponseType.AJUDA_LEITURA
+            elif analysis.literacy_level == LiteracyLevel.ANALFABETO_FUNCIONAL:
+                response_type = ResponseType.EXPLICACAO_BASICA
+            else:
+                response_type = ResponseType.COBRANCA_SIMPLES
+        else:
+            # Para alfabetizados, usa a recomendação normal
+            response_type = analysis.recommended_response
+        
+        # Seleciona template baseado na recomendação (adaptada ou original)
+        templates = self.response_templates[response_type]
         
         # Escolhe template baseado na confiança da análise
         if analysis.confidence > 0.8:
@@ -1182,10 +1682,15 @@ class ResponseGenerator:
     def _personalize_message(self, template: str, context: ConversationContext, 
                            analysis: AnalysisResult) -> str:
         """Personaliza mensagem com dados do cliente"""
+        # Para analfabetos, simplifica ainda mais a formatação
+        if analysis.needs_simple_language:
+            # Simplifica o nome se muito longo
+            name = context.customer_name.split()[0] if len(context.customer_name.split()) > 1 else context.customer_name
+        else:
+            name = context.customer_name
+        
         return template.format(
-            name=context.customer_name,
-            amount=f"{context.debt_amount:.2f}",
-            days=context.days_overdue,
+            name=name,
             company=self.personalization_data['company_name']
         )
     
@@ -1236,6 +1741,168 @@ class ResponseGenerator:
             updates['payment_promises'] = context.payment_promises + 1
         
         return updates
+    
+    # ===== SISTEMA DE TEMPLATES ADAPTATIVOS =====
+    
+    def generate_adaptive_response(self, analysis: AnalysisResult, context: ConversationContext, 
+                                 client_prediction: Dict[str, Any]) -> BotResponse:
+        """Gera resposta adaptativa baseada no aprendizado"""
+        try:
+            # Selecionar template baseado na efetividade
+            best_template = self._select_best_template(analysis.recommended_response, 
+                                                     client_prediction, context)
+            
+            # Personalizar mensagem com dados contextuais
+            personalized_message = self._personalize_adaptive_message(
+                best_template, context, analysis, client_prediction
+            )
+            
+            # Calcular próximo contato baseado no aprendizado
+            next_contact_hours = self._calculate_adaptive_next_contact(
+                analysis, context, client_prediction
+            )
+            
+            # Decidir escalação baseada no histórico
+            escalate = self._should_escalate_adaptive(analysis, context, client_prediction)
+            
+            # Atualizar performance do template usado
+            self._update_template_performance(analysis.recommended_response, context.customer_phone)
+            
+            return BotResponse(
+                message=personalized_message,
+                response_type=analysis.recommended_response,
+                urgency_level=analysis.urgency_level,
+                next_contact_hours=next_contact_hours,
+                escalate=escalate,
+                context_update=self._prepare_adaptive_context_update(analysis, context, client_prediction)
+            )
+            
+        except Exception as e:
+            logger.error(f"❌ Erro na resposta adaptativa: {e}")
+            # Fallback para método padrão
+            return self.generate_response(analysis, context)
+    
+    def _select_best_template(self, response_type: ResponseType, 
+                            client_prediction: Dict[str, Any], 
+                            context: ConversationContext) -> str:
+        """Seleciona o melhor template baseado na performance"""
+        templates = self.response_templates.get(response_type, [])
+        if not templates:
+            return "Template não encontrado"
+        
+        # Se temos dados de performance, usar o melhor
+        if response_type.value in self.template_performance:
+            performance_data = self.template_performance[response_type.value]
+            best_template_idx = performance_data.get('best_template_index', 0)
+            if best_template_idx < len(templates):
+                return templates[best_template_idx]
+        
+        # Selecionar baseado no perfil do cliente
+        if client_prediction.get('cooperation_likelihood', 0.5) > 0.7:
+            # Cliente cooperativo - usar template mais educado
+            return templates[0] if len(templates) > 0 else templates[0]
+        elif client_prediction.get('cooperation_likelihood', 0.5) < 0.3:
+            # Cliente resistente - usar template mais direto
+            return templates[-1] if len(templates) > 1 else templates[0]
+        else:
+            # Cliente neutro - usar template balanceado
+            return templates[1] if len(templates) > 1 else templates[0]
+    
+    def _personalize_adaptive_message(self, template: str, context: ConversationContext,
+                                    analysis: AnalysisResult, client_prediction: Dict[str, Any]) -> str:
+        """Personaliza mensagem com dados adaptativos"""
+        message = template
+        
+        # Dados básicos
+        message = message.replace('{name}', context.customer_name)
+        message = message.replace('{amount}', f"{context.debt_amount:.2f}")
+        message = message.replace('{days}', str(context.days_overdue))
+        
+        # Personalização baseada no perfil do cliente
+        if client_prediction.get('cooperation_likelihood', 0.5) > 0.7:
+            # Cliente cooperativo - adicionar tom mais amigável
+            message = message.replace('Olá', 'Olá! Espero que esteja bem')
+        elif client_prediction.get('escalation_risk', 0.2) > 0.5:
+            # Cliente com risco de escalação - tom mais profissional
+            message = message.replace('Oi', 'Bom dia')
+        
+        # Personalização baseada no histórico de pagamentos
+        if context.payment_promises > 2:
+            message += " Lembramos que esta é uma situação que precisa ser resolvida."
+        
+        return message
+    
+    def _calculate_adaptive_next_contact(self, analysis: AnalysisResult, 
+                                       context: ConversationContext,
+                                       client_prediction: Dict[str, Any]) -> int:
+        """Calcula próximo contato baseado no aprendizado"""
+        base_hours = 24
+        
+        # Ajustar baseado na predição do cliente
+        if client_prediction.get('payment_likelihood', 0.3) > 0.7:
+            # Cliente com alta probabilidade de pagamento - contato mais frequente
+            return 6
+        elif client_prediction.get('escalation_risk', 0.2) > 0.5:
+            # Cliente com risco de escalação - contato menos frequente
+            return 48
+        
+        # Ajustar baseado na urgência
+        if analysis.urgency_level > 0.8:
+            return 4
+        elif analysis.urgency_level > 0.6:
+            return 8
+        else:
+            return base_hours
+    
+    def _should_escalate_adaptive(self, analysis: AnalysisResult, 
+                                context: ConversationContext,
+                                client_prediction: Dict[str, Any]) -> bool:
+        """Decide escalação baseada no aprendizado"""
+        # Escalar se risco de escalação for alto
+        if client_prediction.get('escalation_risk', 0.2) > 0.7:
+            return True
+        
+        # Escalar se muitos contatos sem resultado
+        if context.previous_contacts > 8:
+            return True
+        
+        # Escalar se contestação da dívida
+        if analysis.intent == IntentType.CONTESTACAO_DIVIDA:
+            return True
+        
+        return False
+    
+    def _update_template_performance(self, response_type: ResponseType, phone: str):
+        """Atualiza performance do template usado"""
+        if response_type.value not in self.template_performance:
+            self.template_performance[response_type.value] = {
+                'total_uses': 0,
+                'successful_uses': 0,
+                'success_rate': 0.0,
+                'best_template_index': 0
+            }
+        
+        self.template_performance[response_type.value]['total_uses'] += 1
+    
+    def _prepare_adaptive_context_update(self, analysis: AnalysisResult, 
+                                       context: ConversationContext,
+                                       client_prediction: Dict[str, Any]) -> Dict[str, Any]:
+        """Prepara atualizações contextuais adaptativas"""
+        updates = {
+            'last_intent': analysis.intent.value,
+            'last_sentiment': analysis.sentiment.value,
+            'cooperation_level': analysis.cooperation_score,
+            'lie_probability': analysis.lie_probability,
+            'last_contact': datetime.now().isoformat(),
+            'client_prediction': client_prediction,
+            'adaptive_response_used': True
+        }
+        
+        # Incrementar promessas se cliente prometeu pagar
+        if analysis.intent == IntentType.PAGAMENTO_CONFIRMADO:
+            updates['payment_promises'] = context.payment_promises + 1
+        
+        return updates
 
 class ConversationBot:
     """IA SUPREMA ULTRA INTELIGENTE de Cobrança - Sistema Principal com Aprendizado"""
@@ -1264,7 +1931,7 @@ class ConversationBot:
         logger.info("🎓 SISTEMA DE APRENDIZADO ATIVO!")
     
     def process_message(self, phone: str, message: str, customer_data: Dict[str, Any]) -> BotResponse:
-        """Processa mensagem do cliente com INTELIGÊNCIA REAL + APRENDIZADO"""
+        """Processa mensagem do cliente com INTELIGÊNCIA REAL + APRENDIZADO AVANÇADO"""
         
         logger.info(LogCategory.CONVERSATION, f"🔍 Analisando mensagem de {phone}: {message[:50]}...")
         
@@ -1274,21 +1941,28 @@ class ConversationBot:
         # ANÁLISE ULTRA INTELIGENTE da mensagem
         analysis = self.nlp_processor.analyze_message(message, context)
         
+        # PREDIÇÃO COMPORTAMENTAL DO CLIENTE
+        client_prediction = self.nlp_processor.predict_client_behavior(phone, analysis.intent.value)
+        
         logger.info(LogCategory.CONVERSATION, f"🧠 Análise: Intent={analysis.intent.value}, "
                    f"Sentiment={analysis.sentiment.value}, "
                    f"Cooperação={analysis.cooperation_score:.2f}, "
                    f"Estado={analysis.emotional_state}")
+        logger.info(LogCategory.CONVERSATION, f"🔮 Predição: Cooperação={client_prediction['cooperation_likelihood']:.2f}, "
+                   f"Pagamento={client_prediction['payment_likelihood']:.2f}, "
+                   f"Confiança={client_prediction['confidence']:.2f}")
         
-        # GERA RESPOSTA INTELIGENTE
-        response = self.response_generator.generate_response(analysis, context)
+        # GERA RESPOSTA ADAPTATIVA INTELIGENTE
+        response = self.response_generator.generate_adaptive_response(analysis, context, client_prediction)
         
-        # ===== SISTEMA DE APRENDIZADO =====
+        # ===== SISTEMA DE APRENDIZADO AVANÇADO =====
         if self.quality_analyzer and self.learning_engine:
             # Analisa qualidade da resposta
             quality_scores = self.quality_analyzer.analyze_response_quality({
                 'text': response.message,
                 'intent': analysis.intent.value,
-                'sentiment': analysis.sentiment.value
+                'sentiment': analysis.sentiment.value,
+                'client_prediction': client_prediction
             })
             
             # Aprende com a resposta para melhorar futuras
@@ -1297,18 +1971,30 @@ class ConversationBot:
                 'template_id': response.response_type.value,
                 'response': response.message,
                 'client_reaction': 'pending',  # Será atualizado quando cliente responder
-                'quality_scores': quality_scores
+                'quality_scores': quality_scores,
+                'client_prediction': client_prediction,
+                'adaptive_used': True
             })
             
             logger.info(LogCategory.CONVERSATION, f"🎓 Qualidade: {quality_scores.get('overall', 0):.2f}")
         
-        # ATUALIZA CONTEXTO
-        self._update_context(phone, response.context_update)
+        # ATUALIZA CONTEXTO COM DADOS DE APRENDIZADO
+        enhanced_context_update = response.context_update.copy()
+        enhanced_context_update.update({
+            'client_prediction': client_prediction,
+            'learning_data': {
+                'intent_sequence': [analysis.intent.value],
+                'response_sequence': [response.response_type.value],
+                'timestamp': datetime.now().isoformat()
+            }
+        })
         
-        # ADICIONA À HISTÓRIA
-        self._add_to_history(phone, message, response.message)
+        self._update_context(phone, enhanced_context_update)
         
-        logger.info(LogCategory.CONVERSATION, f"💬 Resposta gerada: {response.response_type.value}")
+        # ADICIONA À HISTÓRIA COM DADOS DE APRENDIZADO
+        self._add_to_history_with_learning(phone, message, response.message, analysis, client_prediction)
+        
+        logger.info(LogCategory.CONVERSATION, f"💬 Resposta adaptativa gerada: {response.response_type.value}")
         
         return response
     
@@ -1416,6 +2102,34 @@ class ConversationBot:
                 self.active_contexts[phone].conversation_history = \
                     self.active_contexts[phone].conversation_history[-50:]
     
+    def _add_to_history_with_learning(self, phone: str, customer_message: str, bot_response: str, 
+                                    analysis: AnalysisResult, client_prediction: Dict[str, Any]):
+        """Adiciona interação ao histórico com dados de aprendizado"""
+        if phone in self.active_contexts:
+            interaction = {
+                'timestamp': datetime.now().isoformat(),
+                'customer_message': customer_message,
+                'bot_response': bot_response,
+                'message_type': 'conversation',
+                'learning_data': {
+                    'intent': analysis.intent.value,
+                    'sentiment': analysis.sentiment.value,
+                    'cooperation_score': analysis.cooperation_score,
+                    'lie_probability': analysis.lie_probability,
+                    'urgency_level': analysis.urgency_level,
+                    'emotional_state': analysis.emotional_state,
+                    'client_prediction': client_prediction,
+                    'response_type': analysis.recommended_response.value,
+                    'confidence': analysis.confidence
+                }
+            }
+            self.active_contexts[phone].conversation_history.append(interaction)
+            
+            # Mantém apenas últimas 50 interações
+            if len(self.active_contexts[phone].conversation_history) > 50:
+                self.active_contexts[phone].conversation_history = \
+                    self.active_contexts[phone].conversation_history[-50:]
+    
     def get_context(self, phone: str) -> Optional[ConversationContext]:
         """Retorna contexto da conversa"""
         return self.active_contexts.get(phone)
@@ -1502,7 +2216,8 @@ class ConversationBot:
             'intent_distribution': {},
             'sentiment_distribution': {},
             'cooperation_levels': [],
-            'average_interactions': 0
+            'average_interactions': 0,
+            'learning_insights': self.nlp_processor.get_learning_insights()
         }
         
         if not self.active_contexts:
@@ -1517,6 +2232,90 @@ class ConversationBot:
         stats['average_cooperation'] = sum(stats['cooperation_levels']) / len(stats['cooperation_levels'])
         
         return stats
+    
+    def process_conversation_feedback(self, phone: str, feedback_data: Dict[str, Any]):
+        """Processa feedback de uma conversa para aprendizado contínuo"""
+        try:
+            outcome = feedback_data.get('outcome', 'unknown')
+            conversation_data = {
+                'outcome': outcome,
+                'intent_sequence': feedback_data.get('intent_sequence', []),
+                'response_sequence': feedback_data.get('response_sequence', []),
+                'final_result': feedback_data.get('final_result', {}),
+                'client_satisfaction': feedback_data.get('client_satisfaction', 0.5),
+                'payment_made': feedback_data.get('payment_made', False),
+                'escalated': feedback_data.get('escalated', False)
+            }
+            
+            # Aprender com o resultado da conversa
+            self.nlp_processor.learn_from_conversation_outcome(phone, conversation_data)
+            
+            # Atualizar sistema de aprendizado se disponível
+            if self.learning_engine:
+                self.learning_engine.learn_from_conversation_outcome(conversation_data)
+            
+            logger.info(f"🎓 Feedback processado para {phone}: {outcome}")
+            
+        except Exception as e:
+            logger.error(f"❌ Erro ao processar feedback: {e}")
+    
+    def get_adaptive_insights(self) -> Dict[str, Any]:
+        """Obtém insights do sistema adaptativo"""
+        insights = {
+            'nlp_learning': self.nlp_processor.get_learning_insights(),
+            'response_effectiveness': self.response_generator.template_performance,
+            'client_profiles': len(self.nlp_processor.client_behavior_profiles),
+            'adaptive_responses_used': 0,
+            'learning_confidence': 0.0
+        }
+        
+        # Contar respostas adaptativas usadas
+        for context in self.active_contexts.values():
+            for interaction in context.conversation_history:
+                if interaction.get('learning_data', {}).get('adaptive_used'):
+                    insights['adaptive_responses_used'] += 1
+        
+        # Calcular confiança geral do aprendizado
+        nlp_confidence = insights['nlp_learning'].get('learning_confidence', 0.0)
+        insights['learning_confidence'] = nlp_confidence
+        
+        return insights
+    
+    def optimize_for_client(self, phone: str) -> Dict[str, Any]:
+        """Otimiza respostas para um cliente específico"""
+        if phone not in self.nlp_processor.client_behavior_profiles:
+            return {'message': 'Cliente não encontrado no sistema de aprendizado'}
+        
+        profile = self.nlp_processor.client_behavior_profiles[phone]
+        prediction = self.nlp_processor.predict_client_behavior(phone, 'unknown')
+        
+        optimization = {
+            'client_phone': phone,
+            'profile': profile,
+            'prediction': prediction,
+            'recommended_approach': 'cobranca_educada',
+            'optimal_timing': 'morning',
+            'risk_factors': [],
+            'success_factors': []
+        }
+        
+        # Determinar abordagem recomendada
+        if profile['cooperation_level'] > 0.7:
+            optimization['recommended_approach'] = 'cobranca_educada'
+            optimization['success_factors'].append('Cliente cooperativo - abordagem educada funciona')
+        elif profile['cooperation_level'] < 0.3:
+            optimization['recommended_approach'] = 'cobranca_direta'
+            optimization['risk_factors'].append('Cliente resistente - risco de escalação')
+        else:
+            optimization['recommended_approach'] = 'cobranca_informativa'
+        
+        # Determinar timing ótimo
+        if profile['payment_likelihood'] > 0.6:
+            optimization['optimal_timing'] = 'morning'
+        else:
+            optimization['optimal_timing'] = 'afternoon'
+        
+        return optimization
 
 # Instância global da IA
 conversation_bot = ConversationBot()
