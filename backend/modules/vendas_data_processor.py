@@ -136,19 +136,21 @@ class VendasDataProcessor:
         status = self._clean_string(venda.get('STATUS', ''))
         aba_origem = self._clean_string(venda.get('aba_origem', ''))
         
-        # Pegar FPD ou SPD (ambos podem existir)
+        # Pegar FPD ou SPD (prioridade para FPD)
         fpd = self._clean_string(venda.get('fpd', ''))
         spd = self._clean_string(venda.get('spd', ''))
         
         # Usar FPD se existir, senão usar SPD
         priority_value = fpd if fpd else spd
+        priority_type = "FPD" if fpd else "SPD" if spd else "NENHUM"
         
-        if index < 3:  # Log apenas os primeiros 3 para debug
-            self.logger.info(LogCategory.SYSTEM, f"🔍 Item {index}: FPD='{fpd}', SPD='{spd}' -> Usando: '{priority_value}'")
+        # Log para debug
+        if index < 3:
+            self.logger.info(LogCategory.SYSTEM, f"🔍 Item {index}: FPD='{fpd}', SPD='{spd}' -> Usando {priority_type}='{priority_value}'")
         
-        # Validar prioridade (FPD ou SPD)
+        # Validar valor de prioridade
         if priority_value not in ['1', '2', '3']:
-            errors.append(f"Item {index}: FPD/SPD deve ser 1, 2 ou 3 (encontrado: {priority_value})")
+            errors.append(f"Item {index}: FPD/SPD deve ser 1, 2 ou 3 (FPD: {fpd}, SPD: {spd})")
         
         # Validar telefone principal
         if not telefone1 or telefone1 == '#ERROR!':
