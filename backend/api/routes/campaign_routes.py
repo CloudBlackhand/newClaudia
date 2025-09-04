@@ -1,10 +1,11 @@
 from flask import Blueprint, request, jsonify
 from backend.modules.campaign_processor import CampaignProcessor
-from backend.modules.logger_system import SmartLogger, LogCategory
 import os
 import json
 
-logger = SmartLogger("campaign_routes")
+# Usar logger padrão temporariamente para resolver problema
+import logging
+logger = logging.getLogger(__name__)
 campaign_blueprint = Blueprint('campaign', __name__)
 campaign_processor = CampaignProcessor()
 
@@ -35,7 +36,7 @@ def process_campaign():
             return jsonify({'error': 'Configuração da campanha deve ser um objeto'}), 400
         
         # Processa campanha
-        logger.info(LogCategory.BILLING, f"🚀 Iniciando processamento de campanha: {file_path}")
+        logger.info(f"🚀 Iniciando processamento de campanha: {file_path}")
         result = campaign_processor.process_campaign_file(file_path, campaign_config)
         
         if result['success']:
@@ -52,7 +53,7 @@ def process_campaign():
             }), 500
             
     except Exception as e:
-        logger.error(LogCategory.BILLING, f"❌ Erro ao processar campanha: {str(e)}")
+        logger.error(f"❌ Erro ao processar campanha: {str(e)}")
         return jsonify({'error': f'Erro interno: {str(e)}'}), 500
 
 @campaign_blueprint.route('/campaigns/status/<campaign_id>', methods=['GET'])
@@ -71,7 +72,7 @@ def get_campaign_status(campaign_id):
         }), 200
         
     except Exception as e:
-        logger.error(LogCategory.BILLING, f"❌ Erro ao obter status da campanha: {str(e)}")
+        logger.error(f"❌ Erro ao obter status da campanha: {str(e)}")
         return jsonify({'error': f'Erro interno: {str(e)}'}), 500
 
 @campaign_blueprint.route('/campaigns/list', methods=['GET'])
@@ -86,7 +87,7 @@ def list_campaigns():
         }), 200
         
     except Exception as e:
-        logger.error(LogCategory.BILLING, f"❌ Erro ao listar campanhas: {str(e)}")
+        logger.error(f"❌ Erro ao listar campanhas: {str(e)}")
         return jsonify({'error': f'Erro interno: {str(e)}'}), 500
 
 @campaign_blueprint.route('/campaigns/stats', methods=['GET'])
@@ -101,7 +102,7 @@ def get_campaign_stats():
         }), 200
         
     except Exception as e:
-        logger.error(LogCategory.BILLING, f"❌ Erro ao obter estatísticas: {str(e)}")
+        logger.error(f"❌ Erro ao obter estatísticas: {str(e)}")
         return jsonify({'error': f'Erro interno: {str(e)}'}), 500
 
 @campaign_blueprint.route('/campaigns/templates', methods=['GET'])
@@ -137,7 +138,7 @@ def get_message_templates():
         }), 200
         
     except Exception as e:
-        logger.error(LogCategory.BILLING, f"❌ Erro ao obter templates: {str(e)}")
+        logger.error(f"❌ Erro ao obter templates: {str(e)}")
         return jsonify({'error': f'Erro interno: {str(e)}'}), 500
 
 @campaign_blueprint.route('/campaigns/validate', methods=['POST'])
@@ -204,7 +205,7 @@ def validate_campaign_config():
         }), 200
         
     except Exception as e:
-        logger.error(LogCategory.BILLING, f"❌ Erro ao validar configuração: {str(e)}")
+        logger.error(f"❌ Erro ao validar configuração: {str(e)}")
         return jsonify({'error': f'Erro interno: {str(e)}'}), 500
 
 @campaign_blueprint.route('/campaigns/preview', methods=['POST'])
@@ -270,5 +271,5 @@ def preview_campaign():
         }), 200
         
     except Exception as e:
-        logger.error(LogCategory.BILLING, f"❌ Erro ao gerar preview: {str(e)}")
+        logger.error(f"❌ Erro ao gerar preview: {str(e)}")
         return jsonify({'error': f'Erro interno: {str(e)}'}), 500

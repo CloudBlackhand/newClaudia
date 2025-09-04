@@ -14,11 +14,12 @@ from typing import Dict, Any
 
 from backend.modules.conversation_bot import ConversationBot
 from backend.modules.waha_integration import WahaIntegration
-from backend.modules.logger_system import LogManager, LogCategory
 from backend.modules.customer_data_manager import get_customer_data
 from backend.config.settings import Config
 
-logger = LogManager.get_logger('api_webhook')
+# Usar logger padrão temporariamente para resolver problema
+import logging
+logger = logging.getLogger(__name__)
 webhook_bp = Blueprint('webhook', __name__)
 
 # Instâncias globais
@@ -41,7 +42,7 @@ def verify_webhook_signature(payload: bytes, signature: str) -> bool:
     """Verificar assinatura do webhook"""
     if not Config.WEBHOOK_SECRET:
         # Se não há secret configurado, aceita qualquer webhook
-        logger.warning(LogCategory.SECURITY, "Webhook sem verificação de assinatura")
+        logger.warning("Webhook sem verificação de assinatura")
         return True
     
     try:
@@ -56,7 +57,7 @@ def verify_webhook_signature(payload: bytes, signature: str) -> bool:
         return hmac.compare_digest(f"sha256={expected_signature}", signature)
         
     except Exception as e:
-        logger.error(LogCategory.SECURITY, f"Erro na verificação de assinatura: {e}")
+        logger.error(f"Erro na verificação de assinatura: {e}")
         return False
 
 @webhook_bp.route('/test-simple', methods=['GET'])
@@ -74,7 +75,7 @@ def whatsapp_webhook():
     try:
         # Verificar Content-Type
         if not request.is_json:
-            logger.warning(LogCategory.WHATSAPP, "Webhook recebido com Content-Type inválido")
+            logger.warning("Webhook recebido com Content-Type inválido")
             return jsonify({
                 'error': 'Content-Type deve ser application/json'
             }), 400
@@ -82,7 +83,7 @@ def whatsapp_webhook():
         # Obter dados do webhook
         webhook_data = request.get_json()
         if not webhook_data:
-            logger.warning(LogCategory.WHATSAPP, "Webhook recebido sem dados")
+            logger.warning("Webhook recebido sem dados")
             return jsonify({
                 'error': 'Dados do webhook ausentes'
             }), 400
@@ -102,13 +103,7 @@ def whatsapp_webhook():
         #     }), 401
         
         # Log do webhook recebido
-        logger.debug(LogCategory.WHATSAPP, 
-                    "Webhook recebido",
-                    details={
-                        'event_type': webhook_data.get('event'),
-                        'session': webhook_data.get('session'),
-                        'has_payload': 'payload' in webhook_data
-                    })
+        logger.debug("Webhook recebido")
         
         # Processar webhook baseado no tipo de evento
         event_type = webhook_data.get('event')
@@ -120,14 +115,14 @@ def whatsapp_webhook():
         elif event_type == 'message.ack':
             return handle_message_ack_event(webhook_data)
         else:
-            logger.info(LogCategory.WHATSAPP, f"Evento não processado: {event_type}")
+            logger.info(f"Evento não processado: {event_type}")
             return jsonify({
                 'status': 'ignored',
                 'message': f'Evento {event_type} não processado'
             }), 200
         
     except Exception as e:
-        logger.error(LogCategory.WHATSAPP, f"Erro no processamento do webhook: {e}")
+        logger.error(f"Erro no processamento do webhook: {e}")
         return jsonify({
             'error': 'Erro interno do servidor',
             'message': str(e)
@@ -139,7 +134,7 @@ def handle_message_event(webhook_data: Dict[str, Any]):
         bot, waha = get_services()
         
         if not waha:
-            logger.warning(LogCategory.WHATSAPP, "Waha não configurado para processar mensagem")
+            logger.warning("Waha não configurado para processar mensagem")
             return jsonify({
                 'status': 'ignored',
                 'message': 'Waha não configurado'
@@ -149,14 +144,14 @@ def handle_message_event(webhook_data: Dict[str, Any]):
         message = waha.parse_webhook_message(webhook_data)
         
         if not message:
-            logger.warning(LogCategory.WHATSAPP, "Falha ao parsear mensagem do webhook")
+            logger.warning("Falha ao parsear mensagem do webhook")
             return jsonify({
                 'error': 'Falha ao parsear mensagem'
             }), 400
         
         # Ignorar mensagens próprias
         if message.from_me:
-            logger.debug(LogCategory.WHATSAPP, "Mensagem própria ignorada")
+            logger.debug("Mensagem própria ignorada")
             return jsonify({
                 'status': 'ignored',
                 'message': 'Mensagem própria'
@@ -164,7 +159,7 @@ def handle_message_event(webhook_data: Dict[str, Any]):
         
         # Ignorar mensagens não de texto por enquanto
         if message.message_type != 'text':
-            logger.debug(LogCategory.WHATSAPP, f"Tipo de mensagem não suportado: {message.message_type}")
+            logger.debug(f"Tipo de mensagem não suportado: {message.message_type}")
             return jsonify({
                 'status': 'ignored',
                 'message': f'Tipo {message.message_type} não suportado'
@@ -173,11 +168,7 @@ def handle_message_event(webhook_data: Dict[str, Any]):
         # Extrair telefone limpo
         phone = message.sender.replace('@c.us', '')
         
-        logger.conversation_event(
-            phone=phone,
-            direction="incoming",
-            message=message.content
-        )
+        logger.info(f"Mensagem incoming de {phone}: {message.content[:50]}...")
         
         # Verificar se é cliente antes de processar
         
@@ -186,11 +177,11 @@ def handle_message_event(webhook_data: Dict[str, Any]):
         
         if customer_data and customer_data.get('is_customer', False):
             # É cliente - processar com dados do cliente
-            logger.info(LogCategory.WHATSAPP, f"👤 Cliente identificado: {customer_data.get('name', 'Cliente')}")
+            logger.info(f"👤 Cliente identificado: {customer_data.get('name', 'Cliente')}")
             response = bot.process_message(phone, message.content, customer_data)
         else:
             # Não é cliente - responder com mensagem geral
-            logger.info(LogCategory.WHATSAPP, f"👤 Pessoa não cadastrada como cliente: {phone}")
+            logger.info(f"👤 Pessoa não cadastrada como cliente: {phone}")
             general_response = bot.generate_general_response(phone, message.content)
             response = general_response
         
@@ -213,25 +204,14 @@ def handle_message_event(webhook_data: Dict[str, Any]):
             sent = loop.run_until_complete(send_response())
                 
         except Exception as e:
-            logger.error(LogCategory.WHATSAPP, f"Erro ao enviar resposta: {e}")
+            logger.error(f"Erro ao enviar resposta: {e}")
         
         if sent:
-            logger.conversation_event(
-                phone=phone,
-                direction="outgoing",
-                message=response.message,
-                ai_response=True
-            )
+            logger.info(f"Resposta enviada para {phone}: {response.message[:50]}...")
         
         # Verificar se deve escalar
         if response.escalate:
-            logger.warning(LogCategory.CONVERSATION, 
-                         f"Conversa requer escalação: {phone}",
-                         details={
-                             'reason': 'Sistema detectou necessidade de intervenção humana',
-                             'confidence': response.confidence,
-                             'response_type': response.response_type.value
-                         })
+            logger.warning(f"Conversa requer escalação: {phone}")
         
         return jsonify({
             'status': 'processed',
@@ -242,7 +222,7 @@ def handle_message_event(webhook_data: Dict[str, Any]):
         }), 200
         
     except Exception as e:
-        logger.error(LogCategory.WHATSAPP, f"Erro no processamento de mensagem: {e}")
+        logger.error(f"Erro no processamento de mensagem: {e}")
         return jsonify({
             'error': 'Erro no processamento',
             'message': str(e)
@@ -255,17 +235,15 @@ def handle_session_status_event(webhook_data: Dict[str, Any]):
         session_name = payload.get('name', 'unknown')
         status = payload.get('status', 'unknown')
         
-        logger.info(LogCategory.WHATSAPP, 
-                   f"Status da sessão alterado: {session_name} -> {status}",
-                   details=payload)
+        logger.info(f"Status da sessão alterado: {session_name} -> {status}")
         
         # Ações baseadas no status
         if status == 'SCAN_QR_CODE':
-            logger.info(LogCategory.WHATSAPP, "QR Code necessário para autenticação")
+            logger.info("QR Code necessário para autenticação")
         elif status == 'WORKING':
-            logger.info(LogCategory.WHATSAPP, "Sessão WhatsApp conectada e funcionando")
+            logger.info("Sessão WhatsApp conectada e funcionando")
         elif status == 'FAILED':
-            logger.error(LogCategory.WHATSAPP, "Falha na sessão WhatsApp")
+            logger.error("Falha na sessão WhatsApp")
         
         return jsonify({
             'status': 'processed',
@@ -274,7 +252,7 @@ def handle_session_status_event(webhook_data: Dict[str, Any]):
         }), 200
         
     except Exception as e:
-        logger.error(LogCategory.WHATSAPP, f"Erro no processamento de status: {e}")
+        logger.error(f"Erro no processamento de status: {e}")
         return jsonify({
             'error': 'Erro no processamento',
             'message': str(e)
@@ -296,9 +274,7 @@ def handle_message_ack_event(webhook_data: Dict[str, Any]):
         
         ack_status = ack_map.get(str(ack_type), ack_type)
         
-        logger.debug(LogCategory.WHATSAPP, 
-                    f"ACK da mensagem: {message_id} -> {ack_status}",
-                    details=payload)
+        logger.debug(f"ACK da mensagem: {message_id} -> {ack_status}")
         
         return jsonify({
             'status': 'processed',
@@ -307,7 +283,7 @@ def handle_message_ack_event(webhook_data: Dict[str, Any]):
         }), 200
         
     except Exception as e:
-        logger.error(LogCategory.WHATSAPP, f"Erro no processamento de ACK: {e}")
+        logger.error(f"Erro no processamento de ACK: {e}")
         return jsonify({
             'error': 'Erro no processamento',
             'message': str(e)
@@ -324,12 +300,7 @@ def test_webhook():
         
         data = request.get_json()
         
-        logger.info(LogCategory.WHATSAPP, 
-                   "Webhook de teste recebido",
-                   details={
-                       'data_keys': list(data.keys()) if data else [],
-                       'source_ip': request.remote_addr
-                   })
+        logger.info("Webhook de teste recebido")
         
         return jsonify({
             'status': 'test_successful',
@@ -339,7 +310,7 @@ def test_webhook():
         }), 200
         
     except Exception as e:
-        logger.error(LogCategory.WHATSAPP, f"Erro no webhook de teste: {e}")
+        logger.error(f"Erro no webhook de teste: {e}")
         return jsonify({
             'error': 'Erro no processamento',
             'message': str(e)
@@ -388,7 +359,7 @@ def health_check():
         }), 200
         
     except Exception as e:
-        logger.error(LogCategory.WHATSAPP, f"Erro no health check: {e}")
+        logger.error(f"Erro no health check: {e}")
         return jsonify({
             'status': 'unhealthy',
             'error': str(e)

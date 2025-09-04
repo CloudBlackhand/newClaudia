@@ -12,10 +12,11 @@ from typing import Dict, Any
 
 from backend.modules.conversation_bot import ConversationBot
 from backend.modules.waha_integration import WahaIntegration
-from backend.modules.logger_system import LogManager, LogCategory
 from backend.config.settings import Config
 
-logger = LogManager.get_logger('api_conversation')
+# Usar logger padrão temporariamente para resolver problema
+import logging
+logger = logging.getLogger(__name__)
 conversation_bp = Blueprint('conversation', __name__)
 
 # Instância global do bot
@@ -32,7 +33,7 @@ def get_conversation_bot():
             waha_client = WahaIntegration()
         
         conversation_bot = ConversationBot()
-        logger.info(LogCategory.CONVERSATION, "Conversation Bot inicializado")
+        logger.info("Conversation Bot inicializado")
     
     return conversation_bot
 
@@ -51,7 +52,7 @@ def health_check():
         }), 200
         
     except Exception as e:
-        logger.error(LogCategory.CONVERSATION, f"Erro no health check: {e}")
+        logger.error(f"Erro no health check: {e}")
         return jsonify({
             'status': 'unhealthy',
             'error': str(e)
@@ -82,13 +83,7 @@ def process_message():
         user_name = data.get('user_name')
         auto_reply = data.get('auto_reply', True)
         
-        logger.info(LogCategory.CONVERSATION, 
-                   f"Processando mensagem de {phone}",
-                   details={
-                       'message_length': len(message),
-                       'user_name': user_name,
-                       'auto_reply': auto_reply
-                   })
+        logger.info(f"Processando mensagem de {phone}")
         
         # Obter bot
         bot = get_conversation_bot()
@@ -112,12 +107,12 @@ def process_message():
                     loop.close()
                     
                 if sent:
-                    logger.info(LogCategory.CONVERSATION, f"Resposta automática enviada para {phone}")
+                    logger.info(f"Resposta automática enviada para {phone}")
                 else:
-                    logger.warning(LogCategory.CONVERSATION, f"Falha ao enviar resposta automática para {phone}")
+                    logger.warning(f"Falha ao enviar resposta automática para {phone}")
                     
             except Exception as e:
-                logger.error(LogCategory.CONVERSATION, f"Erro ao enviar resposta automática: {e}")
+                logger.error(f"Erro ao enviar resposta automática: {e}")
         
         return jsonify({
             'success': True,
@@ -133,7 +128,7 @@ def process_message():
         }), 200
         
     except Exception as e:
-        logger.error(LogCategory.CONVERSATION, f"Erro no processamento de mensagem: {e}")
+        logger.error(f"Erro no processamento de mensagem: {e}")
         return jsonify({
             'error': 'Erro interno do servidor',
             'message': str(e)
@@ -163,13 +158,7 @@ def analyze_message():
         # Analisar mensagem
         analysis = bot.nlp.analyze_message(message)
         
-        logger.debug(LogCategory.CONVERSATION, 
-                    f"Mensagem analisada: {analysis.intent.value}",
-                    details={
-                        'sentiment': analysis.sentiment.value,
-                        'confidence': analysis.confidence,
-                        'entities_count': len(analysis.entities)
-                    })
+        logger.debug(f"Mensagem analisada: {analysis.intent.value}")
         
         return jsonify({
             'analysis': {
@@ -183,7 +172,7 @@ def analyze_message():
         }), 200
         
     except Exception as e:
-        logger.error(LogCategory.CONVERSATION, f"Erro na análise: {e}")
+        logger.error(f"Erro na análise: {e}")
         return jsonify({
             'error': 'Erro interno do servidor',
             'message': str(e)
@@ -229,7 +218,7 @@ def get_active_contexts():
         }), 200
         
     except Exception as e:
-        logger.error(LogCategory.CONVERSATION, f"Erro ao obter contextos: {e}")
+        logger.error(f"Erro ao obter contextos: {e}")
         return jsonify({
             'error': 'Erro interno do servidor',
             'message': str(e)
@@ -267,7 +256,7 @@ def get_context_details(phone):
         }), 200
         
     except Exception as e:
-        logger.error(LogCategory.CONVERSATION, f"Erro ao obter detalhes do contexto: {e}")
+        logger.error(f"Erro ao obter detalhes do contexto: {e}")
         return jsonify({
             'error': 'Erro interno do servidor',
             'message': str(e)
@@ -286,7 +275,7 @@ def delete_context(phone):
         
         del bot.active_contexts[phone]
         
-        logger.info(LogCategory.CONVERSATION, f"Contexto excluído: {phone}")
+        logger.info(f"Contexto excluído: {phone}")
         
         return jsonify({
             'success': True,
@@ -294,7 +283,7 @@ def delete_context(phone):
         }), 200
         
     except Exception as e:
-        logger.error(LogCategory.CONVERSATION, f"Erro ao excluir contexto: {e}")
+        logger.error(f"Erro ao excluir contexto: {e}")
         return jsonify({
             'error': 'Erro interno do servidor',
             'message': str(e)
@@ -317,7 +306,7 @@ def get_statistics():
         }), 200
         
     except Exception as e:
-        logger.error(LogCategory.CONVERSATION, f"Erro ao obter estatísticas: {e}")
+        logger.error(f"Erro ao obter estatísticas: {e}")
         return jsonify({
             'error': 'Erro interno do servidor',
             'message': str(e)
@@ -363,7 +352,7 @@ def test_nlp():
         }), 200
         
     except Exception as e:
-        logger.error(LogCategory.CONVERSATION, f"Erro no teste de NLP: {e}")
+        logger.error(f"Erro no teste de NLP: {e}")
         return jsonify({
             'error': 'Erro interno do servidor',
             'message': str(e)
@@ -385,7 +374,7 @@ def get_learning_insights():
         }), 200
         
     except Exception as e:
-        logger.error(LogCategory.CONVERSATION, f"Erro ao obter insights: {e}")
+        logger.error(f"Erro ao obter insights: {e}")
         return jsonify({
             'error': 'Erro interno do servidor',
             'message': str(e)
@@ -405,7 +394,7 @@ def get_quality_insights():
         }), 200
         
     except Exception as e:
-        logger.error(LogCategory.CONVERSATION, f"Erro ao obter insights de qualidade: {e}")
+        logger.error(f"Erro ao obter insights de qualidade: {e}")
         return jsonify({
             'error': 'Erro interno do servidor',
             'message': str(e)
@@ -426,7 +415,7 @@ def get_template_recommendations(intent):
         }), 200
         
     except Exception as e:
-        logger.error(LogCategory.CONVERSATION, f"Erro ao obter recomendações: {e}")
+        logger.error(f"Erro ao obter recomendações: {e}")
         return jsonify({
             'error': 'Erro interno do servidor',
             'message': str(e)
@@ -459,7 +448,7 @@ def optimize_template():
         }), 200
         
     except Exception as e:
-        logger.error(LogCategory.CONVERSATION, f"Erro na otimização: {e}")
+        logger.error(f"Erro na otimização: {e}")
         return jsonify({
             'error': 'Erro interno do servidor',
             'message': str(e)
@@ -486,7 +475,7 @@ def analyze_campaign():
         }), 200
         
     except Exception as e:
-        logger.error(LogCategory.CONVERSATION, f"Erro na análise de campanha: {e}")
+        logger.error(f"Erro na análise de campanha: {e}")
         return jsonify({
             'error': 'Erro interno do servidor',
             'message': str(e)
@@ -506,7 +495,7 @@ def get_campaign_insights():
         }), 200
         
     except Exception as e:
-        logger.error(LogCategory.CONVERSATION, f"Erro ao obter insights de campanha: {e}")
+        logger.error(f"Erro ao obter insights de campanha: {e}")
         return jsonify({
             'error': 'Erro interno do servidor',
             'message': str(e)
@@ -541,7 +530,7 @@ def update_feedback():
         }), 200
         
     except Exception as e:
-        logger.error(LogCategory.CONVERSATION, f"Erro ao atualizar feedback: {e}")
+        logger.error(f"Erro ao atualizar feedback: {e}")
         return jsonify({
             'error': 'Erro interno do servidor',
             'message': str(e)
