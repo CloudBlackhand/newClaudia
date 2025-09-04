@@ -20,7 +20,20 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 
-logger = logging.getLogger(__name__)
+# Usar SmartLogger se disponível, senão usar logger padrão
+try:
+    from backend.modules.logger_system import LogManager, LogCategory
+    logger = LogManager.get_logger('app')
+    def log_info(message):
+        logger.info(LogCategory.SYSTEM, message)
+    def log_error(message):
+        logger.error(LogCategory.SYSTEM, message)
+except ImportError:
+    logger = logging.getLogger(__name__)
+    def log_info(message):
+        logger.info(message)
+    def log_error(message):
+        logger.error(message)
 
 def create_app():
     """Factory function para criar a aplicação Flask"""
@@ -50,7 +63,7 @@ def create_app():
     # Registrar handlers de erro
     register_error_handlers(app)
     
-    logger.info("✅ Aplicação Flask criada com sucesso")
+    log_info("✅ Aplicação Flask criada com sucesso")
     return app
 
 def register_blueprints(app):
@@ -59,44 +72,44 @@ def register_blueprints(app):
         # Importar blueprints
         try:
             from api.routes.billing_routes import billing_bp
-            logger.info("✅ Billing blueprint importado com sucesso")
+            log_info("✅ Billing blueprint importado com sucesso")
         except Exception as e:
-            logger.error(f"❌ Erro ao importar billing blueprint: {e}")
+            log_error(f"❌ Erro ao importar billing blueprint: {e}")
             billing_bp = None
             
         try:
             from api.routes.conversation_routes import conversation_bp
-            logger.info("✅ Conversation blueprint importado com sucesso")
+            log_info("✅ Conversation blueprint importado com sucesso")
         except Exception as e:
-            logger.error(f"❌ Erro ao importar conversation blueprint: {e}")
+            log_error(f"❌ Erro ao importar conversation blueprint: {e}")
             conversation_bp = None
             
         try:
             from api.routes.webhook_routes import webhook_bp
-            logger.info("✅ Webhook blueprint importado com sucesso")
+            log_info("✅ Webhook blueprint importado com sucesso")
         except Exception as e:
-            logger.error(f"❌ Erro ao importar webhook blueprint: {e}")
+            log_error(f"❌ Erro ao importar webhook blueprint: {e}")
             webhook_bp = None
             
         try:
             from api.routes.campaign_routes import campaign_blueprint
-            logger.info("✅ Campaign blueprint importado com sucesso")
+            log_info("✅ Campaign blueprint importado com sucesso")
         except Exception as e:
-            logger.error(f"❌ Erro ao importar campaign blueprint: {e}")
+            log_error(f"❌ Erro ao importar campaign blueprint: {e}")
             campaign_blueprint = None
             
         try:
             from api.routes.admin_routes import admin_blueprint
-            logger.info("✅ Admin blueprint importado com sucesso")
+            log_info("✅ Admin blueprint importado com sucesso")
         except Exception as e:
-            logger.error(f"❌ Erro ao importar admin blueprint: {e}")
+            log_error(f"❌ Erro ao importar admin blueprint: {e}")
             admin_blueprint = None
             
         try:
             from api.routes.vendas_routes import vendas_blueprint
-            logger.info("✅ Vendas blueprint importado com sucesso")
+            log_info("✅ Vendas blueprint importado com sucesso")
         except Exception as e:
-            logger.error(f"❌ Erro ao importar vendas blueprint: {e}")
+            log_error(f"❌ Erro ao importar vendas blueprint: {e}")
             vendas_blueprint = None
         
         # Registrar blueprints
@@ -107,17 +120,17 @@ def register_blueprints(app):
         # CORREÇÃO DEFINITIVA: Registrar webhook sem prefixo
         if webhook_bp:
             app.register_blueprint(webhook_bp, url_prefix='')
-            logger.info("✅ Webhook blueprint registrado com sucesso - url_prefix=''")
-            logger.info(f"✅ Rotas disponíveis: {[rule.rule for rule in app.url_map.iter_rules()]}")
+            log_info("✅ Webhook blueprint registrado com sucesso - url_prefix=''")
+            log_info(f"✅ Rotas disponíveis: {[rule.rule for rule in app.url_map.iter_rules()]}")
         else:
-            logger.error("❌ Webhook blueprint é None - não foi registrado!")
+            log_error("❌ Webhook blueprint é None - não foi registrado!")
         if campaign_blueprint:
             app.register_blueprint(campaign_blueprint, url_prefix='/api')
         if admin_blueprint:
             app.register_blueprint(admin_blueprint, url_prefix='/api')
         if vendas_blueprint:
             app.register_blueprint(vendas_blueprint, url_prefix='/api')
-            logger.info("✅ Vendas blueprint registrado com sucesso - url_prefix='/api'")
+            log_info("✅ Vendas blueprint registrado com sucesso - url_prefix='/api'")
         
         # Rota principal
         @app.route('/')
@@ -133,10 +146,10 @@ def register_blueprints(app):
                 'version': '1.0.0'
             }), 200
         
-        logger.info("✅ Blueprints registrados com sucesso")
+        log_info("✅ Blueprints registrados com sucesso")
         
     except Exception as e:
-        logger.error(f"❌ Erro ao registrar blueprints: {e}")
+        log_error(f"❌ Erro ao registrar blueprints: {e}")
         raise
 
 def register_error_handlers(app):
@@ -168,14 +181,14 @@ def register_error_handlers(app):
     
     @app.errorhandler(500)
     def internal_error(error):
-        logger.error(f"Erro interno do servidor: {error}")
+        log_error(f"Erro interno do servidor: {error}")
         return jsonify({
             'error': 'Erro interno do servidor',
             'message': 'Ocorreu um erro inesperado',
             'status': 500
         }), 500
     
-    logger.info("✅ Handlers de erro registrados com sucesso")
+    log_info("✅ Handlers de erro registrados com sucesso")
 
 if __name__ == '__main__':
     app = create_app()
