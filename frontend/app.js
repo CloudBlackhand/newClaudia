@@ -1756,9 +1756,19 @@ Entre em contato IMEDIATAMENTE! 📞`
                 return;
             }
             
-            // Preparar dados para envio
+            // Preparar dados para envio no formato correto da API
             const campaignData = {
-                clients: customers,
+                clients: customers.map(customer => ({
+                    id: customer.id || customer.protocolo || `client_${Date.now()}`,
+                    name: customer.nome || 'Cliente',
+                    phone: customer.telefone1 || customer.telefone,
+                    amount: customer.valor || 0,
+                    due_date: customer.data_vencimento || new Date().toISOString().split('T')[0],
+                    document: customer.documento || '',
+                    city: customer.cidade || '',
+                    contract: customer.contrato || '',
+                    status: customer.status || 'active'
+                })),
                 template_id: config.template_id,
                 message: config.message,
                 delay: config.delay,
@@ -1827,8 +1837,38 @@ Entre em contato IMEDIATAMENTE! 📞`
         // Mostrar interface de progresso
         this.showCampaignProgress();
         
-        // Simular envio (em produção, isso seria uma chamada real para a API)
-        this.simulateCampaignExecution(campaignData);
+        try {
+            // ✅ CHAMADA REAL PARA API DE DISPARO
+            const response = await fetch(`${this.apiBase}/billing/send-batch`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    clients: campaignData.clients,
+                    template_id: campaignData.template_id,
+                    message: campaignData.message,
+                    delay: campaignData.delay,
+                    max_messages: campaignData.max_messages
+                })
+            });
+
+            const result = await response.json();
+
+            if (response.ok && result.success) {
+                // ✅ DISPARO REAL EXECUTADO COM SUCESSO
+                this.showRealCampaignResults(result.result);
+                this.showToast('success', 'Campanha Executada', `Disparo concluído: ${result.result.successful} mensagens enviadas`);
+            } else {
+                // ❌ ERRO NO DISPARO
+                this.showToast('error', 'Erro no Disparo', result.error || 'Falha ao executar campanha');
+                this.completeCampaign();
+            }
+        } catch (error) {
+            console.error('Erro ao executar campanha:', error);
+            this.showToast('error', 'Erro de Conexão', 'Falha na comunicação com o servidor');
+            this.completeCampaign();
+        }
     }
     
     showCampaignProgress() {
@@ -1883,6 +1923,51 @@ Entre em contato IMEDIATAMENTE! 📞`
         }, 2000); // Simular delay de 2 segundos entre mensagens
     }
     
+    showRealCampaignResults(result) {
+        // Atualizar estatísticas com dados reais
+        const sentCountEl = document.getElementById('sent-count');
+        const failedCountEl = document.getElementById('failed-count');
+        const remainingCountEl = document.getElementById('remaining-count');
+        const progressFill = document.getElementById('progress-fill');
+        const progressText = document.getElementById('progress-text');
+        const logContent = document.getElementById('log-content');
+        
+        // Dados reais da API
+        const total = result.total_messages || 0;
+        const successful = result.successful || 0;
+        const failed = result.failed || 0;
+        const skipped = result.skipped || 0;
+        
+        // Atualizar contadores
+        sentCountEl.textContent = successful;
+        failedCountEl.textContent = failed;
+        remainingCountEl.textContent = skipped;
+        
+        // Atualizar progresso
+        const progress = total > 0 ? ((successful + failed) / total) * 100 : 100;
+        progressFill.style.width = `${progress}%`;
+        progressText.textContent = `${successful + failed}/${total}`;
+        
+        // Atualizar log com resultados reais
+        logContent.textContent = '';
+        logContent.textContent += `✅ Campanha executada com sucesso!\n`;
+        logContent.textContent += `📊 Total de mensagens: ${total}\n`;
+        logContent.textContent += `✅ Enviadas: ${successful}\n`;
+        logContent.textContent += `❌ Falharam: ${failed}\n`;
+        logContent.textContent += `⏭️ Ignoradas: ${skipped}\n`;
+        logContent.textContent += `⏱️ Tempo de execução: ${result.execution_time || 'N/A'}\n`;
+        
+        if (result.errors && result.errors.length > 0) {
+            logContent.textContent += `\n❌ Erros encontrados:\n`;
+            result.errors.forEach(error => {
+                logContent.textContent += `   • ${error}\n`;
+            });
+        }
+        
+        // Finalizar campanha
+        this.completeCampaign();
+    }
+
     completeCampaign() {
         document.getElementById('start-campaign-btn').classList.remove('hidden');
         document.getElementById('stop-campaign-btn').classList.add('hidden');
