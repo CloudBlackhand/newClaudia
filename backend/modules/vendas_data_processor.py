@@ -135,11 +135,20 @@ class VendasDataProcessor:
         data_nascimento = self._clean_data_nascimento(venda.get('DATA NASCIMENTO', ''))
         status = self._clean_string(venda.get('STATUS', ''))
         aba_origem = self._clean_string(venda.get('aba_origem', ''))
-        fpd = self._clean_string(venda.get('fpd', ''))
         
-        # Validar FPD
-        if fpd not in ['1', '2', '3']:
-            errors.append(f"Item {index}: FPD deve ser 1, 2 ou 3")
+        # Pegar FPD ou SPD (ambos podem existir)
+        fpd = self._clean_string(venda.get('fpd', ''))
+        spd = self._clean_string(venda.get('spd', ''))
+        
+        # Usar FPD se existir, senão usar SPD
+        priority_value = fpd if fpd else spd
+        
+        if index < 3:  # Log apenas os primeiros 3 para debug
+            self.logger.info(LogCategory.SYSTEM, f"🔍 Item {index}: FPD='{fpd}', SPD='{spd}' -> Usando: '{priority_value}'")
+        
+        # Validar prioridade (FPD ou SPD)
+        if priority_value not in ['1', '2', '3']:
+            errors.append(f"Item {index}: FPD/SPD deve ser 1, 2 ou 3 (encontrado: {priority_value})")
         
         # Validar telefone principal
         if not telefone1 or telefone1 == '#ERROR!':
@@ -157,7 +166,7 @@ class VendasDataProcessor:
             data_nascimento=data_nascimento,
             status=status,
             aba_origem=aba_origem,
-            fpd=fpd,
+            fpd=priority_value,  # Usar o valor correto (FPD ou SPD)
             is_valid=len(errors) == 0,
             validation_errors=errors
         )
