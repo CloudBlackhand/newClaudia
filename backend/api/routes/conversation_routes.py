@@ -10,10 +10,10 @@ from datetime import datetime
 from flask import Blueprint, request, jsonify
 from typing import Dict, Any
 
-from backend.modules.conversation_bot import ConversationBot
-from backend.modules.waha_integration import WahaIntegration
-from backend.modules.logger_system import LogManager, LogCategory
-from backend.config.settings import Config
+from modules.conversation_bot import ConversationBot
+from modules.waha_integration import WahaIntegration
+from modules.logger_system import LogManager, LogCategory
+from config.settings import Config
 
 logger = LogManager.get_logger('api_conversation')
 conversation_bp = Blueprint('conversation', __name__)

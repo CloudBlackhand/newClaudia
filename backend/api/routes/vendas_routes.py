@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
-from backend.modules.logger_system import SmartLogger, LogCategory
-from backend.modules.vendas_data_processor import VendasDataProcessor
+from modules.logger_system import SmartLogger, LogCategory
+from modules.vendas_data_processor import VendasDataProcessor
 import os
 import psycopg2
 from datetime import datetime

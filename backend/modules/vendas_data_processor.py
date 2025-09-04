@@ -3,7 +3,7 @@ import re
 from datetime import datetime
 from typing import List, Dict, Any, Tuple
 from dataclasses import dataclass
-from backend.modules.logger_system import SmartLogger, LogCategory
+from .logger_system import SmartLogger, LogCategory
 
 logger = SmartLogger("vendas_data_processor")
 
