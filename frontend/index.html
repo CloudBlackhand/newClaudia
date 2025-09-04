@@ -50,6 +50,10 @@
                     <i class="fas fa-users"></i>
                     <span>Pessoas</span>
                 </button>
+                <button class="tab-button" data-tab="dispatch">
+                    <i class="fas fa-paper-plane"></i>
+                    <span>Disparo</span>
+                </button>
                 <button class="tab-button" data-tab="conversation">
                     <i class="fas fa-comments"></i>
                     <span>Conversas</span>
@@ -201,6 +205,156 @@
                                         <div class="stat-value" id="fpd3-count">--</div>
                                         <div class="stat-label">FPD 3 (Baixo)</div>
                                     </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dispatch Tab -->
+                <div id="dispatch-tab" class="tab-pane">
+                    <div class="section-header">
+                        <h2>🚀 Disparo de Mensagens de Cobrança</h2>
+                        <p>Configure e execute campanhas de cobrança automatizadas via WhatsApp</p>
+                    </div>
+
+                    <div class="grid">
+                        <!-- Campaign Configuration -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h3><i class="fas fa-cogs"></i> Configuração da Campanha</h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="form-group">
+                                    <label for="template-select">Template de Mensagem:</label>
+                                    <select id="template-select" class="form-control">
+                                        <option value="initial_br">Cobrança Inicial (Brasil)</option>
+                                        <option value="reminder_br">Lembrete de Cobrança</option>
+                                        <option value="urgent_br">Cobrança Urgente</option>
+                                        <option value="custom">Personalizado</option>
+                                    </select>
+                                </div>
+
+                                <div id="custom-template" class="form-group hidden">
+                                    <label for="custom-message">Mensagem Personalizada:</label>
+                                    <textarea id="custom-message" class="form-control" rows="4" 
+                                        placeholder="Digite sua mensagem personalizada..."></textarea>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="fpd-filter">Filtrar por FPD:</label>
+                                    <select id="fpd-filter" class="form-control">
+                                        <option value="all">Todos</option>
+                                        <option value="1">FPD 1 (Urgente)</option>
+                                        <option value="2">FPD 2 (Médio)</option>
+                                        <option value="3">FPD 3 (Baixo)</option>
+                                    </select>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="city-filter">Filtrar por Cidade:</label>
+                                    <select id="city-filter" class="form-control">
+                                        <option value="all">Todas as cidades</option>
+                                    </select>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="max-messages">Máximo de Mensagens:</label>
+                                    <input type="number" id="max-messages" class="form-control" 
+                                        value="50" min="1" max="1000" placeholder="50">
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="delay-config">Delay entre Mensagens (segundos):</label>
+                                    <div class="range-input">
+                                        <input type="range" id="delay-config" min="5" max="60" value="10" class="slider">
+                                        <span id="delay-value">10s</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Campaign Preview -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h3><i class="fas fa-eye"></i> Preview da Campanha</h3>
+                            </div>
+                            <div class="card-body">
+                                <div id="campaign-preview">
+                                    <div class="preview-stats">
+                                        <div class="stat-item">
+                                            <i class="fas fa-users"></i>
+                                            <span id="preview-count">0</span>
+                                            <label>Pessoas Selecionadas</label>
+                                        </div>
+                                        <div class="stat-item">
+                                            <i class="fas fa-clock"></i>
+                                            <span id="preview-time">0min</span>
+                                            <label>Tempo Estimado</label>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="message-preview">
+                                        <h4>Preview da Mensagem:</h4>
+                                        <div id="message-preview-content" class="message-content">
+                                            Selecione um template para ver o preview...
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Campaign Actions -->
+                        <div class="card full-width">
+                            <div class="card-header">
+                                <h3><i class="fas fa-play"></i> Executar Campanha</h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="campaign-actions">
+                                    <button id="preview-campaign-btn" class="btn btn-secondary">
+                                        <i class="fas fa-eye"></i>
+                                        Preview da Campanha
+                                    </button>
+                                    <button id="start-campaign-btn" class="btn btn-primary">
+                                        <i class="fas fa-paper-plane"></i>
+                                        Iniciar Disparo
+                                    </button>
+                                    <button id="stop-campaign-btn" class="btn btn-danger hidden">
+                                        <i class="fas fa-stop"></i>
+                                        Parar Campanha
+                                    </button>
+                                </div>
+
+                                <div id="campaign-progress" class="campaign-progress hidden">
+                                    <div class="progress-header">
+                                        <h4>Progresso da Campanha</h4>
+                                        <span id="progress-text">0/0</span>
+                                    </div>
+                                    <div class="progress-bar">
+                                        <div id="progress-fill" class="progress-fill"></div>
+                                    </div>
+                                    <div class="progress-stats">
+                                        <div class="stat">
+                                            <i class="fas fa-check-circle text-success"></i>
+                                            <span id="sent-count">0</span>
+                                            <label>Enviadas</label>
+                                        </div>
+                                        <div class="stat">
+                                            <i class="fas fa-times-circle text-danger"></i>
+                                            <span id="failed-count">0</span>
+                                            <label>Falharam</label>
+                                        </div>
+                                        <div class="stat">
+                                            <i class="fas fa-clock text-warning"></i>
+                                            <span id="remaining-count">0</span>
+                                            <label>Restantes</label>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div id="campaign-log" class="campaign-log hidden">
+                                    <h4>Log da Campanha</h4>
+                                    <div id="log-content" class="log-content"></div>
                                 </div>
                             </div>
                         </div>

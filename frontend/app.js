@@ -50,6 +50,13 @@ class BillingApp {
         document.getElementById('refresh-customers-btn').addEventListener('click', this.loadCustomers.bind(this));
         document.getElementById('export-customers-btn').addEventListener('click', this.exportCustomers.bind(this));
         
+        // Dispatch features
+        document.getElementById('template-select').addEventListener('change', this.handleTemplateChange.bind(this));
+        document.getElementById('delay-config').addEventListener('input', this.handleDelayChange.bind(this));
+        document.getElementById('preview-campaign-btn').addEventListener('click', this.previewCampaign.bind(this));
+        document.getElementById('start-campaign-btn').addEventListener('click', this.startCampaign.bind(this));
+        document.getElementById('stop-campaign-btn').addEventListener('click', this.stopCampaign.bind(this));
+        
         // Modal
         document.getElementById('modal-close').addEventListener('click', this.closeModal.bind(this));
         document.getElementById('modal-cancel').addEventListener('click', this.closeModal.bind(this));
@@ -88,6 +95,9 @@ class BillingApp {
         switch(tabName) {
             case 'customers':
                 this.loadCustomers();
+                break;
+            case 'dispatch':
+                this.loadDispatchData();
                 break;
             case 'conversation':
                 this.loadConversations();
@@ -1504,6 +1514,378 @@ class BillingApp {
         });
         
         return csvRows.join('\n');
+    }
+
+    // ===== DISPATCH METHODS =====
+    
+    async loadDispatchData() {
+        try {
+            // Carregar cidades disponíveis
+            await this.loadCities();
+            
+            // Carregar templates de mensagem
+            this.loadMessageTemplates();
+            
+            // Atualizar preview inicial
+            this.updateCampaignPreview();
+            
+        } catch (error) {
+            console.error('Erro ao carregar dados de disparo:', error);
+            this.showToast('error', 'Erro', 'Falha ao carregar dados de disparo');
+        }
+    }
+    
+    async loadCities() {
+        try {
+            const response = await fetch(`${this.apiBase}/vendas/stats`);
+            if (response.ok) {
+                const data = await response.json();
+                const citySelect = document.getElementById('city-filter');
+                
+                // Limpar opções existentes (exceto "Todas as cidades")
+                citySelect.innerHTML = '<option value="all">Todas as cidades</option>';
+                
+                // Adicionar cidades
+                if (data.success && data.stats.por_cidade) {
+                    Object.keys(data.stats.por_cidade).forEach(city => {
+                        const option = document.createElement('option');
+                        option.value = city;
+                        option.textContent = `${city} (${data.stats.por_cidade[city]})`;
+                        citySelect.appendChild(option);
+                    });
+                }
+            }
+        } catch (error) {
+            console.error('Erro ao carregar cidades:', error);
+        }
+    }
+    
+    loadMessageTemplates() {
+        this.messageTemplates = {
+            'initial_br': `Olá {nome}! 👋
+
+Identificamos que você possui uma pendência em sua conta. 
+
+📋 **Detalhes:**
+• Valor: R$ {valor}
+• Vencimento: {vencimento}
+• Status: {status}
+
+💳 **Formas de Pagamento:**
+• PIX: {pix}
+• Cartão: {cartao}
+• Boleto: {boleto}
+
+Para regularizar sua situação, entre em contato conosco ou acesse nosso portal.
+
+Atenciosamente,
+Equipe de Cobrança`,
+
+            'reminder_br': `Olá {nome}! ⏰
+
+Este é um lembrete sobre sua pendência em aberto.
+
+📊 **Situação Atual:**
+• Valor: R$ {valor}
+• Dias em atraso: {dias_atraso}
+• Status: {status}
+
+⚠️ **Importante:** Para evitar juros e multas, regularize sua situação o quanto antes.
+
+💳 **Pagamento Rápido:**
+• PIX: {pix}
+• Link direto: {link_pagamento}
+
+Precisa de ajuda? Estamos aqui para auxiliar!
+
+Equipe de Cobrança`,
+
+            'urgent_br': `🚨 ATENÇÃO {nome}! 🚨
+
+Sua conta está com pendência URGENTE!
+
+📋 **Dados da Pendência:**
+• Valor: R$ {valor}
+• Vencimento: {vencimento}
+• Status: CRÍTICO
+
+⚡ **AÇÃO IMEDIATA NECESSÁRIA:**
+Para evitar bloqueios e encargos adicionais, regularize AGORA:
+
+💳 **Pagamento Imediato:**
+• PIX: {pix}
+• Link: {link_pagamento}
+
+⏰ **Prazo:** 24 horas
+
+Entre em contato URGENTEMENTE!
+
+Equipe de Cobrança`
+        };
+    }
+    
+    handleTemplateChange() {
+        const templateSelect = document.getElementById('template-select');
+        const customTemplate = document.getElementById('custom-template');
+        const customMessage = document.getElementById('custom-message');
+        
+        if (templateSelect.value === 'custom') {
+            customTemplate.classList.remove('hidden');
+            customMessage.focus();
+        } else {
+            customTemplate.classList.add('hidden');
+            customMessage.value = '';
+        }
+        
+        this.updateMessagePreview();
+    }
+    
+    handleDelayChange() {
+        const delaySlider = document.getElementById('delay-config');
+        const delayValue = document.getElementById('delay-value');
+        delayValue.textContent = `${delaySlider.value}s`;
+    }
+    
+    updateMessagePreview() {
+        const templateSelect = document.getElementById('template-select');
+        const customMessage = document.getElementById('custom-message');
+        const previewContent = document.getElementById('message-preview-content');
+        
+        let message = '';
+        
+        if (templateSelect.value === 'custom') {
+            message = customMessage.value || 'Digite sua mensagem personalizada...';
+        } else if (this.messageTemplates && this.messageTemplates[templateSelect.value]) {
+            message = this.messageTemplates[templateSelect.value];
+        } else {
+            message = 'Selecione um template para ver o preview...';
+        }
+        
+        previewContent.textContent = message;
+    }
+    
+    async updateCampaignPreview() {
+        try {
+            // Obter filtros
+            const fpdFilter = document.getElementById('fpd-filter').value;
+            const cityFilter = document.getElementById('city-filter').value;
+            const maxMessages = parseInt(document.getElementById('max-messages').value) || 50;
+            
+            // Buscar clientes filtrados
+            const response = await fetch(`${this.apiBase}/vendas/list`);
+            if (response.ok) {
+                const data = await response.json();
+                let customers = data.customers || [];
+                
+                // Aplicar filtros
+                if (fpdFilter !== 'all') {
+                    customers = customers.filter(c => c.fpd === fpdFilter);
+                }
+                
+                if (cityFilter !== 'all') {
+                    customers = customers.filter(c => c.cidade === cityFilter);
+                }
+                
+                // Limitar quantidade
+                customers = customers.slice(0, maxMessages);
+                
+                // Atualizar preview
+                const previewCount = document.getElementById('preview-count');
+                const previewTime = document.getElementById('preview-time');
+                const delay = parseInt(document.getElementById('delay-config').value) || 10;
+                
+                previewCount.textContent = customers.length;
+                previewTime.textContent = `${Math.ceil((customers.length * delay) / 60)}min`;
+                
+                // Atualizar preview da mensagem
+                this.updateMessagePreview();
+            }
+        } catch (error) {
+            console.error('Erro ao atualizar preview:', error);
+        }
+    }
+    
+    async previewCampaign() {
+        try {
+            this.showLoading(true);
+            await this.updateCampaignPreview();
+            this.showToast('success', 'Preview Atualizado', 'Campanha configurada com sucesso!');
+        } catch (error) {
+            console.error('Erro no preview:', error);
+            this.showToast('error', 'Erro', 'Falha ao gerar preview da campanha');
+        } finally {
+            this.showLoading(false);
+        }
+    }
+    
+    async startCampaign() {
+        try {
+            // Validar configuração
+            const templateSelect = document.getElementById('template-select');
+            const customMessage = document.getElementById('custom-message');
+            
+            if (templateSelect.value === 'custom' && !customMessage.value.trim()) {
+                this.showToast('error', 'Erro', 'Digite uma mensagem personalizada');
+                return;
+            }
+            
+            // Confirmar envio
+            const confirmed = confirm('Tem certeza que deseja iniciar o disparo? Esta ação não pode ser desfeita.');
+            if (!confirmed) return;
+            
+            this.showLoading(true);
+            
+            // Obter configuração da campanha
+            const config = this.getCampaignConfig();
+            
+            // Buscar clientes filtrados
+            const customers = await this.getFilteredCustomers();
+            
+            if (customers.length === 0) {
+                this.showToast('warning', 'Aviso', 'Nenhum cliente encontrado com os filtros aplicados');
+                return;
+            }
+            
+            // Preparar dados para envio
+            const campaignData = {
+                clients: customers,
+                template_id: config.template_id,
+                message: config.message,
+                delay: config.delay,
+                max_messages: config.max_messages
+            };
+            
+            // Iniciar campanha
+            await this.executeCampaign(campaignData);
+            
+        } catch (error) {
+            console.error('Erro ao iniciar campanha:', error);
+            this.showToast('error', 'Erro', 'Falha ao iniciar campanha');
+        } finally {
+            this.showLoading(false);
+        }
+    }
+    
+    getCampaignConfig() {
+        const templateSelect = document.getElementById('template-select');
+        const customMessage = document.getElementById('custom-message');
+        const delay = parseInt(document.getElementById('delay-config').value) || 10;
+        const maxMessages = parseInt(document.getElementById('max-messages').value) || 50;
+        
+        let template_id = templateSelect.value;
+        let message = '';
+        
+        if (template_id === 'custom') {
+            message = customMessage.value;
+            template_id = 'custom';
+        } else {
+            message = this.messageTemplates[template_id] || '';
+        }
+        
+        return {
+            template_id,
+            message,
+            delay,
+            max_messages: maxMessages
+        };
+    }
+    
+    async getFilteredCustomers() {
+        const response = await fetch(`${this.apiBase}/vendas/list`);
+        if (!response.ok) throw new Error('Falha ao carregar clientes');
+        
+        const data = await response.json();
+        let customers = data.customers || [];
+        
+        // Aplicar filtros
+        const fpdFilter = document.getElementById('fpd-filter').value;
+        const cityFilter = document.getElementById('city-filter').value;
+        const maxMessages = parseInt(document.getElementById('max-messages').value) || 50;
+        
+        if (fpdFilter !== 'all') {
+            customers = customers.filter(c => c.fpd === fpdFilter);
+        }
+        
+        if (cityFilter !== 'all') {
+            customers = customers.filter(c => c.cidade === cityFilter);
+        }
+        
+        return customers.slice(0, maxMessages);
+    }
+    
+    async executeCampaign(campaignData) {
+        // Mostrar interface de progresso
+        this.showCampaignProgress();
+        
+        // Simular envio (em produção, isso seria uma chamada real para a API)
+        this.simulateCampaignExecution(campaignData);
+    }
+    
+    showCampaignProgress() {
+        document.getElementById('campaign-progress').classList.remove('hidden');
+        document.getElementById('campaign-log').classList.remove('hidden');
+        document.getElementById('start-campaign-btn').classList.add('hidden');
+        document.getElementById('stop-campaign-btn').classList.remove('hidden');
+    }
+    
+    simulateCampaignExecution(campaignData) {
+        const totalMessages = campaignData.clients.length;
+        let sentCount = 0;
+        let failedCount = 0;
+        
+        const logContent = document.getElementById('log-content');
+        const progressFill = document.getElementById('progress-fill');
+        const progressText = document.getElementById('progress-text');
+        const sentCountEl = document.getElementById('sent-count');
+        const failedCountEl = document.getElementById('failed-count');
+        const remainingCountEl = document.getElementById('remaining-count');
+        
+        const interval = setInterval(() => {
+            if (sentCount + failedCount >= totalMessages) {
+                clearInterval(interval);
+                this.completeCampaign();
+                return;
+            }
+            
+            // Simular envio
+            const customer = campaignData.clients[sentCount + failedCount];
+            const success = Math.random() > 0.1; // 90% de sucesso
+            
+            if (success) {
+                sentCount++;
+                logContent.textContent += `✅ Enviado para ${customer.nome} (${customer.telefone1})\n`;
+            } else {
+                failedCount++;
+                logContent.textContent += `❌ Falha ao enviar para ${customer.nome} (${customer.telefone1})\n`;
+            }
+            
+            // Atualizar progresso
+            const progress = ((sentCount + failedCount) / totalMessages) * 100;
+            progressFill.style.width = `${progress}%`;
+            progressText.textContent = `${sentCount + failedCount}/${totalMessages}`;
+            sentCountEl.textContent = sentCount;
+            failedCountEl.textContent = failedCount;
+            remainingCountEl.textContent = totalMessages - sentCount - failedCount;
+            
+            // Scroll para o final do log
+            logContent.scrollTop = logContent.scrollHeight;
+            
+        }, 2000); // Simular delay de 2 segundos entre mensagens
+    }
+    
+    completeCampaign() {
+        document.getElementById('start-campaign-btn').classList.remove('hidden');
+        document.getElementById('stop-campaign-btn').classList.add('hidden');
+        
+        this.showToast('success', 'Campanha Concluída', 'Disparo de mensagens finalizado!');
+    }
+    
+    stopCampaign() {
+        // Em produção, isso pararia a campanha real
+        document.getElementById('start-campaign-btn').classList.remove('hidden');
+        document.getElementById('stop-campaign-btn').classList.add('hidden');
+        
+        this.showToast('warning', 'Campanha Interrompida', 'Disparo foi interrompido pelo usuário');
     }
 }
 
