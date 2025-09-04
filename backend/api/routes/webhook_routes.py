@@ -7,7 +7,6 @@ Endpoints para receber webhooks do WhatsApp (Waha)
 
 import hmac
 import hashlib
-import asyncio
 from datetime import datetime
 from flask import Blueprint, request, jsonify
 from typing import Dict, Any
@@ -188,22 +187,9 @@ def handle_message_event(webhook_data: Dict[str, Any]):
         # Enviar resposta automaticamente
         sent = False
         try:
-            # Usar o event loop existente ou criar um novo se necessário
-            try:
-                loop = asyncio.get_event_loop()
-                if loop.is_closed():
-                    loop = asyncio.new_event_loop()
-                    asyncio.set_event_loop(loop)
-            except RuntimeError:
-                loop = asyncio.new_event_loop()
-                asyncio.set_event_loop(loop)
-            
-            async def send_response():
-                # Inicializar sessão se necessário
-                await waha.start_session()
-                return await waha.send_text_message(phone, response.message)
-            
-            sent = loop.run_until_complete(send_response())
+            # Inicializar sessão se necessário
+            waha.start_session()
+            sent = waha.send_text_message(phone, response.message)
                 
         except Exception as e:
             logger.error(f"Erro ao enviar resposta: {e}")
@@ -328,20 +314,7 @@ def health_check():
         waha_status = 'not_configured'
         if waha:
             try:
-                # Usar o event loop existente ou criar um novo se necessário
-                try:
-                    loop = asyncio.get_event_loop()
-                    if loop.is_closed():
-                        loop = asyncio.new_event_loop()
-                        asyncio.set_event_loop(loop)
-                except RuntimeError:
-                    loop = asyncio.new_event_loop()
-                    asyncio.set_event_loop(loop)
-                
-                async def check_waha():
-                    return await waha.health_check()
-                
-                waha_healthy = loop.run_until_complete(check_waha())
+                waha_healthy = waha.health_check()
                 waha_status = 'healthy' if waha_healthy else 'unhealthy'
                     
             except Exception as e:

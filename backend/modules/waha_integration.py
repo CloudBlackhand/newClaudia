@@ -5,8 +5,7 @@ Integração com Waha (WhatsApp HTTP API)
 Módulo para comunicação com WhatsApp via Waha
 """
 
-import aiohttp
-import asyncio
+import requests
 import json
 from typing import Dict, Any, Optional, List, Tuple
 from dataclasses import dataclass
@@ -63,7 +62,10 @@ class WahaIntegration:
         self.base_url = base_url or Config.WAHA_BASE_URL
         self.session_name = session_name or Config.WAHA_SESSION_NAME
         self.api_key = Config.WAHA_API_KEY
-        self.session: Optional[aiohttp.ClientSession] = None
+        self.session = requests.Session()
+        
+        # Configurar timeout para requests
+        self.session.timeout = 30
         
         # Cache de status
         self._session_status = None
@@ -72,36 +74,20 @@ class WahaIntegration:
         
         logger.info(LogCategory.WHATSAPP, f"Waha Integration inicializada - URL: {self.base_url}")
     
-    async def __aenter__(self):
-        """Context manager entry"""
-        await self.start_session()
-        return self
-    
-    async def __aexit__(self, exc_type, exc_val, exc_tb):
-        """Context manager exit"""
-        await self.close_session()
-    
-    async def start_session(self):
+    def start_session(self):
         """Inicializar sessão HTTP"""
-        if not self.session:
-            # Criar sessão sem timeout global - usar timeout por requisição
-            self.session = aiohttp.ClientSession()
-            logger.debug(LogCategory.WHATSAPP, "Sessão HTTP iniciada")
+        logger.debug(LogCategory.WHATSAPP, "Sessão HTTP iniciada")
     
-    async def close_session(self):
+    def close_session(self):
         """Fechar sessão HTTP"""
         if self.session:
-            await self.session.close()
-            self.session = None
+            self.session.close()
             logger.debug(LogCategory.WHATSAPP, "Sessão HTTP fechada")
     
-    async def _make_request(self, method: str, endpoint: str, 
-                          data: Optional[Dict[str, Any]] = None,
-                          params: Optional[Dict[str, Any]] = None) -> Tuple[bool, Optional[Dict[str, Any]]]:
+    def _make_request(self, method: str, endpoint: str, 
+                     data: Optional[Dict[str, Any]] = None,
+                     params: Optional[Dict[str, Any]] = None) -> Tuple[bool, Optional[Dict[str, Any]]]:
         """Fazer requisição para a API do Waha"""
-        if not self.session:
-            await self.start_session()
-        
         url = f"{self.base_url.rstrip('/')}/api/{endpoint.lstrip('/')}"
         
         # Preparar headers com autenticação
@@ -110,44 +96,43 @@ class WahaIntegration:
             headers['X-API-Key'] = self.api_key
         
         try:
-            # Usar timeout diretamente na requisição
-            timeout = aiohttp.ClientTimeout(total=30)
-            async with self.session.request(
+            # Fazer requisição síncrona
+            response = self.session.request(
                 method=method,
                 url=url,
                 json=data,
                 params=params,
                 headers=headers,
-                timeout=timeout
-            ) as response:
+                timeout=30
+            )
+            
+            # Log da requisição
+            logger.debug(LogCategory.WHATSAPP, 
+                       f"Waha Request: {method} {url}",
+                       details={
+                           'status': response.status_code,
+                           'data': data,
+                           'params': params
+                       })
+            
+            if response.status_code == 200:
+                result = response.json()
+                return True, result
+            else:
+                error_text = response.text
+                logger.error(LogCategory.WHATSAPP, 
+                           f"Waha API Error: {response.status_code}",
+                           details={'error': error_text, 'url': url})
+                return False, None
                 
-                # Log da requisição
-                logger.debug(LogCategory.WHATSAPP, 
-                           f"Waha Request: {method} {url}",
-                           details={
-                               'status': response.status,
-                               'data': data,
-                               'params': params
-                           })
-                
-                if response.status == 200:
-                    result = await response.json()
-                    return True, result
-                else:
-                    error_text = await response.text()
-                    logger.error(LogCategory.WHATSAPP, 
-                               f"Waha API Error: {response.status}",
-                               details={'error': error_text, 'url': url})
-                    return False, None
-                    
-        except aiohttp.ClientError as e:
+        except requests.RequestException as e:
             logger.error(LogCategory.WHATSAPP, f"Erro de conexão com Waha: {e}")
             return False, None
         except Exception as e:
             logger.error(LogCategory.WHATSAPP, f"Erro inesperado na requisição Waha: {e}")
             return False, None
     
-    async def get_session_status(self, force_refresh: bool = False) -> Optional[SessionStatus]:
+    def get_session_status(self, force_refresh: bool = False) -> Optional[SessionStatus]:
         """Obter status da sessão do WhatsApp"""
         now = time.time()
         
@@ -155,7 +140,7 @@ class WahaIntegration:
         if not force_refresh and self._session_status and (now - self._last_status_check) < self._status_cache_duration:
             return self._session_status
         
-        success, data = await self._make_request('GET', f'/sessions/{self.session_name}')
+        success, data = self._make_request('GET', f'/sessions/{self.session_name}')
         
         if success and data:
             status_str = data.get('status', 'FAILED')
@@ -171,7 +156,7 @@ class WahaIntegration:
         
         return None
     
-    async def start_whatsapp_session(self) -> bool:
+    def start_whatsapp_session(self) -> bool:
         """Iniciar sessão do WhatsApp"""
         session_config = {
             'name': self.session_name,
@@ -185,7 +170,7 @@ class WahaIntegration:
             }
         }
         
-        success, data = await self._make_request('POST', '/sessions/start', session_config)
+        success, data = self._make_request('POST', '/sessions/start', session_config)
         
         if success:
             logger.info(LogCategory.WHATSAPP, f"Sessão WhatsApp iniciada: {self.session_name}")
@@ -194,9 +179,9 @@ class WahaIntegration:
             logger.error(LogCategory.WHATSAPP, f"Falha ao iniciar sessão WhatsApp: {self.session_name}")
             return False
     
-    async def stop_whatsapp_session(self) -> bool:
+    def stop_whatsapp_session(self) -> bool:
         """Parar sessão do WhatsApp"""
-        success, data = await self._make_request('POST', f'/sessions/{self.session_name}/stop')
+        success, data = self._make_request('POST', f'/sessions/{self.session_name}/stop')
         
         if success:
             logger.info(LogCategory.WHATSAPP, f"Sessão WhatsApp parada: {self.session_name}")
@@ -205,9 +190,9 @@ class WahaIntegration:
             logger.error(LogCategory.WHATSAPP, f"Falha ao parar sessão WhatsApp: {self.session_name}")
             return False
     
-    async def get_qr_code(self) -> Optional[str]:
+    def get_qr_code(self) -> Optional[str]:
         """Obter QR code para autenticação"""
-        success, data = await self._make_request('GET', f'/sessions/{self.session_name}/auth/qr')
+        success, data = self._make_request('GET', f'/sessions/{self.session_name}/auth/qr')
         
         if success and data:
             qr_code = data.get('qr')
@@ -218,8 +203,8 @@ class WahaIntegration:
         logger.warning(LogCategory.WHATSAPP, "QR Code não disponível")
         return None
     
-    async def send_text_message(self, phone: str, text: str, 
-                               reply_to: Optional[str] = None) -> bool:
+    def send_text_message(self, phone: str, text: str, 
+                         reply_to: Optional[str] = None) -> bool:
         """Enviar mensagem de texto"""
         # Normalizar número de telefone
         clean_phone = self._normalize_phone(phone)
@@ -233,7 +218,7 @@ class WahaIntegration:
         if reply_to:
             message_data['reply_to'] = reply_to
         
-        success, data = await self._make_request('POST', '/sendText', message_data)
+        success, data = self._make_request('POST', '/sendText', message_data)
         
         if success:
             logger.info(LogCategory.WHATSAPP, 
@@ -388,11 +373,11 @@ class WahaIntegration:
             logger.error(LogCategory.WHATSAPP, f"Erro ao parsear webhook: {e}")
             return None
     
-    async def health_check(self) -> bool:
+    def health_check(self) -> bool:
         """Verificar saúde da conexão com Waha"""
         try:
             # Verificar se a sessão está funcionando
-            status = await self.get_session_status()
+            status = self.get_session_status()
             if status == SessionStatus.WORKING:
                 logger.debug(LogCategory.WHATSAPP, "Waha health check: HEALTHY")
                 return True
