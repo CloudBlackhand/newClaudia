@@ -8,7 +8,7 @@ from flask import Blueprint, request, jsonify
 import psycopg2
 import redis
 import os
-from modules.logger_system import SmartLogger, LogCategory
+from backend.modules.logger_system import SmartLogger, LogCategory
 
 logger = SmartLogger("admin_routes")
 admin_blueprint = Blueprint('admin', __name__)

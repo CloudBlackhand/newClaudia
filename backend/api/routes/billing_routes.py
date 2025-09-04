@@ -10,10 +10,10 @@ import json
 from flask import Blueprint, request, jsonify, current_app
 from typing import Dict, Any
 
-from modules.billing_dispatcher import BillingDispatcher
-from modules.waha_integration import WahaIntegration
-from modules.logger_system import LogManager, LogCategory
-from config.settings import Config
+from backend.modules.billing_dispatcher import BillingDispatcher
+from backend.modules.waha_integration import WahaIntegration
+from backend.modules.logger_system import LogManager, LogCategory
+from backend.config.settings import Config
 
 logger = LogManager.get_logger('api_billing')
 billing_bp = Blueprint('billing', __name__)

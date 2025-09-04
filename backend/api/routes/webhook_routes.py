@@ -12,11 +12,11 @@ from datetime import datetime
 from flask import Blueprint, request, jsonify
 from typing import Dict, Any
 
-from modules.conversation_bot import ConversationBot
-from modules.waha_integration import WahaIntegration
-from modules.logger_system import LogManager, LogCategory
-from modules.customer_data_manager import get_customer_data
-from config.settings import Config
+from backend.modules.conversation_bot import ConversationBot
+from backend.modules.waha_integration import WahaIntegration
+from backend.modules.logger_system import LogManager, LogCategory
+from backend.modules.customer_data_manager import get_customer_data
+from backend.config.settings import Config
 
 logger = LogManager.get_logger('api_webhook')
 webhook_bp = Blueprint('webhook', __name__)
