@@ -61,6 +61,8 @@ class BillingApp {
         // Database management
         document.getElementById('clear-db-btn').addEventListener('click', this.clearDatabase.bind(this));
         document.getElementById('export-db-btn').addEventListener('click', this.exportDatabase.bind(this));
+        document.getElementById('view-customers-btn').addEventListener('click', this.viewCustomers.bind(this));
+        document.getElementById('refresh-db-stats-btn').addEventListener('click', this.refreshDatabaseStats.bind(this));
     }
 
     switchTab(tabName) {
@@ -1172,6 +1174,150 @@ class BillingApp {
         } catch (error) {
             console.error('Export database error:', error);
             this.showToast('error', 'Erro', `Falha ao exportar dados: ${error.message}`);
+        } finally {
+            this.showLoading(false);
+        }
+    }
+
+    async viewCustomers() {
+        try {
+            this.showLoading(true);
+            
+            const response = await fetch(`${this.apiBase}/vendas/list`);
+            
+            if (response.ok) {
+                const data = await response.json();
+                
+                if (data.success && data.customers) {
+                    this.showCustomersModal(data.customers, data.total_customers);
+                } else {
+                    throw new Error('Resposta inválida do servidor');
+                }
+            } else {
+                const error = await response.json();
+                throw new Error(error.error || 'Erro ao carregar lista de clientes');
+            }
+        } catch (error) {
+            console.error('View customers error:', error);
+            this.showToast('error', 'Erro', `Falha ao carregar clientes: ${error.message}`);
+        } finally {
+            this.showLoading(false);
+        }
+    }
+
+    showCustomersModal(customers, total) {
+        const modalTitle = document.getElementById('modal-title');
+        const modalBody = document.getElementById('modal-body');
+        const modalCancel = document.getElementById('modal-cancel');
+        const modalConfirm = document.getElementById('modal-confirm');
+        
+        modalTitle.textContent = `👥 Lista de Pessoas para Cobrança (${total} registros)`;
+        
+        // Criar tabela de clientes
+        let tableHTML = `
+            <div style="max-height: 60vh; overflow-y: auto;">
+                <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
+                    <thead style="position: sticky; top: 0; background: #f8f9fa; z-index: 10;">
+                        <tr style="border-bottom: 2px solid #dee2e6;">
+                            <th style="padding: 0.75rem; text-align: left; border-right: 1px solid #dee2e6;">ID</th>
+                            <th style="padding: 0.75rem; text-align: left; border-right: 1px solid #dee2e6;">Nome</th>
+                            <th style="padding: 0.75rem; text-align: left; border-right: 1px solid #dee2e6;">Documento</th>
+                            <th style="padding: 0.75rem; text-align: left; border-right: 1px solid #dee2e6;">Telefone</th>
+                            <th style="padding: 0.75rem; text-align: left; border-right: 1px solid #dee2e6;">Cidade</th>
+                            <th style="padding: 0.75rem; text-align: left; border-right: 1px solid #dee2e6;">FPD</th>
+                            <th style="padding: 0.75rem; text-align: left;">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+        `;
+        
+        customers.forEach(customer => {
+            const fpdColor = customer.spd === '1' ? '#e53e3e' : customer.spd === '2' ? '#dd6b20' : '#38a169';
+            const fpdText = customer.spd === '1' ? 'FPD 1' : customer.spd === '2' ? 'FPD 2' : 'FPD 3';
+            
+            tableHTML += `
+                <tr style="border-bottom: 1px solid #dee2e6;">
+                    <td style="padding: 0.75rem; border-right: 1px solid #dee2e6; font-weight: 600;">${customer.id}</td>
+                    <td style="padding: 0.75rem; border-right: 1px solid #dee2e6;">${customer.nome || '-'}</td>
+                    <td style="padding: 0.75rem; border-right: 1px solid #dee2e6; font-family: monospace;">${customer.documento || '-'}</td>
+                    <td style="padding: 0.75rem; border-right: 1px solid #dee2e6; font-family: monospace;">${customer.telefone1 || '-'}</td>
+                    <td style="padding: 0.75rem; border-right: 1px solid #dee2e6;">${customer.cidade || '-'}</td>
+                    <td style="padding: 0.75rem; border-right: 1px solid #dee2e6;">
+                        <span style="background: ${fpdColor}; color: white; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; font-weight: 600;">
+                            ${fpdText}
+                        </span>
+                    </td>
+                    <td style="padding: 0.75rem;">
+                        <span style="color: #38a169; font-weight: 600;">✓ Ativo</span>
+                    </td>
+                </tr>
+            `;
+        });
+        
+        tableHTML += `
+                    </tbody>
+                </table>
+            </div>
+            <div style="margin-top: 1rem; padding: 1rem; background: #f8f9fa; border-radius: 8px;">
+                <h4 style="margin: 0 0 0.5rem 0; color: #2d3748;">📊 Resumo</h4>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem;">
+                    <div style="text-align: center;">
+                        <div style="font-size: 1.5rem; font-weight: 700; color: #2d3748;">${total}</div>
+                        <div style="font-size: 0.9rem; color: #666;">Total de Pessoas</div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="font-size: 1.5rem; font-weight: 700; color: #e53e3e;">${customers.filter(c => c.spd === '1').length}</div>
+                        <div style="font-size: 0.9rem; color: #666;">FPD 1 (Urgente)</div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="font-size: 1.5rem; font-weight: 700; color: #dd6b20;">${customers.filter(c => c.spd === '2').length}</div>
+                        <div style="font-size: 0.9rem; color: #666;">FPD 2 (Médio)</div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="font-size: 1.5rem; font-weight: 700; color: #38a169;">${customers.filter(c => c.spd === '3').length}</div>
+                        <div style="font-size: 0.9rem; color: #666;">FPD 3 (Baixo)</div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        modalBody.innerHTML = tableHTML;
+        
+        // Configurar botões do modal
+        modalCancel.textContent = 'Fechar';
+        modalConfirm.style.display = 'none';
+        
+        // Mostrar modal
+        document.getElementById('modal').classList.add('active');
+        
+        // Event listener para fechar
+        modalCancel.onclick = () => this.closeModal();
+    }
+
+    async refreshDatabaseStats() {
+        try {
+            this.showLoading(true);
+            
+            const response = await fetch(`${this.apiBase}/vendas/stats`);
+            
+            if (response.ok) {
+                const data = await response.json();
+                
+                if (data.success && data.stats) {
+                    // Atualizar estatísticas na interface
+                    document.getElementById('clients-count').textContent = data.stats.total_vendas || '0';
+                    
+                    this.showToast('success', 'Estatísticas Atualizadas', `Total de clientes: ${data.stats.total_vendas}`);
+                } else {
+                    throw new Error('Resposta inválida do servidor');
+                }
+            } else {
+                const error = await response.json();
+                throw new Error(error.error || 'Erro ao carregar estatísticas');
+            }
+        } catch (error) {
+            console.error('Refresh stats error:', error);
+            this.showToast('error', 'Erro', `Falha ao atualizar estatísticas: ${error.message}`);
         } finally {
             this.showLoading(false);
         }

@@ -139,6 +139,78 @@ def process_vendas_data():
             'error': str(e)
         }), 500
 
+@vendas_blueprint.route('/vendas/list', methods=['GET'])
+def list_customers():
+    """Listar todas as pessoas cadastradas para cobrança"""
+    try:
+        database_url = os.getenv('DATABASE_URL')
+        if not database_url:
+            return jsonify({
+                'success': False,
+                'error': 'DATABASE_URL não encontrada'
+            }), 500
+        
+        conn = psycopg2.connect(database_url)
+        cursor = conn.cursor()
+        
+        # Buscar todos os clientes
+        cursor.execute("""
+            SELECT 
+                id, nome, documento, telefone1, telefone2, email, 
+                rua_endereco, cidade, cep, data_nascimento, status, 
+                origem_venda, contrato, data_agenda, obs, aba_origem, spd,
+                created_at, updated_at, processed_at
+            FROM customers 
+            ORDER BY created_at DESC
+        """)
+        
+        customers = cursor.fetchall()
+        
+        # Converter para lista de dicionários
+        customers_list = []
+        for customer in customers:
+            customers_list.append({
+                'id': customer[0],
+                'nome': customer[1],
+                'documento': customer[2],
+                'telefone1': customer[3],
+                'telefone2': customer[4],
+                'email': customer[5],
+                'endereco': customer[6],
+                'cidade': customer[7],
+                'cep': customer[8],
+                'data_nascimento': customer[9],
+                'status': customer[10],
+                'origem_venda': customer[11],
+                'contrato': customer[12],
+                'data_agenda': customer[13],
+                'obs': customer[14],
+                'aba_origem': customer[15],
+                'spd': customer[16],
+                'created_at': customer[17].isoformat() if customer[17] else None,
+                'updated_at': customer[18].isoformat() if customer[18] else None,
+                'processed_at': customer[19].isoformat() if customer[19] else None
+            })
+        
+        cursor.close()
+        conn.close()
+        
+        logger.info(LogCategory.SYSTEM, f"Listagem de clientes: {len(customers_list)} registros encontrados")
+        
+        return jsonify({
+            'success': True,
+            'total_customers': len(customers_list),
+            'customers': customers_list,
+            'timestamp': datetime.now().isoformat()
+        })
+        
+    except Exception as e:
+        logger.error(LogCategory.SYSTEM, f"Erro ao listar clientes: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
 @vendas_blueprint.route('/vendas/stats', methods=['GET'])
 def get_vendas_stats():
     """Obter estatísticas dos dados de vendas processados"""
@@ -167,14 +239,13 @@ def get_vendas_stats():
         """)
         regional_stats = dict(cursor.fetchall())
         
-        # Contar por priority (FPD)
+        # Contar por FPD (spd)
         cursor.execute("""
-            SELECT priority, COUNT(*) FROM customers 
-            WHERE empresa = 'VENDAS' 
-            GROUP BY priority 
-            ORDER BY priority
+            SELECT spd, COUNT(*) FROM customers 
+            GROUP BY spd 
+            ORDER BY spd
         """)
-        priority_stats = dict(cursor.fetchall())
+        fpd_stats = dict(cursor.fetchall())
         
         cursor.close()
         conn.close()
@@ -183,8 +254,8 @@ def get_vendas_stats():
             'success': True,
             'stats': {
                 'total_vendas': vendas_count,
-                'por_regional': regional_stats,
-                'por_priority': priority_stats,
+                'por_cidade': regional_stats,
+                'por_fpd': fpd_stats,
                 'timestamp': datetime.now().isoformat()
             }
         })
