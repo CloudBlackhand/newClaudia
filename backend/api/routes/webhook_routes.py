@@ -197,16 +197,20 @@ def handle_message_event(webhook_data: Dict[str, Any]):
         # Enviar resposta automaticamente
         sent = False
         try:
-            async def send_response():
-                async with waha:
-                    return await waha.send_text_message(phone, response.message)
-            
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
+            # Usar o event loop existente ou criar um novo se necessário
             try:
-                sent = loop.run_until_complete(send_response())
-            finally:
-                loop.close()
+                loop = asyncio.get_event_loop()
+                if loop.is_closed():
+                    loop = asyncio.new_event_loop()
+                    asyncio.set_event_loop(loop)
+            except RuntimeError:
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+            
+            async def send_response():
+                return await waha.send_text_message(phone, response.message)
+            
+            sent = loop.run_until_complete(send_response())
                 
         except Exception as e:
             logger.error(LogCategory.WHATSAPP, f"Erro ao enviar resposta: {e}")
@@ -351,17 +355,21 @@ def health_check():
         waha_status = 'not_configured'
         if waha:
             try:
-                async def check_waha():
-                    async with waha:
-                        return await waha.health_check()
-                
-                loop = asyncio.new_event_loop()
-                asyncio.set_event_loop(loop)
+                # Usar o event loop existente ou criar um novo se necessário
                 try:
-                    waha_healthy = loop.run_until_complete(check_waha())
-                    waha_status = 'healthy' if waha_healthy else 'unhealthy'
-                finally:
-                    loop.close()
+                    loop = asyncio.get_event_loop()
+                    if loop.is_closed():
+                        loop = asyncio.new_event_loop()
+                        asyncio.set_event_loop(loop)
+                except RuntimeError:
+                    loop = asyncio.new_event_loop()
+                    asyncio.set_event_loop(loop)
+                
+                async def check_waha():
+                    return await waha.health_check()
+                
+                waha_healthy = loop.run_until_complete(check_waha())
+                waha_status = 'healthy' if waha_healthy else 'unhealthy'
                     
             except Exception as e:
                 waha_status = f'error: {e}'

@@ -387,6 +387,15 @@ class WahaIntegration:
     
     async def health_check(self) -> bool:
         """Verificar saúde da conexão com Waha"""
-        # TEMPORARIAMENTE DESABILITADO - Foco no webhook principal
-        logger.debug(LogCategory.WHATSAPP, "Waha health check: SKIPPED (focusing on webhook)")
-        return True  # Retorna True para não bloquear o sistema
+        try:
+            # Verificar se a sessão está funcionando
+            status = await self.get_session_status()
+            if status == SessionStatus.WORKING:
+                logger.debug(LogCategory.WHATSAPP, "Waha health check: HEALTHY")
+                return True
+            else:
+                logger.warning(LogCategory.WHATSAPP, f"Waha health check: UNHEALTHY - Status: {status}")
+                return False
+        except Exception as e:
+            logger.error(LogCategory.WHATSAPP, f"Waha health check: ERROR - {e}")
+            return False
