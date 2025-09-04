@@ -84,9 +84,8 @@ class WahaIntegration:
     async def start_session(self):
         """Inicializar sessão HTTP"""
         if not self.session:
-            # Criar timeout dentro do contexto assíncrono
-            timeout = aiohttp.ClientTimeout(total=30)
-            self.session = aiohttp.ClientSession(timeout=timeout)
+            # Criar sessão sem timeout global - usar timeout por requisição
+            self.session = aiohttp.ClientSession()
             logger.debug(LogCategory.WHATSAPP, "Sessão HTTP iniciada")
     
     async def close_session(self):
@@ -111,12 +110,15 @@ class WahaIntegration:
             headers['X-API-Key'] = self.api_key
         
         try:
+            # Usar timeout diretamente na requisição
+            timeout = aiohttp.ClientTimeout(total=30)
             async with self.session.request(
                 method=method,
                 url=url,
                 json=data,
                 params=params,
-                headers=headers
+                headers=headers,
+                timeout=timeout
             ) as response:
                 
                 # Log da requisição
