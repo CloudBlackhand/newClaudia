@@ -86,37 +86,38 @@ class MessageTemplateManager:
         # Template inicial de cobrança
         self.templates['initial_br'] = MessageTemplate(
             type=MessageType.INITIAL,
-            subject="Cobrança - Vencimento {due_date}",
+            subject="Cobrança Pendente",
             content="""Olá {client_name}! 👋
 
 Esperamos que esteja bem! 
 
-📋 Temos uma cobrança pendente em seu nome:
-💰 Valor: R$ {amount}
-📅 Vencimento: {due_date}
+📋 Temos uma cobrança pendente em seu nome.
 
-Para efetuar o pagamento ou esclarecer dúvidas, entre em contato conosco.
+💳 Para efetuar o pagamento, acesse:
+https://central.desktop.com.br/bill
+
+Para esclarecer dúvidas, entre em contato conosco.
 
 Agradecemos sua atenção! 🙏""",
-            variables=['client_name', 'amount', 'due_date'],
+            variables=['client_name'],
             priority=1
         )
         
         # Template de lembrete
         self.templates['reminder_br'] = MessageTemplate(
             type=MessageType.REMINDER,
-            subject="Lembrete - Vencimento {due_date}",
+            subject="Lembrete de Cobrança",
             content="""Oi {client_name}! 🔔
 
-Este é um lembrete amigável sobre sua cobrança:
+Este é um lembrete amigável sobre sua cobrança.
 
-💰 Valor: R$ {amount}
-📅 Vencimento: {due_date}
+💳 Para efetuar o pagamento, acesse:
+https://central.desktop.com.br/bill
 
 Se já efetuou o pagamento, pode desconsiderar esta mensagem.
 
 Qualquer dúvida, estamos aqui para ajudar! 😊""",
-            variables=['client_name', 'amount', 'due_date'],
+            variables=['client_name'],
             priority=2
         )
         
@@ -126,15 +127,15 @@ Qualquer dúvida, estamos aqui para ajudar! 😊""",
             subject="URGENTE - Cobrança Vencida",
             content="""Atenção {client_name}! ⚠️
 
-Sua cobrança está VENCIDA:
+Sua cobrança está VENCIDA.
 
-💰 Valor: R$ {amount}
-📅 Venceu em: {due_date}
+💳 Para efetuar o pagamento, acesse:
+https://central.desktop.com.br/bill
 
 Para evitar maiores complicações, entre em contato URGENTEMENTE para regularizar a situação.
 
 ⚡ Ação necessária IMEDIATA""",
-            variables=['client_name', 'amount', 'due_date'],
+            variables=['client_name'],
             priority=3
         )
         
@@ -144,17 +145,17 @@ Para evitar maiores complicações, entre em contato URGENTEMENTE para regulariz
             subject="AVISO FINAL - Última oportunidade",
             content="""🚨 AVISO FINAL - {client_name}
 
-Esta é sua ÚLTIMA OPORTUNIDADE para regularizar:
+Esta é sua ÚLTIMA OPORTUNIDADE para regularizar.
 
-💰 Valor: R$ {amount}
-📅 Vencido desde: {due_date}
+💳 Para efetuar o pagamento, acesse:
+https://central.desktop.com.br/bill
 
 ⚠️ Próximos passos caso não haja retorno:
 • Inclusão em órgãos de proteção ao crédito
 • Cobrança judicial
 
 Entre em contato IMEDIATAMENTE! 📞""",
-            variables=['client_name', 'amount', 'due_date'],
+            variables=['client_name'],
             priority=4
         )
         
@@ -166,13 +167,13 @@ Entre em contato IMEDIATAMENTE! 📞""",
 
 Sua fatura está VENCIDA.
 
-💰 Valor: R$ {amount}
-📅 Venceu em: {due_date}
+💳 Para efetuar o pagamento, acesse:
+https://central.desktop.com.br/bill
 
 Para evitar maiores complicações, entre em contato URGENTEMENTE para regularizar a situação.
 
 ⚡ Ação necessária IMEDIATA""",
-            variables=['client_name', 'amount', 'due_date'],
+            variables=['client_name'],
             priority=3
         )
         
@@ -407,9 +408,7 @@ class BillingDispatcher:
                 
                 # Preparar variáveis para o template
                 variables = {
-                    'client_name': client['name'],
-                    'amount': f"{client['amount']:.2f}",
-                    'due_date': self._format_date(client['due_date'])
+                    'client_name': client['name']
                 }
                 
                 # Renderizar mensagem
