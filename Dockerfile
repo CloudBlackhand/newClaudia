@@ -37,4 +37,4 @@ RUN ls -la && echo "=== ESTRUTURA BACKEND ===" && ls -la backend/ || echo "BACKE
 EXPOSE 8000
 
 # Comando de inicialização
-CMD ["python", "app.py"]
+CMD ["python", "backend/app.py"]
