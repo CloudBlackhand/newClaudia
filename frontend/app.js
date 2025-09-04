@@ -1762,8 +1762,8 @@ Entre em contato IMEDIATAMENTE! 📞`
                     id: customer.id || customer.protocolo || `client_${Date.now()}`,
                     name: customer.nome || 'Cliente',
                     phone: customer.telefone1 || customer.telefone,
-                    amount: customer.valor || customer.valor_total || 100.00, // Valor padrão se não houver
-                    due_date: customer.data_vencimento || new Date().toISOString().split('T')[0],
+                    amount: customer.valor || customer.amount || 100.00, // Valor padrão para cobrança
+                    due_date: customer.data_vencimento || customer.due_date || new Date().toISOString().split('T')[0],
                     document: customer.documento || '',
                     city: customer.cidade || '',
                     contract: customer.contrato || '',
