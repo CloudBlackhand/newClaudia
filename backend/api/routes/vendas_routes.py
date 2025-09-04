@@ -159,7 +159,7 @@ def list_customers():
                 id, nome, documento, telefone1, telefone2, email, 
                 rua_endereco, cidade, cep, data_nascimento, status, 
                 origem_venda, contrato, data_agenda, obs, aba_origem, spd,
-                created_at, updated_at, processed_at
+                created_at, updated_at
             FROM customers 
             ORDER BY created_at DESC
         """)
@@ -188,8 +188,7 @@ def list_customers():
                 'aba_origem': customer[15],
                 'spd': customer[16],
                 'created_at': customer[17].isoformat() if customer[17] else None,
-                'updated_at': customer[18].isoformat() if customer[18] else None,
-                'processed_at': customer[19].isoformat() if customer[19] else None
+                'updated_at': customer[18].isoformat() if customer[18] else None
             })
         
         cursor.close()
