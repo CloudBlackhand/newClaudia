@@ -1599,7 +1599,7 @@ Aproveite sua internet! 🚀`,
 
 Esperamos que esteja bem! 
 
-📋 Temos uma cobrança pendente em seu nome.
+📋 Temos uma fatura pendente em seu nome.
 
 🌐 Para consultar e pagar sua fatura, acesse:
 https://central.desktop.com.br/bill
@@ -1610,7 +1610,7 @@ Agradecemos sua atenção! 🙏`,
 
             'urgent_reminder': `Atenção {NOME}! ⚠️
 
-Sua cobrança está VENCIDA.
+Sua fatura está VENCIDA.
 
 🌐 REGULARIZE AGORA através do nosso portal:
 https://central.desktop.com.br/bill
@@ -1628,7 +1628,7 @@ https://central.desktop.com.br/bill
 
 ⚠️ Próximos passos caso não haja retorno:
 • Inclusão em órgãos de proteção ao crédito
-• Cobrança judicial
+• Ação judicial
 
 Entre em contato IMEDIATAMENTE! 📞`
         };
