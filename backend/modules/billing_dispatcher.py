@@ -532,6 +532,10 @@ class BillingDispatcher:
             
             # 3. Integração real com Waha (agora síncrona)
             logger.info(LogCategory.BILLING, f"📤 [REAL] Enviando mensagem real para {message.phone}")
+            
+            # INICIALIZAR SESSÃO ANTES DO ENVIO (igual ao webhook que funciona!)
+            self.waha.start_session()
+            
             success = self.waha.send_text_message(
                 phone=message.phone,
                 text=message.content
