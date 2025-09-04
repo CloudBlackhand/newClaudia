@@ -6,7 +6,7 @@ import psycopg2
 from datetime import datetime
 
 vendas_blueprint = Blueprint('vendas', __name__)
-logger = SmartLogger()
+logger = SmartLogger("vendas_routes")
 
 @vendas_blueprint.route('/vendas/validate', methods=['POST'])
 def validate_vendas_data():
