@@ -496,9 +496,9 @@ class BillingDispatcher:
                 await asyncio.sleep(0.5)  # Simular delay de rede
                 return True
             
-            # 3. Integração real com Waha
+            # 3. Integração real com Waha (agora síncrona)
             logger.info(LogCategory.BILLING, f"📤 Enviando mensagem real para {message.phone}")
-            success = await self.waha.send_text_message(
+            success = self.waha.send_text_message(
                 phone=message.phone,
                 text=message.content
             )

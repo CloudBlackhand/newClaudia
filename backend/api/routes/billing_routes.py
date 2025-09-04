@@ -121,13 +121,22 @@ def send_billing_batch():
         async def send_messages():
             return await dispatcher.dispatch_batch(messages)
         
-        # Executar envio
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
+        # Executar envio - usar loop existente ou criar novo
+        try:
+            loop = asyncio.get_event_loop()
+            if loop.is_closed():
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+        except RuntimeError:
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+        
         try:
             result = loop.run_until_complete(send_messages())
-        finally:
-            loop.close()
+        except Exception as e:
+            logger.error(LogCategory.BILLING, f"Erro no envio assíncrono: {e}")
+            # Fallback: tentar envio síncrono
+            result = await send_messages()
         
         logger.billing_event('batch_sent', 'system', {
             'total_messages': result.total_messages,
