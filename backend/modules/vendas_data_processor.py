@@ -50,18 +50,27 @@ class VendasDataProcessor:
     def process_vendas_json(self, json_content: str) -> Tuple[List[VendasData], List[str]]:
         """Processa conteúdo JSON de vendas"""
         try:
+            self.logger.info(LogCategory.SYSTEM, f"🔍 Iniciando processamento JSON - Tamanho: {len(json_content)} chars")
             data = json.loads(json_content)
+            self.logger.info(LogCategory.SYSTEM, f"🔍 JSON parseado - Tipo: {type(data)}, Tamanho: {len(data) if isinstance(data, list) else 'N/A'}")
             vendas_data = []
             errors = []
             
             if not isinstance(data, list):
+                self.logger.error(LogCategory.SYSTEM, f"❌ Formato inválido: esperado lista, recebido {type(data)}")
                 return [], ["Formato inválido: deve ser uma lista"]
+            
+            self.logger.info(LogCategory.SYSTEM, f"🔍 Processando {len(data)} itens...")
             
             for idx, item in enumerate(data):
                 try:
+                    if idx < 3:  # Log apenas os primeiros 3 itens para debug
+                        self.logger.info(LogCategory.SYSTEM, f"🔍 Item {idx}: {list(item.keys()) if isinstance(item, dict) else type(item)}")
+                    
                     # Verificar se é formato antigo (com dados_vendas) ou novo (dados diretos)
                     if 'dados_vendas' in item and item['dados_vendas']:
                         # Formato antigo: item tem dados_vendas
+                        self.logger.info(LogCategory.SYSTEM, f"🔍 Item {idx}: Formato antigo - {len(item['dados_vendas'])} vendas")
                         for venda in item['dados_vendas']:
                             vendas_item = self._process_venda_item(venda, idx)
                             if vendas_item.is_valid:
@@ -70,6 +79,8 @@ class VendasDataProcessor:
                                 errors.extend(vendas_item.validation_errors)
                     else:
                         # Formato novo: item já são os dados de venda
+                        if idx < 3:
+                            self.logger.info(LogCategory.SYSTEM, f"🔍 Item {idx}: Formato novo - processando diretamente")
                         vendas_item = self._process_venda_item(item, idx)
                         if vendas_item.is_valid:
                             vendas_data.append(vendas_item)
@@ -91,10 +102,15 @@ class VendasDataProcessor:
         """Processa item individual de venda"""
         errors = []
         
+        if index < 3:  # Log apenas os primeiros 3 para debug
+            self.logger.info(LogCategory.SYSTEM, f"🔍 Processando venda {index}: campos disponíveis: {list(venda.keys())}")
+        
         # Extrair e validar campos
         nome = self._clean_string(venda.get('NOME', ''))
         if not nome:
             errors.append(f"Item {index}: NOME é obrigatório")
+            if index < 3:
+                self.logger.warning(LogCategory.SYSTEM, f"⚠️ Item {index}: NOME vazio ou inválido")
         
         documento = self._clean_documento(venda.get('DOCUMENTO', ''))
         if not documento:
