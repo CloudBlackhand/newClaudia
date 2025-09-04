@@ -1562,65 +1562,66 @@ class BillingApp {
     
     loadMessageTemplates() {
         this.messageTemplates = {
-            'initial_br': `Olá {nome}! 👋
+            'fpd_reminder': `Olá {NOME}! 👋
 
-Identificamos que você possui uma pendência em sua conta. 
+Sua fatura de {VALOR} reais venceu há {DIAS_FPD} dias.
 
-📋 **Detalhes:**
-• Valor: R$ {valor}
-• Vencimento: {vencimento}
-• Status: {status}
+Para evitar bloqueios, regularize seu pagamento o quanto antes.
 
-💳 **Formas de Pagamento:**
-• PIX: {pix}
-• Cartão: {cartao}
-• Boleto: {boleto}
+Agradecemos sua preferência! 🙏`,
 
-Para regularizar sua situação, entre em contato conosco ou acesse nosso portal.
+            'spd_reminder': `Oi {NOME}! 😊
 
-Atenciosamente,
-Equipe de Cobrança`,
+Sua segunda fatura de {VALOR} reais venceu há {DIAS_FPD} dias.
 
-            'reminder_br': `Olá {nome}! ⏰
+Mantenha seu serviço ativo regularizando o pagamento.
 
-Este é um lembrete sobre sua pendência em aberto.
+Qualquer dúvida, estamos aqui! 📞`,
 
-📊 **Situação Atual:**
-• Valor: R$ {valor}
-• Dias em atraso: {dias_atraso}
-• Status: {status}
+            'welcome_message': `Bem-vindo(a) {NOME}! 🎉
 
-⚠️ **Importante:** Para evitar juros e multas, regularize sua situação o quanto antes.
+Seu plano {PLANO} foi ativado com sucesso em {CIDADE}.
 
-💳 **Pagamento Rápido:**
-• PIX: {pix}
-• Link direto: {link_pagamento}
+Valor mensal: R$ {VALOR}
+Vendedor: {VENDEDOR}
 
-Precisa de ajuda? Estamos aqui para auxiliar!
+Aproveite sua internet! 🚀`,
 
-Equipe de Cobrança`,
+            'payment_reminder': `Olá {NOME}! 👋
 
-            'urgent_br': `🚨 ATENÇÃO {nome}! 🚨
+Esperamos que esteja bem! 
 
-Sua conta está com pendência URGENTE!
+📋 Temos uma cobrança pendente em seu nome:
+💰 Valor: R$ {VALOR}
+📅 Vencimento: {VENCIMENTO}
 
-📋 **Dados da Pendência:**
-• Valor: R$ {valor}
-• Vencimento: {vencimento}
-• Status: CRÍTICO
+Para efetuar o pagamento ou esclarecer dúvidas, entre em contato conosco.
 
-⚡ **AÇÃO IMEDIATA NECESSÁRIA:**
-Para evitar bloqueios e encargos adicionais, regularize AGORA:
+Agradecemos sua atenção! 🙏`,
 
-💳 **Pagamento Imediato:**
-• PIX: {pix}
-• Link: {link_pagamento}
+            'urgent_reminder': `Atenção {NOME}! ⚠️
 
-⏰ **Prazo:** 24 horas
+Sua cobrança está VENCIDA:
 
-Entre em contato URGENTEMENTE!
+💰 Valor: R$ {VALOR}
+📅 Venceu em: {VENCIMENTO}
 
-Equipe de Cobrança`
+Para evitar maiores complicações, entre em contato URGENTEMENTE para regularizar a situação.
+
+⚡ Ação necessária IMEDIATA`,
+
+            'final_notice': `🚨 AVISO FINAL - {NOME}
+
+Esta é sua ÚLTIMA OPORTUNIDADE para regularizar:
+
+💰 Valor: R$ {VALOR}
+📅 Vencido desde: {VENCIMENTO}
+
+⚠️ Próximos passos caso não haja retorno:
+• Inclusão em órgãos de proteção ao crédito
+• Cobrança judicial
+
+Entre em contato IMEDIATAMENTE! 📞`
         };
     }
     
