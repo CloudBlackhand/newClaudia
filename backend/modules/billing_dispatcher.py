@@ -158,6 +158,24 @@ Entre em contato IMEDIATAMENTE! 📞""",
             priority=4
         )
         
+        # Template urgent_reminder (compatibilidade com frontend)
+        self.templates['urgent_reminder'] = MessageTemplate(
+            type=MessageType.URGENT,
+            subject="URGENTE - Cobrança Vencida",
+            content="""Atenção {client_name}! ⚠️
+
+Sua fatura está VENCIDA.
+
+💰 Valor: R$ {amount}
+📅 Venceu em: {due_date}
+
+Para evitar maiores complicações, entre em contato URGENTEMENTE para regularizar a situação.
+
+⚡ Ação necessária IMEDIATA""",
+            variables=['client_name', 'amount', 'due_date'],
+            priority=3
+        )
+        
         logger.info(LogCategory.BILLING, f"Templates carregados: {len(self.templates)}")
     
     def get_template(self, template_id: str) -> Optional[MessageTemplate]:
